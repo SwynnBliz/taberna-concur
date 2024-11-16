@@ -42,12 +42,14 @@ export default function AgeVerification() {
         <div className="flex gap-4 justify-center">
           <button
             onClick={handleYesClick}
+            aria-label="Click if you are of legal age to enter website"
             className="w-1/2 py-2 border border-[#D6A336] bg-[#2B1A0A] text-white font-semibold rounded-md hover:bg-transparent transition duration-200"
           >
             Yes
           </button>
           <button
             onClick={handleNoClick}
+            aria-label="Click if you are not of legal age to enter website"
             className="w-1/2 py-2 border border-[#D6A336] bg-[#2B1A0A] text-white font-semibold rounded-md hover:bg-transparent transition duration-200"
           >
             No
@@ -63,13 +65,14 @@ export default function AgeVerification() {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div     role="dialog" aria-labelledby="modal-title" aria-describedby="modal-description" className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg p-6 shadow-lg text-center">
             <p className="text-lg font-medium mb-4">
               Sorry, you must be of legal drinking age to enter this site.
             </p>
             <button
               onClick={closeModal}
+              aria-label="Click to close the restriction modal popup"
               className="w-1/2 py-2 border border-[#D6A336] bg-[#2B1A0A] text-white font-semibold rounded-md hover:bg-opacity-40 transition duration-200"
             >
               OK
