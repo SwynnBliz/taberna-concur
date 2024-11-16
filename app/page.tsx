@@ -8,7 +8,7 @@ export default function AgeVerification() {
   const [showModal, setShowModal] = useState(false);
 
   const handleYesClick = () => {
-    router.push("/sign-up");
+    router.push("/sign-in");
   };
 
   const handleNoClick = () => {

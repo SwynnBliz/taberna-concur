@@ -33,7 +33,7 @@ const SignIn = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       if (result.user) {
-        router.push('/');
+        router.push('/discussion-board');
       }
     } catch (e) {
       console.error("Error with Google Sign-In:", e);
@@ -43,7 +43,7 @@ const SignIn = () => {
 
   useEffect(() => {
     if (user) {
-      router.push('/');
+      router.push('/discussion-board/');
     }
   }, [user, router]);
 
