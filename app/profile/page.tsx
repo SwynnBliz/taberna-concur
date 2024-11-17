@@ -155,7 +155,7 @@ const ProfilePage = () => {
     <Layout>
       <div className="flex justify-center items-start min-h-screen bg-[#484242] p-8">
         <div
-          className="bg-white/30 border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-4xl"
+          className="bg-[#383434] border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-4xl"
           style={{ paddingTop: '30px', paddingBottom: '30px' }}
         >
           <h1 className="text-4xl font-bold text-center text-white mb-6">

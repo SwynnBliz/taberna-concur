@@ -77,7 +77,7 @@ const SignUp = () => {
       className="flex items-center justify-center min-h-screen bg-cover bg-center"
       style={{ backgroundImage: "url('https://wallup.net/wp-content/uploads/2019/09/929884-liquor-alcohol-spirits-poster-drinks-drink-whiskey.jpg')" }}
     >
-      <div className="bg-white/30 border border-white rounded-xl backdrop-blur-lg p-8 shadow-lg w-full max-w-md">
+      <div className="bg-white/20 border border-white rounded-xl backdrop-blur-lg p-8 shadow-lg w-full max-w-md">
         <h1 className="text-4xl font-bold text-center text-white mb-8">
           <span>Welcome to </span>
           <span className="text-yellow-500 italic island-moments">
@@ -155,7 +155,7 @@ const SignUp = () => {
           <div className="text-center mt-4">
             <p className="text-white">
               Already have an account?{" "}
-              <a href="/sign-in" className="text-yellow-500 hover:underline">Sign In</a>
+              <a href="/sign-in" className="text-white hover:underline hover:text-yellow-300 font-bold">Sign In</a>
             </p>
           </div>
         </form>
