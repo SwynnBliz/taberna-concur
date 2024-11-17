@@ -1,5 +1,7 @@
+/** src/app/firebase/config.tsx (Firebase Config File) */
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth"; // Import GoogleAuthProvider
+import { getFirestore } from "firebase/firestore"; // Import Firestore
 
 // Firebase configuration using environment variables
 const firebaseConfig = {
@@ -18,5 +20,8 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const googleProvider = new GoogleAuthProvider(); // Initialize Google provider
 
-// Export the app, auth, and provider for use in other parts of the application
-export { app, auth, googleProvider };
+// Initialize Firestore
+const firestore = getFirestore(app); // Initialize Firestore
+
+// Export the app, auth, firestore, and provider for use in other parts of the application
+export { app, auth, googleProvider, firestore };

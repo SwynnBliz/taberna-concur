@@ -1,10 +1,12 @@
+/** src/app/sign-up/page.tsx (Register Page) */
 'use client';
 import { useState, useEffect } from "react";
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
-import { getAuth, setPersistence, browserSessionPersistence, fetchSignInMethodsForEmail } from "firebase/auth";
+import { setPersistence, browserSessionPersistence } from "firebase/auth";
 import { auth } from '../firebase/config';
 import { useRouter } from 'next/navigation';
 import PasswordStrengthChecker from "../../components/auth/PasswordStrengthChecker";
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -12,10 +14,12 @@ const SignUp = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const firestore = getFirestore();
   
   const [passwordVisible, setPasswordVisible] = useState(false); // State to toggle password visibility
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); // State to toggle confirm password visibility
 
+  // Initialize the hook here (top level of the component)
   const [createUserWithEmailAndPassword, user, loading, error] = useCreateUserWithEmailAndPassword(auth);
   const router = useRouter();
 
@@ -60,23 +64,33 @@ const SignUp = () => {
     }
   
     try {
+      // Create the user with email and password using the hook
       const res = await createUserWithEmailAndPassword(email, password);
-      console.log("User created:", res);
-
+  
       if (!res || res.user === null) {
-        setErrorMessage("This email is already in use. Please try another one.")
+        setErrorMessage("This email is already in use. Please try another one.");
         return;
       }
-    
-      // Only clear the form and redirect if there are no errors
+
+      // Store user data in Firestore
+      const userRef = doc(firestore, "users", res.user.uid); // Reference to the user's document
+      await setDoc(userRef, {
+        email: email,
+        username: username,  // Storing the username
+        createdAt: new Date(), // You can add additional fields like the creation timestamp
+      });
+
+      // Clear the form and redirect
       if (!errorMessage) {
         setEmail("");
         setPassword("");
         setConfirmPassword("");
         setUsername("");
+        router.push('/sign-in');  // Redirect to sign-in page
       }
     } catch (e: any) {
       console.error("Error creating user:", e);
+      setErrorMessage("An error occurred during sign-up.");
     }
   };
 

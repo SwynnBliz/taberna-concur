@@ -1,20 +1,23 @@
+/** src/app/sign-in/page.tsx (Login Page) */
 'use client';
 import { useState, useEffect } from "react";
 import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
 import { auth, googleProvider } from '../firebase/config';
 import { signInWithPopup } from "firebase/auth";
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-
-  const [passwordVisible, setPasswordVisible] = useState(false); // State to toggle password visibility
+  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
   const router = useRouter();
+  const firestore = getFirestore();
 
+  // Handle email/password sign-in
   const handleEmailPasswordSignIn = async (e: any) => {
     e.preventDefault();
     setErrorMessage("");
@@ -28,13 +31,26 @@ const SignIn = () => {
     }
   };
 
+  // Handle Google sign-in
   const handleGoogleSignIn = async () => {
     setErrorMessage("");
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      if (result.user) {
-        router.push('/discussion-board');
+      const user = result.user;
+      const userRef = doc(firestore, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+
+      if (!userDoc.exists()) {
+        // This is the user's first time logging in with Google
+        const defaultUsername = user.email?.split('@')[0]; // Extract username from email
+        await setDoc(userRef, {
+          email: user.email,
+          username: defaultUsername, // Set the default username
+          createdAt: new Date(),
+        });
       }
+      
+      router.push('/discussion-board');
     } catch (e) {
       console.error("Error with Google Sign-In:", e);
       setErrorMessage("Google sign-in failed. Please try again.");
@@ -43,7 +59,7 @@ const SignIn = () => {
 
   useEffect(() => {
     if (user) {
-      router.push('/discussion-board/');
+      router.push('/discussion-board');
     }
   }, [user, router]);
 
