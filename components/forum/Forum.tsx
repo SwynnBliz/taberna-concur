@@ -380,7 +380,7 @@ const Forum = () => {
                   <input
                     type="text"
                     placeholder="Add a comment..."
-                    className="w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none"
+                    className="text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         handleAddComment(post.id, e.currentTarget.value);
