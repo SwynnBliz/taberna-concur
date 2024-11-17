@@ -39,7 +39,7 @@ export default function AgeVerification() {
     >
       <div className="bg-white/20 border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-md">
         <h1 className="text-5xl font-bold text-center text-white mb-6">
-          <span style={{ fontFamily: "Arial, sans-serif" }}>Welcome to </span>
+          <span>Welcome to </span>
           <span className="text-yellow-500 italic island-moments">
             TabernaConcur
           </span>

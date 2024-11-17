@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth } from 'firebase/auth'; // Firebase Auth import
+import { getAuth, signOut } from 'firebase/auth'; // Firebase Auth import
 import { getFirestore, doc, getDoc } from 'firebase/firestore'; // Firestore import
 import { app } from '../firebase/config'; // Firebase config import
 import Layout from '../../components/root/Layout'; // Layout component import
@@ -55,8 +55,13 @@ const DashboardPage = () => {
     router.push('/profile'); // Navigate to profile page (example)
   };
 
-  const handleLogout = () => {
-    router.push('/sign-in'); // Redirect to sign-in page after logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth); // Sign out the user from Firebase Authentication
+      router.push('/sign-in'); // Redirect to sign-in page after logout
+    } catch (error) {
+      console.error('Error during logout: ', error);
+    }
   };
 
   return (

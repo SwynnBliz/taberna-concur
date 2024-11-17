@@ -69,7 +69,7 @@ const SignIn = () => {
       <div className="bg-white/30 border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-md">
         <h1 className="text-5xl font-bold text-center text-white mb-4">
           <span>Welcome to </span>
-          <span className="text-yellow-500 italic">TabernaConcur</span>
+          <span className="text-yellow-500 italic island-moments">TabernaConcur</span>
         </h1>
 
         <button

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { getAuth } from "firebase/auth";
+import { getAuth, signOut } from "firebase/auth"; // Import signOut
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) => {
@@ -17,8 +17,13 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     setIsProfileMenuOpen(!isProfileMenuOpen);
   };
 
-  const handleLogout = () => {
-    router.push("/sign-in");
+  const handleLogout = async () => {
+    try {
+      await signOut(authInstance); // Sign out from Firebase
+      router.push("/sign-in"); // Redirect to sign-in page after logout
+    } catch (error) {
+      console.error("Error during logout: ", error);
+    }
   };
 
   const handleNavigateHome = () => {
@@ -60,9 +65,19 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
           />
         </button>
         {isProfileMenuOpen && (
-          <div className="absolute right-0 mt-2 bg-white text-black p-4 rounded-md shadow-lg">
-            <button onClick={() => router.push("/profile")}>Update Profile</button>
-            <button onClick={handleLogout}>Logout</button>
+          <div className="absolute right-0 mt-2 bg-[#363232] text-black p-4 rounded-md shadow-lg w-48">
+            <button
+              onClick={() => router.push("/profile")}
+              className="w-full text-left px-4 py-2 mb-2 rounded-md hover:bg-[#302C2C] transition duration-200 text-white"
+            >
+              Update Profile
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full text-left px-4 py-2 rounded-md text-red-600 font-semibold hover:bg-[#302C2C] transition duration-200"
+            >
+              Logout
+            </button>
           </div>
         )}
       </div>

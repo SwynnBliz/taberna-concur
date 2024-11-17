@@ -6,6 +6,7 @@ import { getAuth, EmailAuthProvider, reauthenticateWithCredential, updatePasswor
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Cloudinary } from 'cloudinary-core';
 import Layout from '../../components/root/Layout'; // Layout component import
+import PasswordStrengthChecker from '../../components/auth/PasswordStrengthChecker'; // Import the strength checker
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -17,11 +18,15 @@ const ProfilePage = () => {
     profilePhoto: '',
   });
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [oldPassword, setOldPassword] = useState('');
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isGoogleUser, setIsGoogleUser] = useState(false); // To track if the user logged in with Google
+  const [showOldPassword, setShowOldPassword] = useState(false); // Separate state for old password visibility
+  const [showNewPassword, setShowNewPassword] = useState(false); // Separate state for new password visibility
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Separate state for confirm password visibility
   const firestore = getFirestore();
   const authInstance = getAuth();
 
@@ -87,11 +92,23 @@ const ProfilePage = () => {
       setErrorMessage('Username is required.');
       return;
     }
-
+  
+    // Check if password fields are provided, only validate if they are being used
+    if ((oldPassword || newPassword || confirmPassword) && (oldPassword === '' || newPassword === '' || confirmPassword === '')) {
+      setErrorMessage('Please fill in all the password fields if you want to change your password.');
+      return;
+    }
+  
+    // Check if the new password and confirm password match (only if both are provided)
+    if (newPassword && confirmPassword && newPassword !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      return;
+    }
+  
     try {
       const user = authInstance.currentUser;
       if (!user) return;
-
+  
       // Update user data in Firestore
       const userRef = doc(firestore, 'users', user.uid);
       await updateDoc(userRef, {
@@ -100,19 +117,33 @@ const ProfilePage = () => {
         contactNumber: userData.contactNumber,
         profilePhoto: newPhotoUrl || userData.profilePhoto, // Use the uploaded photo or keep the current one
       });
-
-      // Update password if provided (only for email/password users)
+  
+      // Reauthenticate and update password if provided (only for email/password users)
       if (oldPassword && newPassword && !isGoogleUser) {
         const credential = EmailAuthProvider.credential(user.email!, oldPassword);
-        await reauthenticateWithCredential(user, credential);
-        await updatePassword(user, newPassword);
-        setNewPassword('');
-        setOldPassword('');
-        alert('Password updated successfully');
+  
+        try {
+          // Reauthenticate the user with the old password
+          await reauthenticateWithCredential(user, credential);
+  
+          // If reauthentication succeeds, update the password
+          await updatePassword(user, newPassword);
+  
+          // Clear password fields
+          setNewPassword('');
+          setConfirmPassword('');
+          setOldPassword('');
+  
+          alert('Password updated successfully');
+        } catch (err) {
+          // If reauthentication fails, show an error
+          setErrorMessage('Old password is incorrect.');
+          return;
+        }
       } else if (isGoogleUser) {
         alert('You cannot change your password because you signed in with Google');
       }
-
+  
       alert('Profile updated successfully');
       router.push('/discussion-board'); // Redirect to the discussion board
     } catch (error: any) {
@@ -121,7 +152,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <Layout> {/* Wrap the content in the Layout component */}
+    <Layout>
       <div className="flex justify-center items-start min-h-screen bg-[#484242] p-8">
         <div
           className="bg-white/30 border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-4xl"
@@ -144,11 +175,11 @@ const ProfilePage = () => {
             <div className="flex flex-col items-start w-2/3 ml-4">
               <label className="text-white">Profile Picture</label>
               <input
-                  type="file"
-                  onChange={handleProfilePhotoChange}
-                  className="mb-10 text-white"
-                  accept="image/*" 
-                />
+                type="file"
+                onChange={handleProfilePhotoChange}
+                className="mb-10 text-white"
+                accept="image/*" 
+              />
               <label htmlFor="username" className="text-white mb-2">Username</label>
               <input
                 id="username"
@@ -176,60 +207,99 @@ const ProfilePage = () => {
                 />
               </div>
 
-              {/* Contact Number Section */}
-              <div>
+              {/* Contact Number */}
+              <div className="mb-4">
                 <label htmlFor="contactNumber" className="text-white mb-2">Contact Number</label>
                 <input
                   id="contactNumber"
-                  type="tel"
+                  type="text"
                   value={userData.contactNumber}
                   onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
-                  placeholder="Contact Number"
+                  placeholder="Your contact number"
                   className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
                 />
               </div>
             </div>
 
-            {/* Change Password Section */}
+            {/* Password Section */}
             <div className="w-1/2 pl-4">
-              {/* Only show password change section if the user is not logged in with Google */}
               <div className="mb-4">
-                <label className="text-white">Change Password</label>
-                {!isGoogleUser && (
-                  <>
-                    <input
-                      type="password"
-                      placeholder="Old Password"
-                      value={oldPassword}
-                      onChange={(e) => setOldPassword(e.target.value)}
-                      className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 mb-4"
-                    />
-                    <input
-                      type="password"
-                      placeholder="New Password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-                    />
-                  </>
-                )}
-                {isGoogleUser && (
-                  <p className="text-white">You cannot change your password because you signed in with Google</p>
-                )}
+                <label htmlFor="oldPassword" className="text-white mb-2">Old Password</label>
+                <div className="relative">
+                  <input
+                    type={showOldPassword ? 'text' : 'password'}
+                    id="oldPassword"
+                    value={oldPassword}
+                    onChange={(e) => setOldPassword(e.target.value)}
+                    placeholder="Enter old password"
+                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowOldPassword(!showOldPassword)}
+                    className="absolute top-2 right-2"
+                  >
+                    {showOldPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
+
+              <div className="mb-4">
+                <label htmlFor="newPassword" className="text-white mb-2">New Password</label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    id="newPassword"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Enter new password"
+                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute top-2 right-2"
+                  >
+                    {showNewPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="mb-6">
+                <label htmlFor="confirmPassword" className="text-white mb-2">Confirm Password</label>
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    id="confirmPassword"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute top-2 right-2"
+                  >
+                    {showConfirmPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Password strength checker */}
+              <PasswordStrengthChecker password={newPassword} />
             </div>
           </div>
-
-          <button
-            type="submit"
-            className="w-full py-2 mt-4 bg-yellow-500 text-white font-semibold rounded-md hover:bg-yellow-600"
-            disabled={isLoading}
-            onClick={handleUpdateProfile}
-          >
-            {isLoading ? "Updating..." : "Update Profile"}
-          </button>
-
-          {errorMessage && <p className="text-red-500 mt-4 text-center font-semibold" aria-live="polite">{errorMessage}</p>}
+          <div className="flex flex-col justify-center text-center">
+            {errorMessage && <p className="mt-6 text-red-500 font-semibold">{errorMessage}</p>}
+            <button
+                onClick={handleUpdateProfile}
+                className="mt-2 w-full py-2 px-4 bg-yellow-500 text-white rounded-md"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Updating...' : 'Update Profile'}
+            </button>
+          </div>
         </div>
       </div>
     </Layout>
