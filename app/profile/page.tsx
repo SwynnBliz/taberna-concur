@@ -1,4 +1,3 @@
-// app/profile/page.tsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -140,8 +139,6 @@ const ProfilePage = () => {
           setErrorMessage('Old password is incorrect.');
           return;
         }
-      } else if (isGoogleUser) {
-        alert('You cannot change your password because you signed in with Google');
       }
   
       alert('Profile updated successfully');
@@ -215,7 +212,7 @@ const ProfilePage = () => {
                   type="text"
                   value={userData.contactNumber}
                   onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
-                  placeholder="Your contact number"
+                  placeholder="Contact Number"
                   className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
                 />
               </div>
@@ -223,81 +220,95 @@ const ProfilePage = () => {
 
             {/* Password Section */}
             <div className="w-1/2 pl-4">
-              <div className="mb-4">
-                <label htmlFor="oldPassword" className="text-white mb-2">Old Password</label>
-                <div className="relative">
-                  <input
-                    type={showOldPassword ? 'text' : 'password'}
-                    id="oldPassword"
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    placeholder="Enter old password"
-                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowOldPassword(!showOldPassword)}
-                    className="absolute top-2 right-2"
-                  >
-                    {showOldPassword ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-              </div>
+              {/* Only show password change section for non-Google users */}
+              {!isGoogleUser && (
+                <>
+                  <div className="mb-2">
+                    <label htmlFor="oldPassword" className="text-white mb-2">Old Password</label>
+                    <div className="relative">
+                      <input
+                        id="oldPassword"
+                        type={showOldPassword ? 'text' : 'password'}
+                        value={oldPassword}
+                        onChange={(e) => setOldPassword(e.target.value)}
+                        placeholder="Old Password"
+                        className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowOldPassword(!showOldPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      >
+                        {showOldPassword ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                  </div>
+                  <div className="mb-2">
+                    <label htmlFor="newPassword" className="text-white mb-2">New Password</label>
+                    <div className="relative">
+                      <input
+                        id="newPassword"
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="New Password"
+                        className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      >
+                        {showNewPassword ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                  </div>
 
-              <div className="mb-4">
-                <label htmlFor="newPassword" className="text-white mb-2">New Password</label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    id="newPassword"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter new password"
-                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute top-2 right-2"
-                  >
-                    {showNewPassword ? 'Hide' : 'Show'}
-                  </button>
-                </div>
-              </div>
+                  <div className="mb-2">
+                    <label htmlFor="confirmPassword" className="text-white mb-2">Confirm New Password</label>
+                    <div className="relative">
+                      <input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm Password"
+                        className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                      >
+                        {showConfirmPassword ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
 
-              <div className="mb-6">
-                <label htmlFor="confirmPassword" className="text-white mb-2">Confirm Password</label>
-                <div className="relative">
-                  <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    id="confirmPassword"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm new password"
-                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute top-2 right-2"
-                  >
-                    {showConfirmPassword ? 'Hide' : 'Show'}
-                  </button>
+              {isGoogleUser && (
+                <div className="text-white text-center">
+                  <p>You cannot change your password because you signed in with Google.</p>
                 </div>
-              </div>
-
-              {/* Password strength checker */}
-              <PasswordStrengthChecker password={newPassword} />
+              )}
             </div>
           </div>
-          <div className="flex flex-col justify-center text-center">
-            {errorMessage && <p className="mt-6 text-red-500 font-semibold">{errorMessage}</p>}
+
+          {/* Error message */}
+          {errorMessage && (
+            <div className="bg-red-500 text-white text-center rounded p-2 mt-4">
+              {errorMessage}
+            </div>
+          )}
+
+          {/* Update Button */}
+          <div className="text-center mt-8">
             <button
-                onClick={handleUpdateProfile}
-                className="mt-2 w-full py-2 px-4 bg-yellow-500 text-white rounded-md"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Updating...' : 'Update Profile'}
+              onClick={handleUpdateProfile}
+              className="w-48 py-2 px-4 bg-yellow-500 hover:bg-yellow-600 rounded text-white"
+            >
+              {isLoading ? 'Updating...' : 'Update Profile'}
             </button>
           </div>
         </div>

@@ -78,7 +78,6 @@ const PostForum = () => {
         await addDoc(collection(firestore, 'posts'), {
           userId: user.uid,
           username: userProfile?.username || 'Anonymous',
-          profilePhoto: userProfile?.profilePhoto || 'https://via.placeholder.com/150',
           message,
           imageUrl: uploadedImageUrl,
           createdAt: new Date(),

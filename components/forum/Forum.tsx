@@ -1,7 +1,7 @@
 // components/forum/Forum.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, arrayUnion, increment, getDoc, DocumentData } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
 import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
@@ -11,7 +11,7 @@ import { FaThumbsUp, FaThumbsDown } from 'react-icons/fa'; // Importing React Ic
 interface Post {
   id: string;
   username: string;
-  profilePhoto: string;
+  userId: string;
   message: string;
   imageUrl: string | null;
   createdAt: any;
@@ -21,7 +21,6 @@ interface Post {
     username: string;
     comment: string;
     createdAt: any;
-    profilePhoto: string;
     userId: string; // Add userId to the comment object
     likes: number; // Add likes field for comments
     dislikes: number; // Add dislikes field for comments
@@ -37,6 +36,7 @@ const Forum = () => {
   const firestore = getFirestore(app);
   const auth = getAuth();
   const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); // Track user's like/dislike status
+  const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -247,8 +247,6 @@ const Forum = () => {
     
     const userData = userDoc.data();
     const username = userData?.username || 'Anonymous';
-    const profilePhoto = userData?.profilePhoto || 'https://via.placeholder.com/150'; // Default placeholder if not found
-    
     const postRef = doc(firestore, 'posts', postId);
     const postDoc = await getDoc(postRef);
     
@@ -261,7 +259,6 @@ const Forum = () => {
           username, 
           comment, 
           createdAt: new Date(), 
-          profilePhoto, // Use profilePhoto from Firestore user data
           userId, // Add the userId to the comment
           likedBy: [], // Initialize as empty array
           dislikedBy: [], // Initialize as empty array
@@ -275,13 +272,37 @@ const Forum = () => {
       });
     }
   };
-  
 
   const formatTimestamp = (timestamp: any) => {
     // Handle if timestamp is valid or missing
     return timestamp && timestamp.seconds
       ? formatDistanceToNow(new Date(timestamp.seconds * 1000), { addSuffix: true })
       : 'Invalid date';
+  };
+
+  const fetchUserPhoto = async (userId: string) => {
+    if (!userId) return null;
+  
+    const cachedPhoto = userPhotos.get(userId);
+    if (cachedPhoto) return cachedPhoto;
+  
+    try {
+      const userRef = doc(firestore, 'users', userId);
+      const userDoc = await getDoc(userRef);
+  
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const profilePhoto = userData?.profilePhoto || 'https://via.placeholder.com/150';
+        
+        // Cache the photo for future use
+        setUserPhotos((prev) => new Map(prev).set(userId, profilePhoto));
+        return profilePhoto;
+      }
+    } catch (error) {
+      console.error(`Failed to fetch user photo for userId: ${userId}`, error);
+    }
+  
+    return 'https://via.placeholder.com/150'; // Default placeholder image
   };
 
   return (
@@ -298,9 +319,10 @@ const Forum = () => {
               <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383434] p-6">
                 <div className="flex items-center mb-4">
                   <img
-                    src={post.profilePhoto || 'https://via.placeholder.com/150'}
+                    src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
                     alt="Profile"
                     className="w-12 h-12 rounded-full mr-4"
+                    onLoad={() => fetchUserPhoto(post.userId)}
                   />
                   <div>
                     <p className="text-xl font-semibold text-white">{post.username}</p>
@@ -344,9 +366,10 @@ const Forum = () => {
                       post.comments.map((comment, index) => (
                         <div key={index} className="flex items-start mb-3">
                           <img
-                            src={comment.profilePhoto}
+                            src={userPhotos.get(comment.userId) || 'https://via.placeholder.com/150'}
                             alt="Commenter profile"
                             className="w-8 h-8 rounded-full mr-2"
+                            onLoad={() => fetchUserPhoto(comment.userId)}
                           />
                           <div>
                             <p className="font-semibold">{comment.username}</p>
