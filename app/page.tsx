@@ -2,22 +2,31 @@
 "use client"; // This directive makes this file a Client Component
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function AgeVerification() {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
 
+  useEffect(() => {
+    // Check if the user has already verified their age
+    const hasVerifiedAge = localStorage.getItem("ageVerified");
+    if (hasVerifiedAge === "true") {
+      router.push("/sign-in"); // Redirect to sign-in if age verification is complete
+    }
+  }, [router]);
+
   const handleYesClick = () => {
-    router.push("/sign-in");
+    localStorage.setItem("ageVerified", "true"); // Save user's verification in localStorage
+    router.push("/sign-in"); // Redirect to sign-in page
   };
 
   const handleNoClick = () => {
-    setShowModal(true);
+    setShowModal(true); // Show the modal for underage users
   };
 
   const closeModal = () => {
-    setShowModal(false);
+    setShowModal(false); // Close the modal
   };
 
   return (
@@ -66,7 +75,12 @@ export default function AgeVerification() {
 
       {/* Modal */}
       {showModal && (
-        <div     role="dialog" aria-labelledby="modal-title" aria-describedby="modal-description" className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+        <div
+          role="dialog"
+          aria-labelledby="modal-title"
+          aria-describedby="modal-description"
+          className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+        >
           <div className="bg-white rounded-lg p-6 shadow-lg text-center">
             <p className="text-lg font-medium mb-4">
               Sorry, you must be of legal drinking age to enter this site.

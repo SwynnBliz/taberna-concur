@@ -37,7 +37,7 @@ const PasswordStrengthChecker = ({ password }: PasswordStrengthCheckerProps) => 
   }, [password]);
 
   const textStyles = {
-    Weak: "text-red-500 text-shadow-lg",
+    Weak: "text-red-500 font-semibold text-shadow-lg",
     Fair: "text-yellow-500 text-shadow-lg",
     Good: "text-blue-500 text-shadow-lg",
     Strong: "text-green-500 text-shadow-lg",

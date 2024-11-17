@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Island+Moments&display=swap');
+/* app/globals.css */
+@import url('https://fonts.googleapis.com/css2?family=Island+Moments&family=Inria+Serif&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -19,9 +20,10 @@
   }
 }
 
-body {
+html, body {
+  height: 100%; /* Ensure the body takes full height */
+  margin: 0;    /* Remove any default margin */
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inria Serif', serif; /* Set the body font to Inria Serif */
 }
-

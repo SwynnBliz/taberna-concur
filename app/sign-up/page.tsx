@@ -1,11 +1,10 @@
-/** src/app/sign-up/page.tsx (Register Page) */
+/** src/app/sign-up/page.tsx */
 'use client';
+
 import { useState, useEffect } from "react";
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
-import { setPersistence, browserSessionPersistence } from "firebase/auth";
 import { auth } from '../firebase/config';
 import { useRouter } from 'next/navigation';
-import PasswordStrengthChecker from "../../components/auth/PasswordStrengthChecker";
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 const SignUp = () => {
@@ -15,81 +14,47 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const firestore = getFirestore();
-  
-  const [passwordVisible, setPasswordVisible] = useState(false); // State to toggle password visibility
-  const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false); // State to toggle confirm password visibility
 
-  // Initialize the hook here (top level of the component)
   const [createUserWithEmailAndPassword, user, loading, error] = useCreateUserWithEmailAndPassword(auth);
   const router = useRouter();
 
   useEffect(() => {
-    setPersistence(auth, browserSessionPersistence).catch((error) => {
-      console.error("Error setting persistence:", error);
-      setErrorMessage("Failed to set session persistence. Try using a regular browsing window.");
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        router.push('/discussion-board');
+      }
     });
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      console.log("User signed up:", user);
-      router.push('/sign-in');
-    }
-  }, [user, router]);
-
-  const validateEmail = (email: string) => {
-    // Basic email regex validation
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailPattern.test(email);
-  };
+    return () => unsubscribe(); // Cleanup the listener on component unmount
+  }, [router]);
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    setErrorMessage(""); // Clear previous error messages
-  
-    // Validation checks
+    setErrorMessage("");
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
       return;
     }
-  
     if (password.length < 8) {
       setErrorMessage("Password must be at least 8 characters.");
       return;
     }
-  
-    if (!validateEmail(email)) {
-      setErrorMessage("Please enter a valid email address.");
-      return;
-    }
-  
     try {
-      // Create the user with email and password using the hook
       const res = await createUserWithEmailAndPassword(email, password);
-  
-      if (!res || res.user === null) {
-        setErrorMessage("This email is already in use. Please try another one.");
+      if (!res || !res.user) {
+        setErrorMessage("This email is already in use.");
         return;
       }
-
-      // Store user data in Firestore
-      const userRef = doc(firestore, "users", res.user.uid); // Reference to the user's document
+      const userRef = doc(firestore, "users", res.user.uid);
       await setDoc(userRef, {
-        email: email,
-        username: username,  // Storing the username
-        createdAt: new Date(), // You can add additional fields like the creation timestamp
+        email,
+        username,
+        createdAt: new Date(),
       });
-
-      // Clear the form and redirect
-      if (!errorMessage) {
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
-        setUsername("");
-        router.push('/sign-in');  // Redirect to sign-in page
-      }
-    } catch (e: any) {
-      console.error("Error creating user:", e);
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setUsername("");
+    } catch (e) {
       setErrorMessage("An error occurred during sign-up.");
     }
   };
@@ -101,16 +66,15 @@ const SignUp = () => {
     >
       <div className="bg-white/30 border border-white rounded-xl backdrop-blur-lg p-8 shadow-lg w-full max-w-md">
         <h1 className="text-4xl font-bold text-center text-white mb-8">
-          <span style={{ fontFamily: "Arial, sans-serif" }}>Welcome to </span>
-          <span className="text-yellow-500 island-moments">TabernaConcur</span>
+          <span>Welcome to </span>
+          <span className="text-yellow-500">TabernaConcur</span>
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="email"
             placeholder="Email"
-            aria-label="Enter your email"
-            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+            className="w-full px-4 py-2 rounded-md bg-white/90"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -118,68 +82,36 @@ const SignUp = () => {
           <input
             type="text"
             placeholder="Username"
-            aria-label="Enter your username"
-            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+            className="w-full px-4 py-2 rounded-md bg-white/90"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
           />
-          
-          {/* Password field */}
-          <div className="relative">
-            <input
-              type={passwordVisible ? "text" : "password"}
-              placeholder="Password"
-              aria-label="Enter your password"
-              className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setPasswordVisible(!passwordVisible)}
-              className="absolute right-4 top-2 text-gray-500"
-              aria-label="Show/Hide Password"
-            >
-              {passwordVisible ? "Hide" : "Show"}
-            </button>
-          </div>
-          
-          {/* Confirm Password field */}
-          <div className="relative">
-            <input
-              type={confirmPasswordVisible ? "text" : "password"}
-              placeholder="Confirm Password"
-              aria-label="Re-enter your password for confirmation"
-              className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-              className="absolute right-4 top-2 text-gray-500"
-              aria-label="Show/Hide Confirm Password"
-            >
-              {confirmPasswordVisible ? "Hide" : "Show"}
-            </button>
-          </div>
-
-          <PasswordStrengthChecker password={password} />
+          <input
+            type="password"
+            placeholder="Password"
+            className="w-full px-4 py-2 rounded-md bg-white/90"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          <input
+            type="password"
+            placeholder="Confirm Password"
+            className="w-full px-4 py-2 rounded-md bg-white/90"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
           <button
             type="submit"
-            aria-label="Click to sign up using your user credential"
             className="w-full py-2 mt-4 bg-yellow-500 text-white font-semibold rounded-md hover:bg-yellow-600"
             disabled={loading}
           >
             {loading ? "Signing Up..." : "Sign Up"}
           </button>
-          {errorMessage && <p className="text-red-500 mt-4" aria-live="polite">{errorMessage}</p>}
-          {!errorMessage && error && <p className="text-red-500 mt-4" aria-live="polite">{error.message}</p>}
-
-          {/* Link to Sign In */}
+          {errorMessage && <p className="text-red-500 mt-4 text-center font-semibold">{errorMessage}</p>}
+          {error && !errorMessage && <p className="text-red-500 mt-4 text-center font-semibold">{error.message}</p>}
           <div className="text-center mt-4">
             <p className="text-white">
               Already have an account?{" "}

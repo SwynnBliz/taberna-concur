@@ -1,5 +1,6 @@
-/** src/app/sign-in/page.tsx (Login Page) */
+/** src/app/sign-in/page.tsx */
 'use client';
+
 import { useState, useEffect } from "react";
 import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
@@ -12,12 +13,11 @@ const SignIn = () => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
-
   const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
+
   const router = useRouter();
   const firestore = getFirestore();
 
-  // Handle email/password sign-in
   const handleEmailPasswordSignIn = async (e: any) => {
     e.preventDefault();
     setErrorMessage("");
@@ -26,12 +26,10 @@ const SignIn = () => {
       setEmail("");
       setPassword("");
     } catch (e) {
-      console.error("Error signing in:", e);
       setErrorMessage("Error signing in. Please try again.");
     }
   };
 
-  // Handle Google sign-in
   const handleGoogleSignIn = async () => {
     setErrorMessage("");
     try {
@@ -41,27 +39,27 @@ const SignIn = () => {
       const userDoc = await getDoc(userRef);
 
       if (!userDoc.exists()) {
-        // This is the user's first time logging in with Google
-        const defaultUsername = user.email?.split('@')[0]; // Extract username from email
+        const defaultUsername = user.email?.split('@')[0];
         await setDoc(userRef, {
           email: user.email,
-          username: defaultUsername, // Set the default username
+          username: defaultUsername,
           createdAt: new Date(),
         });
       }
-      
       router.push('/discussion-board');
     } catch (e) {
-      console.error("Error with Google Sign-In:", e);
       setErrorMessage("Google sign-in failed. Please try again.");
     }
   };
 
   useEffect(() => {
-    if (user) {
-      router.push('/discussion-board');
-    }
-  }, [user, router]);
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        router.push('/discussion-board');
+      }
+    });
+    return () => unsubscribe(); // Cleanup the listener on component unmount
+  }, [router]);
 
   return (
     <div
@@ -70,13 +68,12 @@ const SignIn = () => {
     >
       <div className="bg-white/30 border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-md">
         <h1 className="text-5xl font-bold text-center text-white mb-4">
-          <span style={{ fontFamily: "Arial, sans-serif" }}>Welcome to </span>
-          <span className="text-yellow-500 italic island-moments">TabernaConcur</span>
+          <span>Welcome to </span>
+          <span className="text-yellow-500 italic">TabernaConcur</span>
         </h1>
 
         <button
           onClick={handleGoogleSignIn}
-          aria-label="Continue with Google"
           className="w-full flex items-center justify-center py-2 mt-4 mb-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 border border-gray-300"
         >
           <img
@@ -97,20 +94,16 @@ const SignIn = () => {
           <input
             type="email"
             placeholder="Email"
-            aria-label="Enter your email"
-            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 placeholder-gray-500"
+            className="w-full px-4 py-2 rounded-md bg-white/90"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          
-          {/* Password field */}
           <div className="relative">
             <input
               type={passwordVisible ? "text" : "password"}
               placeholder="Password"
-              aria-label="Enter your password"
-              className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 placeholder-gray-500"
+              className="w-full px-4 py-2 rounded-md bg-white/90"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -119,24 +112,19 @@ const SignIn = () => {
               type="button"
               onClick={() => setPasswordVisible(!passwordVisible)}
               className="absolute right-4 top-2 text-gray-500"
-              aria-label="Show/Hide Password"
             >
               {passwordVisible ? "Hide" : "Show"}
             </button>
           </div>
-
           <button
             type="submit"
-            aria-label="Click to login using your user credential"
             className="w-full py-2 mt-4 bg-yellow-500 text-white font-semibold rounded-md hover:bg-yellow-600"
             disabled={loading}
           >
             {loading ? "Signing In..." : "Log In"}
           </button>
-          {errorMessage && <p className="text-red-500 mt-4 text-center" aria-live="polite">{errorMessage}</p>}
-          {error && !errorMessage && <p className="text-red-500 mt-4 text-center" aria-live="polite">{error.message}</p>}
-
-          {/* Link to Sign Up */}
+          {errorMessage && <p className="text-red-500 mt-4 text-center font-semibold">{errorMessage}</p>}
+          {error && !errorMessage && <p className="text-red-500 mt-4 text-center font-semibold">{error.message}</p>}
           <div className="text-center mt-4">
             <p className="text-white">
               Don't have an account?{" "}
