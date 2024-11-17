@@ -39,7 +39,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         />
 
         {/* Main Content */}
-        <main className="flex-1 bg-gray-50 overflow-auto">{children}</main>
+        <main className="flex-1 bg-[#484242] overflow-auto">{children}</main>
 
         {/* Right Sidebar */}
         <RightSidebar />
