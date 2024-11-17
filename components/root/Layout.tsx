@@ -1,7 +1,7 @@
 // components/root/Layout.tsx
 'use client';
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation"; // Import usePathname here
 import TopBar from "./Topbar";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSideBar";
@@ -10,6 +10,7 @@ import { app } from "../../app/firebase/config";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
+  const pathname = usePathname(); // Use usePathname to get the current path
   const auth = getAuth(app);
 
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false);
@@ -17,6 +18,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const handleLeftSidebarToggle = () => {
     setIsLeftSidebarVisible(!isLeftSidebarVisible);
   };
+
+  // Check if the current route is the discussion-board route
+  const isDiscussionBoard = pathname === '/discussion-board';
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -41,8 +45,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         {/* Main Content */}
         <main className="flex-1 bg-[#484242] overflow-auto">{children}</main>
 
-        {/* Right Sidebar */}
-        <RightSidebar />
+        {/* Conditionally Render Right Sidebar */}
+        {isDiscussionBoard && <RightSidebar />}
       </div>
     </div>
   );
