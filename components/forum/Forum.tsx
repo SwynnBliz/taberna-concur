@@ -7,6 +7,7 @@ import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
 import { FaThumbsUp, FaThumbsDown, FaTrash } from 'react-icons/fa'; // Importing React Icons
+import Link from 'next/link';
 
 interface Post {
   id: string;
@@ -391,20 +392,20 @@ const Forum = () => {
                 <div className="flex items-center justify-between mb-4">
                   {/* Left Section: Image, Username, and Timestamp */}
                   <div className="flex items-center">
-                    <img
-                      src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
-                      alt="Profile"
-                      className="w-12 h-12 rounded-full mr-4"
-                      onLoad={() => fetchUserPhoto(post.userId)}
-                    />
+                    <Link href={`/profile-view/${post.userId}`}>
+                      <img
+                        src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full mr-4 cursor-pointer"
+                        onLoad={() => fetchUserPhoto(post.userId)}
+                      />
+                    </Link>
                     <div>
                       <p className="text-xl font-semibold text-white">{post.username}</p>
-                      <p className="text-sm text-gray-400">
-                        {formatTimestamp(post.createdAt)}
-                      </p>
+                      <p className="text-sm text-gray-400">{formatTimestamp(post.createdAt)}</p>
                     </div>
                   </div>
-
+  
                   {/* Right Section: Delete Button */}
                   <div>
                     {auth.currentUser?.uid === post.userId && (
@@ -451,12 +452,14 @@ const Forum = () => {
                     {Array.isArray(post.comments) && post.comments.length > 0 ? (
                       post.comments.map((comment, index) => (
                         <div key={index} className="flex items-start mb-3">
-                          <img
-                            src={userPhotos.get(comment.userId) || 'https://via.placeholder.com/150'}
-                            alt="Commenter profile"
-                            className="w-8 h-8 rounded-full mr-2"
-                            onLoad={() => fetchUserPhoto(comment.userId)}
-                          />
+                          <Link href={`/profile-view/${comment.userId}`}>
+                            <img
+                              src={userPhotos.get(comment.userId) || 'https://via.placeholder.com/150'}
+                              alt="Commenter profile"
+                              className="w-8 h-8 rounded-full mr-2 cursor-pointer"
+                              onLoad={() => fetchUserPhoto(comment.userId)}
+                            />
+                          </Link>
                           <div className="flex flex-col w-full">
                             <div className="flex flex-row justify-between">
                               <div>
@@ -473,19 +476,27 @@ const Forum = () => {
                               )}
                             </div>
                             <p>{comment.comment}</p>
-
+  
                             {/* Like/Dislike buttons for comments */}
                             <div className="flex gap-4 mt-2">
                               <button
                                 onClick={() => handleLikeComment(post.id, index)}
-                                className={`${comment.likedBy?.includes(auth.currentUser?.uid || '') ? 'text-blue-500' : 'text-gray-400'}`}
+                                className={`${
+                                  comment.likedBy?.includes(auth.currentUser?.uid || '')
+                                    ? 'text-blue-500'
+                                    : 'text-gray-400'
+                                }`}
                               >
                                 <FaThumbsUp className="w-4 h-4" />
                                 {comment.likes}
                               </button>
                               <button
                                 onClick={() => handleDislikeComment(post.id, index)}
-                                className={`${comment.dislikedBy.includes(auth.currentUser?.uid || '') ? 'text-red-500' : 'text-gray-400'}`}
+                                className={`${
+                                  comment.dislikedBy.includes(auth.currentUser?.uid || '')
+                                    ? 'text-red-500'
+                                    : 'text-gray-400'
+                                }`}
                               >
                                 <FaThumbsDown className="w-4 h-4" />
                                 {comment.dislikes}

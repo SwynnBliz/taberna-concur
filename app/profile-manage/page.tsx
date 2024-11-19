@@ -28,6 +28,7 @@ const ProfilePage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Separate state for confirm password visibility
   const firestore = getFirestore();
   const authInstance = getAuth();
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Initialize Cloudinary with environment variables
   const cloudinary = new Cloudinary({ cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME });
@@ -40,6 +41,7 @@ const ProfilePage = () => {
         const userRef = doc(firestore, 'users', user.uid);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
+          setDataLoaded(true);
           setUserData({
             username: userDoc.data()?.username || '',
             email: user.email || '',
@@ -162,14 +164,25 @@ const ProfilePage = () => {
           {/* Profile Photo and Username Section */}
           <div className="flex justify-between items-start mb-6 border-b border-white py-2 px-10">
             <div className="text-center">
-              <img
-                src={newPhotoUrl || userData.profilePhoto || "https://via.placeholder.com/150"}
-                alt="Profile Photo"
-                className="w-56 h-56 rounded-full ml-10 mb-10 mt-0 mr-80"
-              />
+                {/* Show loading state while data is being fetched */}
+                {!dataLoaded ? (
+                  <div className="w-56 h-56 rounded-full bg-[#cccccc] flex items-center justify-center ml-10 mb-10 mt-0 mr-36">
+                    <p className="text-[#aaaaaa] text-lg font-semibold">Loading Profile...</p>
+                  </div>
+                ) : isLoading ? (
+                  <div className="w-56 h-56 rounded-full bg-[#cccccc] flex items-center justify-center ml-10 mb-10 mt-0 mr-36">
+                    <p className="text-[#aaaaaa] text-lg font-semibold">Loading Image...</p>
+                  </div>
+                ) : (
+                  <img
+                    src={newPhotoUrl || userData.profilePhoto || "https://via.placeholder.com/150"}
+                    alt="Profile Photo"
+                    className="w-56 h-56 rounded-full ml-10 mb-10 mt-0 mr-80"
+                  />
+                )}
             </div>
 
-            <div className="flex flex-col items-start w-2/3 ml-4">
+            <div className="flex flex-col items-start w-2/3">
               <label className="text-white">Profile Picture</label>
               <input
                 type="file"
@@ -178,14 +191,19 @@ const ProfilePage = () => {
                 accept="image/*" 
               />
               <label htmlFor="username" className="text-white mb-2">Username</label>
-              <input
-                id="username"
-                type="text"
-                value={userData.username}
-                onChange={(e) => setUserData({ ...userData, username: e.target.value })}
-                placeholder="Username"
-                className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-              />
+              {/* Show loading text for username */}
+              {!dataLoaded ? (
+                  <div className="w-full h-10 bg-gray-300 animate-pulse"></div>
+                ) : (
+                <input
+                  id="username"
+                  type="text"
+                  value={userData.username}
+                  onChange={(e) => setUserData({ ...userData, username: e.target.value })}
+                  placeholder="Username"
+                  className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                />
+              )}
             </div>
           </div>
 
@@ -195,26 +213,36 @@ const ProfilePage = () => {
               {/* Bio Section */}
               <div className="mb-2">
                 <label htmlFor="bio" className="text-white mb-2">Additional Info (Bio)</label>
-                <textarea
-                  id="bio"
-                  value={userData.bio}
-                  onChange={(e) => setUserData({ ...userData, bio: e.target.value })}
-                  placeholder="Tell us something about you..."
-                  className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 h-32 resize-none"
-                />
+                {/* Loading state for Bio */}
+                {!dataLoaded ? (
+                  <div className="w-full h-32 bg-gray-300 animate-pulse"></div>
+                ) : (
+                  <textarea
+                    id="bio"
+                    value={userData.bio || ''}
+                    onChange={(e) => setUserData({ ...userData, bio: e.target.value })}
+                    placeholder="Write a short bio"
+                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 h-32 resize-none"
+                  />
+                )}
               </div>
 
               {/* Contact Number */}
               <div className="mb-4">
                 <label htmlFor="contactNumber" className="text-white mb-2">Contact Number</label>
-                <input
-                  id="contactNumber"
-                  type="text"
-                  value={userData.contactNumber}
-                  onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
-                  placeholder="Contact Number"
-                  className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-                />
+                {/* Show loading state for Contact Number */}
+                {!dataLoaded ? (
+                  <div className="w-full h-10 bg-gray-300 animate-pulse"></div>
+                ) : (
+                  <input
+                    id="contactNumber"
+                    type="text"
+                    value={userData.contactNumber || ''}
+                    onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
+                    placeholder="Contact Number"
+                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                  />
+                )}
               </div>
             </div>
 
@@ -264,6 +292,8 @@ const ProfilePage = () => {
                     </div>
                   </div>
 
+                  <PasswordStrengthChecker password={newPassword} />
+
                   <div className="mb-2">
                     <label htmlFor="confirmPassword" className="text-white mb-2">Confirm New Password</label>
                     <div className="relative">
@@ -304,12 +334,13 @@ const ProfilePage = () => {
 
           {/* Update Button */}
           <div className="text-center mt-8">
-            <button
-              onClick={handleUpdateProfile}
-              className="w-48 py-2 px-4 bg-yellow-500 hover:bg-yellow-600 rounded text-white"
-            >
-              {isLoading ? 'Updating...' : 'Update Profile'}
-            </button>
+          <button
+            onClick={handleUpdateProfile}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md"
+            disabled={isLoading} // Disable button while loading
+          >
+            {isLoading ? 'Updating...' : 'Update Profile'}
+          </button>
           </div>
         </div>
       </div>

@@ -150,8 +150,11 @@ const SignUp = () => {
           >
             {loading ? "Signing Up..." : "Sign Up"}
           </button>
-          {errorMessage && <p className="text-red-500 mt-4 text-center font-semibold">{errorMessage}</p>}
-          {error && !errorMessage && <p className="text-red-500 mt-4 text-center font-semibold">{error.message}</p>}
+          {errorMessage && (
+            <div className="bg-red-500 text-white text-center w-10/12 rounded p-2 mt-4 ml-8">
+              {errorMessage}
+            </div>
+          )}
           <div className="text-center mt-4">
             <p className="text-white">
               Already have an account?{" "}

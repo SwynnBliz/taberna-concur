@@ -67,7 +67,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         {isProfileMenuOpen && (
           <div className="absolute right-0 mt-2 bg-[#363232] text-black p-4 rounded-md shadow-lg w-48">
             <button
-              onClick={() => router.push("/profile")}
+              onClick={() => router.push("/profile-manage")}
               className="w-full text-left px-4 py-2 mb-2 rounded-md hover:bg-[#302C2C] transition duration-200 text-white"
             >
               Update Profile

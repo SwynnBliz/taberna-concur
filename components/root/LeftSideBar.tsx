@@ -45,7 +45,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         <li>
           <button
             className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
-            onClick={() => router.push('')}
+            onClick={() => router.push('/discussion-board')}
           >
             Educational
           </button>
@@ -53,7 +53,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         <li>
           <button
             className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
-            onClick={() => router.push('')}
+            onClick={() => router.push('/discussion-board')}
           >
             Quiz
           </button>
@@ -61,7 +61,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         <li>
           <button
             className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
-            onClick={() => router.push('')}
+            onClick={() => router.push('/discussion-board')}
           >
             Collaboration
           </button>
@@ -69,7 +69,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         <li>
           <button
             className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
-            onClick={() => router.push('/profile')}
+            onClick={() => router.push('/profile-manage')}
           >
             Profile
           </button>
