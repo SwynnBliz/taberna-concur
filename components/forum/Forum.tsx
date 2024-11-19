@@ -17,6 +17,7 @@ interface Post {
   createdAt: any;
   likes: number;
   dislikes: number;
+  updatedAt?: any;
   comments: { 
     comment: string;
     createdAt: any;
@@ -516,7 +517,17 @@ const Forum = () => {
                       <p className="text-xl font-semibold text-white">
                         {usernames.get(post.userId) || "Loading..."}
                       </p>
-                      <p className="text-sm text-gray-400">{formatTimestamp(post.createdAt)}</p>
+
+                      {/* Check if updatedAt exists */}
+                      <p className="text-sm text-gray-400">
+                        {post.updatedAt ? (
+                          <>
+                            {formatTimestamp(post.updatedAt)} <span className="text-gray-400">(edited)</span>
+                          </>
+                        ) : (
+                          formatTimestamp(post.createdAt)
+                        )}
+                      </p>
                     </div>
                   </div>
   
@@ -616,25 +627,35 @@ const Forum = () => {
                                 <p className="font-semibold text-white">
                                   {usernames.get(comment.userId) || "Loading..."}
                                 </p>
-                                <p className="text-sm text-gray-500">{formatTimestamp(comment.createdAt)}</p>
+                                
+                                {/* Check if updatedAt exists */}
+                                <p className="text-sm text-gray-400">
+                                  {comment.updatedAt ? (
+                                    <>
+                                      {formatTimestamp(comment.updatedAt)} <span className="text-gray-400">(edited)</span>
+                                    </>
+                                  ) : (
+                                    formatTimestamp(comment.createdAt)
+                                  )}
+                                </p>
                               </div>
-                                {/* Right Section: Update and Delete Buttons in the same container */}
-                                {auth.currentUser?.uid === comment.userId && (
-                                  <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                                    <button
-                                      onClick={() => handleUpdateComment(post.id, index)}
-                                      className="hover:text-yellow-500"
-                                    >
-                                      <FaEdit className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteComment(post.id, index)}
-                                      className="hover:text-yellow-500"
-                                    >
-                                      <FaTrash className="w-5 h-5" />
-                                    </button>
-                                  </div>
-                                )}
+                              {/* Right Section: Update and Delete Buttons in the same container */}
+                              {auth.currentUser?.uid === comment.userId && (
+                                <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
+                                  <button
+                                    onClick={() => handleUpdateComment(post.id, index)}
+                                    className="hover:text-yellow-500"
+                                  >
+                                    <FaEdit className="w-5 h-5" />
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteComment(post.id, index)}
+                                    className="hover:text-yellow-500"
+                                  >
+                                    <FaTrash className="w-5 h-5" />
+                                  </button>
+                                </div>
+                              )}
                             </div>
 
                             {isEditingComment && (
