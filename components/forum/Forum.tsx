@@ -1,12 +1,12 @@
 // components/forum/Forum.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc } from 'firebase/firestore';
 import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash } from 'react-icons/fa'; // Importing React Icons
 
 interface Post {
   id: string;
@@ -305,6 +305,77 @@ const Forum = () => {
     return 'https://via.placeholder.com/150'; // Default placeholder image
   };
 
+  const handleDeletePost = async (postId: string) => {
+    try {
+      console.log("Attempting to delete post with ID:", postId);
+      const userId = auth.currentUser?.uid;
+  
+      if (!userId) {
+        console.error("You must be logged in to delete posts.");
+        return;
+      }
+  
+      const postRef = doc(firestore, 'posts', postId);
+      const postDoc = await getDoc(postRef);
+  
+      if (postDoc.exists()) {
+        const postData = postDoc.data() as Post;
+  
+        if (postData.userId !== userId) {
+          console.error("You can only delete your own posts.");
+          return;
+        }
+  
+        // Uncomment for soft delete:
+        // await updateDoc(postRef, { deleted: true });
+  
+        // For hard delete:
+        await deleteDoc(postRef);
+        console.log("Post deleted successfully.");
+      } else {
+        console.error("Post does not exist.");
+      }
+    } catch (error) {
+      console.error("Error deleting post:", error);
+    }
+  };
+
+  const handleDeleteComment = async (postId: string, commentIndex: number) => {
+    try {
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        console.error("You must be logged in to delete comments.");
+        return;
+      }
+  
+      const postRef = doc(firestore, 'posts', postId);
+      const postDoc = await getDoc(postRef);
+  
+      if (postDoc.exists()) {
+        const postData = postDoc.data() as Post;
+  
+        // Ensure that the comment belongs to the logged-in user
+        if (postData.comments[commentIndex].userId !== userId) {
+          console.error("You can only delete your own comments.");
+          return;
+        }
+  
+        // Remove the comment from the comments array
+        const updatedComments = postData.comments.filter((_, index) => index !== commentIndex);
+  
+        await updateDoc(postRef, {
+          comments: updatedComments,
+        });
+  
+        console.log("Comment deleted successfully.");
+      } else {
+        console.error("Post does not exist.");
+      }
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
   return (
     <div className="flex flex-col">
       <PostForum />
@@ -317,18 +388,33 @@ const Forum = () => {
           ) : (
             posts.map((post) => (
               <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383434] p-6">
-                <div className="flex items-center mb-4">
-                  <img
-                    src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
-                    alt="Profile"
-                    className="w-12 h-12 rounded-full mr-4"
-                    onLoad={() => fetchUserPhoto(post.userId)}
-                  />
+                <div className="flex items-center justify-between mb-4">
+                  {/* Left Section: Image, Username, and Timestamp */}
+                  <div className="flex items-center">
+                    <img
+                      src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
+                      alt="Profile"
+                      className="w-12 h-12 rounded-full mr-4"
+                      onLoad={() => fetchUserPhoto(post.userId)}
+                    />
+                    <div>
+                      <p className="text-xl font-semibold text-white">{post.username}</p>
+                      <p className="text-sm text-gray-400">
+                        {formatTimestamp(post.createdAt)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Section: Delete Button */}
                   <div>
-                    <p className="text-xl font-semibold text-white">{post.username}</p>
-                    <p className="text-sm text-gray-400">
-                      {formatTimestamp(post.createdAt)}
-                    </p>
+                    {auth.currentUser?.uid === post.userId && (
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        <FaTrash className="w-5 h-5" />
+                      </button>
+                    )}
                   </div>
                 </div>
                 <p className="text-lg text-white mb-4" style={{ whiteSpace: 'pre-wrap' }}>
@@ -371,11 +457,23 @@ const Forum = () => {
                             className="w-8 h-8 rounded-full mr-2"
                             onLoad={() => fetchUserPhoto(comment.userId)}
                           />
-                          <div>
-                            <p className="font-semibold">{comment.username}</p>
+                          <div className="flex flex-col w-full">
+                            <div className="flex flex-row justify-between">
+                              <div>
+                                <p className="font-semibold">{comment.username}</p>
+                                <p className="text-sm text-gray-500">{formatTimestamp(comment.createdAt)}</p>
+                              </div>
+                              {auth.currentUser?.uid === comment.userId && (
+                                <button
+                                  onClick={() => handleDeleteComment(post.id, index)}
+                                  className="text-red-500 hover:text-red-700 ml-auto"
+                                >
+                                  <FaTrash className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
                             <p>{comment.comment}</p>
-                            <p className="text-sm text-gray-500">{formatTimestamp(comment.createdAt)}</p>
-                            
+
                             {/* Like/Dislike buttons for comments */}
                             <div className="flex gap-4 mt-2">
                               <button
