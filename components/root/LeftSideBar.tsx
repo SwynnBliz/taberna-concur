@@ -1,7 +1,7 @@
 // components/root/LeftSidebar.tsx
 import { useRouter } from 'next/navigation';
 import { getAuth, signOut } from 'firebase/auth';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface LeftSidebarProps {
   isVisible: boolean;
@@ -11,6 +11,16 @@ interface LeftSidebarProps {
 const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Get the current user's ID from Firebase Authentication
+  useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      setUserId(user.uid);
+    }
+  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -67,9 +77,10 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
           </button>
         </li>
         <li>
+          {/* Dynamically navigate to the user's profile using their UID */}
           <button
             className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
-            onClick={() => router.push('/profile-manage')}
+            onClick={() => userId && router.push(`/profile-view/${userId}`)}
           >
             Profile
           </button>

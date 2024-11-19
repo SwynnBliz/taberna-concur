@@ -77,7 +77,7 @@ const ProfileView = () => {
           {/* Right Section: Bio and Contact Number */}
           <div className="flex flex-col w-2/3">
             {/* Bio */}
-            <div className="bg-[#4A4A4A] p-4 rounded-lg mb-4 flex-grow min-h-80">
+            <div className="bg-[#4A4A4A] p-4 rounded-lg mb-4 flex-grow min-h-60">
               <p className="text-gray-300 italic">
                 <span className="font-bold text-white">Bio: </span><br></br>
                 {userData.bio || 'No bio available'}
