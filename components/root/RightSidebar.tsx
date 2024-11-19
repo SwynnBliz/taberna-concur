@@ -2,7 +2,7 @@
 'use client';
 import { useState, useEffect } from "react";
 import { firestore } from "../../app/firebase/config";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { FaBookmark } from "react-icons/fa";
 
@@ -21,25 +21,32 @@ const RightSidebar = () => {
     setLoading(true);
     try {
       const postsRef = collection(firestore, "posts");
-
+  
       const unsubscribe = onSnapshot(postsRef, (querySnapshot) => {
         const posts = querySnapshot.docs
           .map((doc) => {
             const data = doc.data();
             const bookmarks = data.bookmarks || [];
-
-            // Check if the current user has bookmarked this post
-            const isBookmarkedByUser = bookmarks.some(
-              (bookmark: { userId: string }) => bookmark.userId === userId
-            );
-
-            return isBookmarkedByUser ? data : null;
+  
+            // Find the bookmark by the current user
+            const userBookmark = bookmarks.find((bookmark: { userId: string }) => bookmark.userId === userId);
+            
+            if (userBookmark) {
+              return {
+                ...data,
+                bookmarkCreatedAt: userBookmark.bookmarkCreatedAt, // Add bookmarkCreatedAt to post data
+              };
+            }
+            return null;
           })
           .filter((post) => post !== null); // Remove null values
-
-        setBookmarkedPosts(posts);
+  
+        // Sort posts by bookmarkCreatedAt in descending order
+        const sortedPosts = posts.sort((a, b) => b.bookmarkCreatedAt - a.bookmarkCreatedAt);
+  
+        setBookmarkedPosts(sortedPosts);
       });
-
+  
       return () => unsubscribe();
     } catch (error) {
       console.error("Error fetching bookmarked posts: ", error);

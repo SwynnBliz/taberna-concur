@@ -49,6 +49,9 @@ const Forum = () => {
   const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null); // Define state for comment index
   const [isEditingComment, setIsEditingComment] = useState(false); // State to toggle editing mode
   const [editContentComment, setEditContentComment] = useState(''); // Store the new comment content
+  const [showComments, setShowComments] = useState<{ [key: string]: boolean }>(
+    {}
+  );
 
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -662,129 +665,145 @@ const Forum = () => {
                 <p className="border-b-2 border-white py-2 w-auto text-white text-xl p-2 ml-2 mb-2">
                   Comments ({post.comments.length})
                 </p>
-                <div className="comments-section ml-2">
-                  <div className="text-white">
-                    {Array.isArray(post.comments) && post.comments.length > 0 ? (
-                      post.comments.map((comment, index) => (
-                        <div key={index} className="flex items-start mb-3">
-                          <Link href={`/profile-view/${comment.userId}`}>
-                            <img
-                              src={userPhotos.get(comment.userId) || 'https://via.placeholder.com/150'}
-                              alt="Commenter profile"
-                              className="w-8 h-8 rounded-full mr-2 cursor-pointer"
-                              onLoad={() => fetchUserPhoto(comment.userId)}
-                            />
-                          </Link>
-                          <div className="flex flex-col w-full">
-                            <div className="flex flex-row justify-between">
-                              <div>
-                                <p className="font-semibold text-white">
-                                  {usernames.get(comment.userId) || "Loading..."}
-                                </p>
-                                
-                                {/* Check if updatedAt exists */}
-                                <p className="text-sm text-gray-400">
-                                  {comment.updatedAt ? (
-                                    <>
-                                      {formatTimestamp(comment.updatedAt)} <span className="text-gray-400">(edited)</span>
-                                    </>
-                                  ) : (
-                                    formatTimestamp(comment.createdAt)
-                                  )}
-                                </p>
-                              </div>
-                              {/* Right Section: Update and Delete Buttons in the same container */}
-                              {auth.currentUser?.uid === comment.userId && (
-                                <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                                  <button
-                                    onClick={() => handleUpdateComment(post.id, index)}
-                                    className="hover:text-yellow-500"
-                                  >
-                                    <FaEdit className="w-5 h-5" />
-                                  </button>
-                                  <button
-                                    onClick={() => handleDeleteComment(post.id, index)}
-                                    className="hover:text-yellow-500"
-                                  >
-                                    <FaTrash className="w-5 h-5" />
-                                  </button>
-                                </div>
-                              )}
-                            </div>
 
-                            {isEditingComment && (
-                              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-                                <div className="bg-white p-6 rounded-lg w-96">
-                                  <textarea
-                                    value={editContentComment} // Pre-fill the content
-                                    onChange={(e) => setEditContentComment(e.target.value)} // Update state on change
-                                    className="w-full p-3 rounded-lg border border-gray-300 text-black"
-                                    rows={5}
-                                  />
-                                  <div className="mt-4 flex justify-end space-x-2">
+                {/* Toggle Comments Button */}
+                <button
+                  onClick={() =>
+                    setShowComments((prevState) => ({
+                      ...prevState,
+                      [post.id]: !prevState[post.id], // Toggle visibility for the current post
+                    }))
+                  }
+                  className="ml-1 mb-4 text-white bg-[#2c2c2c] px-4 py-2 rounded-md hover:bg-yellow-500"
+                >
+                  {showComments[post.id] ? "Hide Comments" : "Show Comments"}
+                </button>
+
+                {/* Comments Section */}
+                {showComments[post.id] && (
+                  <div className="comments-section ml-2">
+                    <div className="text-white">
+                      {Array.isArray(post.comments) && post.comments.length > 0 ? (
+                        post.comments.map((comment, index) => (
+                          <div key={index} className="flex items-start mb-3">
+                            <Link href={`/profile-view/${comment.userId}`}>
+                              <img
+                                src={
+                                  userPhotos.get(comment.userId) || "https://via.placeholder.com/150"
+                                }
+                                alt="Commenter profile"
+                                className="w-8 h-8 rounded-full mr-2 cursor-pointer"
+                                onLoad={() => fetchUserPhoto(comment.userId)}
+                              />
+                            </Link>
+                            <div className="flex flex-col w-full">
+                              <div className="flex flex-row justify-between">
+                                <div>
+                                  <p className="font-semibold text-white">
+                                    {usernames.get(comment.userId) || "Loading..."}
+                                  </p>
+                                  <p className="text-sm text-gray-400">
+                                    {comment.updatedAt ? (
+                                      <>
+                                        {formatTimestamp(comment.updatedAt)}{" "}
+                                        <span className="text-gray-400">(edited)</span>
+                                      </>
+                                    ) : (
+                                      formatTimestamp(comment.createdAt)
+                                    )}
+                                  </p>
+                                </div>
+                                {auth.currentUser?.uid === comment.userId && (
+                                  <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
                                     <button
-                                      onClick={() => setIsEditingComment(false)} // Cancel editing
-                                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                                      onClick={() => handleUpdateComment(post.id, index)}
+                                      className="hover:text-yellow-500"
                                     >
-                                      Cancel
+                                      <FaEdit className="w-5 h-5" />
                                     </button>
                                     <button
-                                      onClick={handleSaveComment} // Save comment
-                                      className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                                      onClick={() => handleDeleteComment(post.id, index)}
+                                      className="hover:text-yellow-500"
                                     >
-                                      Save
+                                      <FaTrash className="w-5 h-5" />
                                     </button>
                                   </div>
-                                </div>
+                                )}
                               </div>
-                            )}
 
-                            <p>{comment.comment}</p>
-  
-                            {/* Like/Dislike buttons for comments */}
-                            <div className="flex gap-4 mt-2">
-                              <button
-                                onClick={() => handleLikeComment(post.id, index)}
-                                className={`${
-                                  comment.likedBy?.includes(auth.currentUser?.uid || '')
-                                    ? 'text-yellow-500'
-                                    : 'text-gray-400'
-                                }`}
-                              >
-                                <FaThumbsUp className="w-4 h-4" />
-                                {comment.likes}
-                              </button>
-                              <button
-                                onClick={() => handleDislikeComment(post.id, index)}
-                                className={`${
-                                  comment.dislikedBy.includes(auth.currentUser?.uid || '')
-                                    ? 'text-yellow-500'
-                                    : 'text-gray-400'
-                                }`}
-                              >
-                                <FaThumbsDown className="w-4 h-4" />
-                                {comment.dislikes}
-                              </button>
+                              {isEditingComment && (
+                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+                                  <div className="bg-white p-6 rounded-lg w-96">
+                                    <textarea
+                                      value={editContentComment}
+                                      onChange={(e) => setEditContentComment(e.target.value)}
+                                      className="w-full p-3 rounded-lg border border-gray-300 text-black"
+                                      rows={5}
+                                    />
+                                    <div className="mt-4 flex justify-end space-x-2">
+                                      <button
+                                        onClick={() => setIsEditingComment(false)}
+                                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        onClick={handleSaveComment}
+                                        className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                                      >
+                                        Save
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              <p>{comment.comment}</p>
+
+                              <div className="flex gap-4 mt-2">
+                                <button
+                                  onClick={() => handleLikeComment(post.id, index)}
+                                  className={`${
+                                    comment.likedBy?.includes(auth.currentUser?.uid || "")
+                                      ? "text-yellow-500"
+                                      : "text-gray-400"
+                                  }`}
+                                >
+                                  <FaThumbsUp className="w-4 h-4" />
+                                  {comment.likes}
+                                </button>
+                                <button
+                                  onClick={() => handleDislikeComment(post.id, index)}
+                                  className={`${
+                                    comment.dislikedBy.includes(auth.currentUser?.uid || "")
+                                      ? "text-yellow-500"
+                                      : "text-gray-400"
+                                  }`}
+                                >
+                                  <FaThumbsDown className="w-4 h-4" />
+                                  {comment.dislikes}
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="pl-2 mb-2">No comments yet</p>
-                    )}
+                        ))
+                      ) : (
+                        <p className="pl-2 mb-2">No comments yet</p>
+                      )}
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Add a comment..."
-                    className="text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleAddComment(post.id, e.currentTarget.value);
-                        e.currentTarget.value = '';
-                      }
-                    }}
-                  />
-                </div>
+                )}
+                <input
+                  type="text"
+                  placeholder="Add a comment..."
+                  className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      handleAddComment(post.id, e.currentTarget.value);
+                      e.currentTarget.value = "";
+                    }
+                  }}
+                />
               </div>
             ))
           )}
