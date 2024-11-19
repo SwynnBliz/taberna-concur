@@ -606,7 +606,10 @@ const Forum = () => {
         <div className="flex space-x-4">
           {/* Create Post Button with Tooltip */}
           <div className="relative group inline-flex items-center">
-            <button onClick={togglePostForum} className="text-white hover:text-yellow-500">
+            <button
+              onClick={togglePostForum}
+              className={`text-white ${isPostForumVisible ? 'text-yellow-500' : 'hover:text-yellow-500'}`}
+            >
               <FaPlus className="w-6 h-6" />
             </button>
 
@@ -618,10 +621,13 @@ const Forum = () => {
 
           {/* Search Button with Tooltip */}
           <div className="relative group inline-flex items-center">
-            <button onClick={toggleSearch} className="text-white hover:text-yellow-500">
+            <button
+              onClick={toggleSearch}
+              className={`text-white ${isSearchVisible ? 'text-yellow-500' : 'hover:text-yellow-500'}`}
+            >
               <FaSearch className="w-6 h-6" />
             </button>
-            
+
             {/* Tooltip */}
             <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
               Search Posts
@@ -694,7 +700,7 @@ const Forum = () => {
                         </button>
 
                         {/* Tooltip */}
-                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                           Bookmark Post
                         </div>
                       </div>
@@ -709,7 +715,7 @@ const Forum = () => {
                         </button>
 
                         {/* Tooltip */}
-                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                           Update Post
                         </div>
                       </div>
@@ -723,7 +729,7 @@ const Forum = () => {
                           <FaTrash className="w-5 h-5" />
                         </button>
                         {/* Tooltip */}
-                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                             Delete Post
                         </div>
                       </div>
@@ -797,7 +803,9 @@ const Forum = () => {
                       [post.id]: !prevState[post.id], // Toggle visibility for the current post
                     }))
                   }
-                  className="ml-1 mb-4 text-white bg-[#2c2c2c] px-4 py-2 rounded-md hover:bg-yellow-500"
+                  className={`ml-1 mb-4 text-white px-4 py-2 rounded-md ${
+                    showComments[post.id] ? 'bg-yellow-500' : 'bg-[#2c2c2c] hover:bg-yellow-500'
+                  }`}
                 >
                   {showComments[post.id] ? "Hide Comments" : "Show Comments"}
                 </button>
@@ -848,7 +856,7 @@ const Forum = () => {
                                       </button>
 
                                       {/* Tooltip */}
-                                      <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                      <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                                           Update Comment
                                       </div>
                                     </div>
@@ -862,7 +870,7 @@ const Forum = () => {
                                       </button>
 
                                       {/* Tooltip */}
-                                      <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                      <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                                           Delete Comment
                                       </div>
                                     </div>

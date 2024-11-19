@@ -82,14 +82,21 @@ const ProfileView = () => {
   return (
     <Layout>
       <div className="max-w-7xl h-5/6 mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative">
-        {/* Edit Button - Visible only if the logged-in user is the same as the profile */}
+        {/* Edit Button with Tooltip - Visible only if the logged-in user is the same as the profile */}
         {currentUserId === id && (
-          <button
-            onClick={handleEditProfile}
-            className="absolute top-4 right-4 p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500"
-          >
-            <FaEdit />
-          </button>
+          <div className="relative group">
+            <button
+              onClick={handleEditProfile}
+              className="absolute -top-4 -right-4 p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500"
+            >
+              <FaEdit />
+            </button>
+
+            {/* Tooltip */}
+            <div className="absolute top-full mt-4 -right-9 transform translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+              Edit Profile
+            </div>
+          </div>
         )}
 
         <div className="mt-6 flex items-start space-x-8"> {/* Flex container with space between */}

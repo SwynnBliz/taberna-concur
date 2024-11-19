@@ -184,12 +184,20 @@ const ProfilePage = () => {
 
             <div className="flex flex-col items-start w-2/3">
               <label className="text-white">Profile Picture</label>
-              <input
-                type="file"
-                onChange={handleProfilePhotoChange}
-                className="mb-10 text-white"
-                accept="image/*" 
-              />
+              <div className="relative group">
+                {/* File Input */}
+                <input
+                  type="file"
+                  onChange={handleProfilePhotoChange}
+                  className="mb-10 text-white"
+                  accept="image/*"
+                />
+                
+                {/* Tooltip */}
+                <div className="absolute top-full transform -translate-x-3 -translate-y-9 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                  Upload Profile Photo
+                </div>
+              </div>
               <label htmlFor="username" className="text-white mb-2">Username</label>
               {/* Show loading text for username */}
               {!dataLoaded ? (
