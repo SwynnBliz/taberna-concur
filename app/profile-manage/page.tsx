@@ -41,7 +41,6 @@ const ProfilePage = () => {
         const userRef = doc(firestore, 'users', user.uid);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
-          setDataLoaded(true);
           setUserData({
             username: userDoc.data()?.username || '',
             email: user.email || '',
@@ -50,6 +49,7 @@ const ProfilePage = () => {
             profilePhoto: userDoc.data()?.profilePhoto || '',
           });
 
+          setDataLoaded(true);
           // Check if the user logged in with Google
           if (user.providerData.some((provider) => provider.providerId === 'google.com')) {
             setIsGoogleUser(true);

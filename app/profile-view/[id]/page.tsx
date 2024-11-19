@@ -86,7 +86,7 @@ const ProfileView = () => {
         {currentUserId === id && (
           <button
             onClick={handleEditProfile}
-            className="absolute top-4 right-4 p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-[#302C2C]"
+            className="absolute top-4 right-4 p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500"
           >
             <FaEdit />
           </button>

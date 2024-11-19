@@ -116,7 +116,7 @@ const PostForum = () => {
           <div className="flex justify-center">
             <button
               onClick={handlePostCreation}
-              className="py-1 px-4 bg-yellow-500 text-white rounded-md hover:bg-yellow-400 transition-all duration-200"
+              className="py-1 px-4 bg-[#2c2c2c] text-white rounded-md hover:bg-yellow-500 transition-all duration-200"
               disabled={uploading}
             >
               {uploading ? 'Creating Post...' : 'Post'}

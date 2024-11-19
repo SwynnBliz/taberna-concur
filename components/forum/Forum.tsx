@@ -6,7 +6,7 @@ import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 
 interface Post {
@@ -25,6 +25,7 @@ interface Post {
     dislikes: number; // Add dislikes field for comments
     likedBy: string[]; // Track users who liked the comment
     dislikedBy: string[]; // Track users who disliked the comment
+    updatedAt?: any;
   }[]; 
   likedBy: string[];
   dislikedBy: string[];
@@ -36,9 +37,13 @@ const Forum = () => {
   const auth = getAuth();
   const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); // Track user's like/dislike status
   const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
-  const usernameCache = new Map<string, string>(); // Cache to store fetched usernames
   const [usernames, setUsernames] = useState<Map<string, string>>(new Map());
-
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [isEditingPost, setIsEditingPost] = useState(false); // State to toggle editing mode
+  const [editContentPost, setEditContentPost] = useState(''); // Store the new post content
+  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null); // Define state for comment index
+  const [isEditingComment, setIsEditingComment] = useState(false); // State to toggle editing mode
+  const [editContentComment, setEditContentComment] = useState(''); // Store the new comment content
 
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -411,6 +416,79 @@ const Forum = () => {
     fetchUsernames();
   }, [posts]);
 
+  const handleUpdatePost = (postId: string) => {
+    const postToEdit = posts.find(post => post.id === postId);
+    if (postToEdit) {
+      setEditingPostId(postId);  // Track the post being edited
+      setEditContentPost(postToEdit.message); // Pre-fill the content
+      setIsEditingPost(true); // Enable editing mode
+    }
+  };
+  
+  // Handle form submission for updating the post
+  const handleSavePost = async () => {
+    if (!editingPostId) return; // Ensure we have a post to edit
+  
+    const userId = auth.currentUser?.uid;
+    if (!userId) return; // Ensure the user is authenticated
+  
+    // Reference the post to update based on editingPostId
+    const postRef = doc(firestore, 'posts', editingPostId); 
+    await updateDoc(postRef, {
+      message: editContentPost, // Update the content of the post
+      updatedAt: new Date(), // Set the updated timestamp
+    });
+  
+    setIsEditingPost(false); // Exit editing mode
+    setEditContentPost(''); // Clear the edit content
+    setEditingPostId(null); // Clear the tracking state after saving
+  };
+
+  const handleUpdateComment = (postId: string, commentIndex: number) => {
+    const postToEdit = posts.find(post => post.id === postId);
+    if (postToEdit) {
+      const commentToEdit = postToEdit.comments[commentIndex];
+      if (commentToEdit) {
+        setEditingPostId(postId);  // Track the post being edited
+        setEditingCommentIndex(commentIndex); // Track the comment being edited by its index
+        setEditContentComment(commentToEdit.comment); // Pre-fill the content of the comment
+        setIsEditingComment(true); // Enable editing mode for comments
+      }
+    }
+  };
+  
+
+  const handleSaveComment = async () => {
+    if (editingPostId === null || editingCommentIndex === null) return;
+  
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+  
+    const postRef = doc(firestore, 'posts', editingPostId);
+    const postToUpdate = await getDoc(postRef);
+    const postData = postToUpdate.data() as Post;
+  
+    // Get the comment to update using its index
+    const commentToUpdate = postData.comments[editingCommentIndex];
+  
+    // Update the comment's content
+    postData.comments[editingCommentIndex] = {
+      ...commentToUpdate,
+      comment: editContentComment,
+      updatedAt: new Date(),
+    };
+  
+    // Save the updated post
+    await updateDoc(postRef, {
+      comments: postData.comments,
+    });
+  
+    setIsEditingComment(false);
+    setEditContentComment('');
+    setEditingPostId(null);
+    setEditingCommentIndex(null); // Reset the index after saving
+  };
+
   return (
     <div className="flex flex-col">
       <PostForum />
@@ -442,21 +520,57 @@ const Forum = () => {
                     </div>
                   </div>
   
-                  {/* Right Section: Delete Button */}
-                  <div>
-                    {auth.currentUser?.uid === post.userId && (
-                      <button
-                        onClick={() => handleDeletePost(post.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
-                    )}
+                  {/* Right Section: Update and Delete Buttons */}
+                  <div className="flex space-x-2">
+                      {auth.currentUser?.uid === post.userId && !isEditingPost && (
+                        <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
+                          <button
+                            onClick={() => handleUpdatePost(post.id)}
+                            className="text-white hover:text-yellow-500"
+                          >
+                            <FaEdit className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePost(post.id)}
+                            className="text-white hover:text-yellow-500"
+                          >
+                            <FaTrash className="w-5 h-5" />
+                          </button>
+                        </div>
+                      )}
                   </div>
                 </div>
                 <p className="text-lg text-white mb-4" style={{ whiteSpace: 'pre-wrap' }}>
                   {post.message}
                 </p>
+
+                {isEditingPost && (
+                  <div className="fixed inset-0 bg-[#484242] bg-opacity-80 flex items-center justify-center z-50">
+                    <div className="bg-[#383434] p-6 rounded-lg w-2/4">
+                      <textarea
+                        value={editContentPost}
+                        onChange={(e) => setEditContentPost(e.target.value)} // Update content as you type
+                        className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] min-h-52 resize-none"
+                        rows={5}
+                      />
+                      <div className="mt-4 flex justify-end space-x-2">
+                        <button
+                          onClick={() => setIsEditingPost(false)} // Cancel editing
+                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSavePost} // Save post
+                          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {post.imageUrl && (
                   <img
                     src={post.imageUrl}
@@ -467,14 +581,14 @@ const Forum = () => {
                 <div className="flex gap-4 mb-4">
                   <button
                     onClick={() => handleLike(post.id)}
-                    className={`${userLikes.get(post.id) === 'like' ? 'text-blue-500' : 'text-gray-400'}`}
+                    className={`${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                   >
                     <FaThumbsUp className="w-4 h-4" />
                     {post.likes}
                   </button>
                   <button
                     onClick={() => handleDislike(post.id)}
-                    className={`${userLikes.get(post.id) === 'dislike' ? 'text-red-500' : 'text-gray-400'}`}
+                    className={`${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                   >
                     <FaThumbsDown className="w-4 h-4" />
                     {post.dislikes}
@@ -504,15 +618,52 @@ const Forum = () => {
                                 </p>
                                 <p className="text-sm text-gray-500">{formatTimestamp(comment.createdAt)}</p>
                               </div>
-                              {auth.currentUser?.uid === comment.userId && (
-                                <button
-                                  onClick={() => handleDeleteComment(post.id, index)}
-                                  className="text-red-500 hover:text-red-700 ml-auto"
-                                >
-                                  <FaTrash className="w-5 h-5" />
-                                </button>
-                              )}
+                                {/* Right Section: Update and Delete Buttons in the same container */}
+                                {auth.currentUser?.uid === comment.userId && (
+                                  <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
+                                    <button
+                                      onClick={() => handleUpdateComment(post.id, index)}
+                                      className="hover:text-yellow-500"
+                                    >
+                                      <FaEdit className="w-5 h-5" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleDeleteComment(post.id, index)}
+                                      className="hover:text-yellow-500"
+                                    >
+                                      <FaTrash className="w-5 h-5" />
+                                    </button>
+                                  </div>
+                                )}
                             </div>
+
+                            {isEditingComment && (
+                              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+                                <div className="bg-white p-6 rounded-lg w-96">
+                                  <textarea
+                                    value={editContentComment} // Pre-fill the content
+                                    onChange={(e) => setEditContentComment(e.target.value)} // Update state on change
+                                    className="w-full p-3 rounded-lg border border-gray-300 text-black"
+                                    rows={5}
+                                  />
+                                  <div className="mt-4 flex justify-end space-x-2">
+                                    <button
+                                      onClick={() => setIsEditingComment(false)} // Cancel editing
+                                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                                    >
+                                      Cancel
+                                    </button>
+                                    <button
+                                      onClick={handleSaveComment} // Save comment
+                                      className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                                    >
+                                      Save
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
                             <p>{comment.comment}</p>
   
                             {/* Like/Dislike buttons for comments */}
@@ -521,7 +672,7 @@ const Forum = () => {
                                 onClick={() => handleLikeComment(post.id, index)}
                                 className={`${
                                   comment.likedBy?.includes(auth.currentUser?.uid || '')
-                                    ? 'text-blue-500'
+                                    ? 'text-yellow-500'
                                     : 'text-gray-400'
                                 }`}
                               >
@@ -532,7 +683,7 @@ const Forum = () => {
                                 onClick={() => handleDislikeComment(post.id, index)}
                                 className={`${
                                   comment.dislikedBy.includes(auth.currentUser?.uid || '')
-                                    ? 'text-red-500'
+                                    ? 'text-yellow-500'
                                     : 'text-gray-400'
                                 }`}
                               >
@@ -544,7 +695,7 @@ const Forum = () => {
                         </div>
                       ))
                     ) : (
-                      <p className="pl-2 mb-2">No comments yet</p> // Optional: display message if there are no comments
+                      <p className="pl-2 mb-2">No comments yet</p>
                     )}
                   </div>
                   <input
