@@ -11,7 +11,6 @@ import Link from 'next/link';
 
 interface Post {
   id: string;
-  username: string;
   userId: string;
   message: string;
   imageUrl: string | null;
@@ -19,7 +18,6 @@ interface Post {
   likes: number;
   dislikes: number;
   comments: { 
-    username: string;
     comment: string;
     createdAt: any;
     userId: string; // Add userId to the comment object
@@ -38,6 +36,9 @@ const Forum = () => {
   const auth = getAuth();
   const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); // Track user's like/dislike status
   const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
+  const usernameCache = new Map<string, string>(); // Cache to store fetched usernames
+  const [usernames, setUsernames] = useState<Map<string, string>>(new Map());
+
 
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -377,6 +378,39 @@ const Forum = () => {
     }
   };
 
+  const getUsernameFromDatabase = async (userId: string): Promise<string> => {
+    try {
+      const userRef = doc(firestore, "users", userId); // Reference to the user's document
+      const userDoc = await getDoc(userRef);   // Fetch the document
+      return userDoc.exists() ? (userDoc.data()?.username as string) : "Unknown User";
+    } catch (error) {
+      console.error("Error fetching username:", error);
+      return "Unknown User";
+    }
+  };
+
+  useEffect(() => {
+    const fetchUsernames = async () => {
+      const updatedUsernames = new Map(usernames);
+
+      // Fetch usernames for posts and comments
+      for (const post of posts) {
+        if (!updatedUsernames.has(post.userId)) {
+          updatedUsernames.set(post.userId, await getUsernameFromDatabase(post.userId));
+        }
+        for (const comment of post.comments) {
+          if (!updatedUsernames.has(comment.userId)) {
+            updatedUsernames.set(comment.userId, await getUsernameFromDatabase(comment.userId));
+          }
+        }
+      }
+
+      setUsernames(updatedUsernames);
+    };
+
+    fetchUsernames();
+  }, [posts]);
+
   return (
     <div className="flex flex-col">
       <PostForum />
@@ -401,7 +435,9 @@ const Forum = () => {
                       />
                     </Link>
                     <div>
-                      <p className="text-xl font-semibold text-white">{post.username}</p>
+                      <p className="text-xl font-semibold text-white">
+                        {usernames.get(post.userId) || "Loading..."}
+                      </p>
                       <p className="text-sm text-gray-400">{formatTimestamp(post.createdAt)}</p>
                     </div>
                   </div>
@@ -463,7 +499,9 @@ const Forum = () => {
                           <div className="flex flex-col w-full">
                             <div className="flex flex-row justify-between">
                               <div>
-                                <p className="font-semibold">{comment.username}</p>
+                                <p className="font-semibold text-white">
+                                  {usernames.get(comment.userId) || "Loading..."}
+                                </p>
                                 <p className="text-sm text-gray-500">{formatTimestamp(comment.createdAt)}</p>
                               </div>
                               {auth.currentUser?.uid === comment.userId && (
