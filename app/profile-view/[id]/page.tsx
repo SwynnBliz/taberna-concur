@@ -2,9 +2,11 @@
 'use client';
 import Layout from '../../../components/root/Layout'; // Layout component
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation'; // For dynamic route params
+import { useParams, useRouter } from 'next/navigation'; // For dynamic route params
 import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase/config'; // Import Firestore instance
+import { getAuth } from 'firebase/auth'; // For getting the current logged-in user's UID
+import { FaEdit } from 'react-icons/fa'; // Importing the Edit icon from react-icons
 
 interface User {
   profilePhoto: string;
@@ -18,6 +20,17 @@ const ProfileView = () => {
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null); // To store current logged-in user's UID
+  const router = useRouter();
+
+  useEffect(() => {
+    // Get the current user's ID from Firebase Authentication
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      setCurrentUserId(user.uid); // Store the UID of the logged-in user
+    }
+  }, []);
 
   useEffect(() => {
     if (!id || Array.isArray(id)) return; // Ensure `id` is a single string before proceeding
@@ -25,7 +38,7 @@ const ProfileView = () => {
     const fetchUserData = async () => {
       try {
         setLoading(true);
-        const userDoc = await getDoc(doc(firestore, 'users', id)); // id is now correctly passed as string
+        const userDoc = await getDoc(doc(firestore, 'users', id)); // Fetch user data
         if (userDoc.exists()) {
           setUserData(userDoc.data() as User);
         } else {
@@ -59,10 +72,27 @@ const ProfileView = () => {
     return null; // Safety check for null user data
   }
 
+  const handleEditProfile = () => {
+    // Redirect to the profile-manage page only if the logged-in user's UID matches the profile ID
+    if (currentUserId === id) {
+      router.push('/profile-manage'); // Navigate to the profile manage page
+    }
+  };
+
   return (
     <Layout>
-      <div className="max-w-7xl h-5/6 mx-40 mt-10 p-8 bg-[#383434] rounded-lg">
-        <div className="flex items-start space-x-8"> {/* Flex container with space between */}
+      <div className="max-w-7xl h-5/6 mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative">
+        {/* Edit Button - Visible only if the logged-in user is the same as the profile */}
+        {currentUserId === id && (
+          <button
+            onClick={handleEditProfile}
+            className="absolute top-4 right-4 p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-[#302C2C]"
+          >
+            <FaEdit />
+          </button>
+        )}
+
+        <div className="mt-6 flex items-start space-x-8"> {/* Flex container with space between */}
           
           {/* Left Section: Profile Image and Username */}
           <div className="flex flex-col items-center w-1/3">
