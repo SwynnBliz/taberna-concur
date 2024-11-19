@@ -46,7 +46,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
       <ul className="space-y-4">
         <li>
           <button
-            className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
+            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
             onClick={() => router.push('/discussion-board')}
           >
             Home
@@ -54,7 +54,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         </li>
         <li>
           <button
-            className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
+            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
             onClick={() => router.push('/discussion-board')}
           >
             Educational
@@ -62,7 +62,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         </li>
         <li>
           <button
-            className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
+            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
             onClick={() => router.push('/discussion-board')}
           >
             Quiz
@@ -70,7 +70,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         </li>
         <li>
           <button
-            className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
+            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
             onClick={() => router.push('/discussion-board')}
           >
             Collaboration
@@ -79,7 +79,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         <li>
           {/* Dynamically navigate to the user's profile using their UID */}
           <button
-            className="w-full py-2 px-4 text-left hover:bg-[#302C2C] hover:rounded-lg"
+            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
             onClick={() => userId && router.push(`/profile-view/${userId}`)}
           >
             Profile
@@ -87,7 +87,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         </li>
         <li>
           <button
-            className="w-full py-2 px-4 text-left text-red-600 font-semibold hover:bg-[#302C2C] hover:rounded-lg"
+            className="w-full py-2 px-4 text-left text-red-600 font-semibold hover:bg-red-300 hover:rounded-lg"
             onClick={handleLogout}
             disabled={isLoggingOut}
           >

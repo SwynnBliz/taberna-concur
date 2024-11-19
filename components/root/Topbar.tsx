@@ -48,14 +48,22 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
 
   return (
     <div className="sticky top-0 z-50 flex justify-between items-center bg-[#302C2C] text-white p-4 shadow-md">
-      <button onClick={onLeftSidebarToggle}>
+      <button
+        onClick={onLeftSidebarToggle}
+        className="hover:bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center transition-all"
+      >
         <span className="text-white text-2xl">☰</span>
       </button>
       <button onClick={handleNavigateHome} className="text-yellow-500 italic island-moments font-semibold text-4xl">
         TabernaConcur
       </button>
       <div className="relative">
-        <button onClick={handleProfileClick} className="w-10 h-10 rounded-full overflow-hidden">
+        <button
+          onClick={handleProfileClick}
+          className="w-10 h-10 rounded-full overflow-hidden relative transition-all"
+        >
+          <div className="absolute top-0 left-0 w-full h-full bg-yellow-500 opacity-0 hover:opacity-50 transition-all"></div>
+          {/* Profile image */}
           <Image
             src={profilePhoto || "https://via.placeholder.com/150"} // Fallback to default image if profilePhoto is null
             alt="Profile"
@@ -68,13 +76,13 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
           <div className="absolute right-0 mt-2 bg-[#363232] text-black p-4 rounded-md shadow-lg w-48">
             <button
               onClick={() => router.push("/profile-manage")}
-              className="w-full text-left px-4 py-2 mb-2 rounded-md hover:bg-[#302C2C] transition duration-200 text-white"
+              className="w-full text-left px-4 py-2 mb-2 rounded-md hover:bg-yellow-500 transition duration-200 text-white"
             >
               Update Profile
             </button>
             <button
               onClick={handleLogout}
-              className="w-full text-left px-4 py-2 rounded-md text-red-600 font-semibold hover:bg-[#302C2C] transition duration-200"
+              className="w-full text-left px-4 py-2 rounded-md text-red-600 font-semibold hover:bg-red-300 transition duration-200"
             >
               Logout
             </button>
