@@ -108,7 +108,7 @@ const PostForum = () => {
   }, [auth.currentUser]);
 
   return (
-    <div className="flex justify-center items-center bg-[#484242] p-8">
+    <div className="flex justify-center items-center bg-[#484242] p-8 min-h-40">
       <div className="w-8/12 bg-[#383434] rounded-lg shadow-lg p-8 space-y-6">
         <div className="flex flex-row justify-between">
           <h1 className="text-2xl font-bold text-white mb-4">Create a Post</h1>
@@ -128,7 +128,7 @@ const PostForum = () => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="What's on your mind?"
-            className="w-full px-4 py-3 rounded-md text-white outline-none focus:ring-2 focus:ring-yellow-500 bg-[#2c2c2c] h-48 resize-none"
+            className="w-full px-4 py-3 rounded-md text-white outline-none focus:ring-2 focus:ring-yellow-500 bg-[#2c2c2c] h-36 resize-none"
           />
         </div>
 

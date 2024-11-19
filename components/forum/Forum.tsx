@@ -6,7 +6,7 @@ import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 
 interface Post {
@@ -49,9 +49,11 @@ const Forum = () => {
   const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null); // Define state for comment index
   const [isEditingComment, setIsEditingComment] = useState(false); // State to toggle editing mode
   const [editContentComment, setEditContentComment] = useState(''); // Store the new comment content
-  const [showComments, setShowComments] = useState<{ [key: string]: boolean }>(
-    {}
-  );
+  const [showComments, setShowComments] = useState<{ [key: string]: boolean }>({});
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); // Store posts after filtering
+  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [isPostForumVisible, setIsPostForumVisible] = useState(false);
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
 
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -530,17 +532,118 @@ const Forum = () => {
     }
   };
 
+  useEffect(() => {
+    const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
+  
+    // Real-time listener to fetch posts from Firestore
+    const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
+      const postsData: Post[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Post[];
+  
+      setPosts(postsData); // Set all posts
+  
+      // Apply filtering logic based on search query
+      filterPosts(postsData); // Filter posts whenever data changes
+    });
+  
+    return () => {
+      // Clean up the listener when the component unmounts
+      unsubscribe();
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount
+  
+  // Function to filter posts based on the search query
+  const filterPosts = (postsData: Post[]) => {
+    if (searchQuery.trim() === "") {
+      setFilteredPosts(postsData); // If search is empty, show all posts
+    } else {
+      const filtered = postsData.filter((post) =>
+        post.message.toLowerCase().includes(searchQuery.toLowerCase()) // Filter by message content
+      );
+      setFilteredPosts(filtered); // Update filtered posts
+    }
+  };
+
+  useEffect(() => {
+    filterPosts(posts); // Filter posts whenever the searchQuery state changes
+  }, [searchQuery, posts]); // Trigger when either posts or searchQuery change
+
+  // Function to toggle PostForum visibility
+  const togglePostForum = () => {
+    setIsPostForumVisible((prevState) => !prevState);
+  };
+
+  // Function to toggle Search input visibility
+  const toggleSearch = () => {
+    setIsSearchVisible((prevState) => !prevState);
+  };
+
   return (
     <div className="flex flex-col">
-      <PostForum />
+      {/* Conditionally show Search Input */}
+      {isSearchVisible && (
+        <div className="w-8/12 mx-auto mt-4">
+          <input
+            type="text"
+            placeholder="Search posts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)} // Update searchQuery on input change
+            className="w-full p-2 bg-[#383434] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
+          />
+        </div>
+      )}
+
+      {/* Posts Section with Title and Divider */}
+       <div className="mt-4 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
+        <div>
+          {/* Posts Text with Border */}
+          <p className="text-white text-xl">Posts</p>
+        </div>
+        
+        {/* Buttons aligned to the right */}
+        <div className="flex space-x-4">
+          {/* Create Post Button with Tooltip */}
+          <div className="relative group inline-flex items-center">
+            <button onClick={togglePostForum} className="text-white hover:text-yellow-500">
+              <FaPlus className="w-6 h-6" />
+            </button>
+
+            {/* Tooltip */}
+            <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+              Create Post
+            </div>
+          </div>
+
+          {/* Search Button with Tooltip */}
+          <div className="relative group inline-flex items-center">
+            <button onClick={toggleSearch} className="text-white hover:text-yellow-500">
+              <FaSearch className="w-6 h-6" />
+            </button>
+            
+            {/* Tooltip */}
+            <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+              Search Posts
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Conditionally show Post Forum */}
+      {isPostForumVisible && (
+        <div className="w-10/12 mx-auto">
+          <PostForum /> {/* Your PostForum Component */}
+        </div>
+      )}
+
+      {/* Contains the Posts and Comments Sections*/}
       <div>
-        <p className="mt-2 border-b-2 border-white pb-2 w-8/12 mx-auto"></p>
-        <p className="border-b-2 border-white py-2 w-8/12 mx-auto text-white text-xl">Posts</p>
         <div className="p-3 w-9/12 bg-[#484242] mx-auto">
-          {posts.length === 0 ? (
-            <p className="text-center text-white w-full">There are no posts yet. Be the first to create one!</p>
+          {filteredPosts.length === 0 ? (
+            <p className="text-center text-white w-full">There are no posts matching your search query.</p>
           ) : (
-            posts.map((post) => (
+            filteredPosts.map((post) => (
               <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383434] p-6">
                 <div className="flex items-center justify-between mb-4">
                   {/* Left Section: Image, Username, and Timestamp */}
@@ -575,35 +678,55 @@ const Forum = () => {
                   <div className="flex space-x-2">
                   {auth.currentUser?.uid === post.userId && !isEditingPost && (
                     <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                      {/* Bookmark Button */}
-                      <button
-                        onClick={() => handleBookmarkPost(post.id)}
-                        className={`${
-                          post.bookmarks?.some(
-                            (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
-                          )
-                            ? "text-yellow-500"
-                            : "text-white"
-                        } hover:text-yellow-500`}
-                      >
-                        <FaBookmark className="w-5 h-5" />
-                      </button>
+                      {/* Bookmark Button with Tooltip */}
+                      <div className="relative group inline-flex items-center">
+                        <button
+                          onClick={() => handleBookmarkPost(post.id)}
+                          className={`${
+                            post.bookmarks?.some(
+                              (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
+                            )
+                              ? "text-yellow-500"
+                              : "text-white"
+                          } hover:text-yellow-500`}
+                        >
+                          <FaBookmark className="w-5 h-5" />
+                        </button>
 
-                      {/* Edit Button */}
-                      <button
-                        onClick={() => handleUpdatePost(post.id)}
-                        className="text-white hover:text-yellow-500"
-                      >
-                        <FaEdit className="w-5 h-5" />
-                      </button>
+                        {/* Tooltip */}
+                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                          Bookmark Post
+                        </div>
+                      </div>
 
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => handleDeletePost(post.id)}
-                        className="text-white hover:text-yellow-500"
-                      >
-                        <FaTrash className="w-5 h-5" />
-                      </button>
+                      {/* Edit Button with Tooltip */}
+                      <div className="relative group inline-flex items-center">
+                        <button
+                          onClick={() => handleUpdatePost(post.id)}
+                          className="text-white hover:text-yellow-500"
+                        >
+                          <FaEdit className="w-5 h-5" />
+                        </button>
+
+                        {/* Tooltip */}
+                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                          Update Post
+                        </div>
+                      </div>
+
+                      {/* Delete Button with Tooltip */}
+                      <div className="relative group inline-flex items-center">
+                        <button
+                          onClick={() => handleDeletePost(post.id)}
+                          className="text-white hover:text-yellow-500"
+                        >
+                          <FaTrash className="w-5 h-5" />
+                        </button>
+                        {/* Tooltip */}
+                        <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                            Delete Post
+                        </div>
+                      </div>
                     </div>
                   )}
                   </div>
@@ -715,18 +838,34 @@ const Forum = () => {
                                 </div>
                                 {auth.currentUser?.uid === comment.userId && (
                                   <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                                    <button
-                                      onClick={() => handleUpdateComment(post.id, index)}
-                                      className="hover:text-yellow-500"
-                                    >
-                                      <FaEdit className="w-5 h-5" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteComment(post.id, index)}
-                                      className="hover:text-yellow-500"
-                                    >
-                                      <FaTrash className="w-5 h-5" />
-                                    </button>
+                                    {/* Update Button with Tooltip */}
+                                    <div className="relative group inline-flex items-center">
+                                      <button
+                                        onClick={() => handleUpdateComment(post.id, index)}
+                                        className="hover:text-yellow-500"
+                                      >
+                                        <FaEdit className="w-5 h-5" />
+                                      </button>
+
+                                      {/* Tooltip */}
+                                      <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                          Update Comment
+                                      </div>
+                                    </div>
+                                    {/* Delete Button with Tooltip */}
+                                    <div className="relative group inline-flex items-center">
+                                      <button
+                                        onClick={() => handleDeleteComment(post.id, index)}
+                                        className="hover:text-yellow-500"
+                                      >
+                                        <FaTrash className="w-5 h-5" />
+                                      </button>
+
+                                      {/* Tooltip */}
+                                      <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                          Delete Comment
+                                      </div>
+                                    </div>
                                   </div>
                                 )}
                               </div>
