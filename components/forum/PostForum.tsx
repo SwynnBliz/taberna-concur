@@ -89,7 +89,6 @@ const PostForum = () => {
         setFile(null);
         setImagePreview(null);
         setUploading(false);
-        router.push('/discussion-board');
       } else {
         setErrorMessage('User data is unavailable.');
         setUploading(false);

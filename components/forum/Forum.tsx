@@ -6,7 +6,7 @@ import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 
 interface Post {
@@ -30,6 +30,10 @@ interface Post {
   }[]; 
   likedBy: string[];
   dislikedBy: string[];
+  bookmarks: { 
+    userId: string;  // User who bookmarked the post
+    bookmarkCreatedAt: any;  // Timestamp when the post was bookmarked
+  }[]; // Array of bookmarks
 }
 
 const Forum = () => {
@@ -490,6 +494,39 @@ const Forum = () => {
     setEditingCommentIndex(null); // Reset the index after saving
   };
 
+  // Assuming `handleBookmarkPost` is the function handling the bookmark toggle
+  const handleBookmarkPost = async (postId: string) => {
+    const currentUserId = auth.currentUser?.uid;
+    if (!currentUserId) return; // Make sure user is authenticated
+
+    const postRef = doc(firestore, 'posts', postId); // Reference to the post document
+    const postDoc = await getDoc(postRef);
+
+    if (postDoc.exists()) {
+      const postData = postDoc.data();
+      const bookmarks = postData.bookmarks || []; // Default to an empty array if undefined
+
+      // Check if the current user has already bookmarked the post
+      const existingBookmarkIndex = bookmarks.findIndex((bookmark: { userId: string }) => bookmark.userId === currentUserId);
+
+      if (existingBookmarkIndex !== -1) {
+        // Remove bookmark (user is unbookmarking the post)
+        bookmarks.splice(existingBookmarkIndex, 1); // Remove the bookmark for that user
+      } else {
+        // Add bookmark (user is bookmarking the post)
+        bookmarks.push({
+          userId: currentUserId,
+          bookmarkCreatedAt: new Date(), // Using Firestore Timestamp is preferable
+        });
+      }
+
+      // Update the post document with the modified bookmarks array
+      await updateDoc(postRef, {
+        bookmarks: bookmarks,
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col">
       <PostForum />
@@ -533,22 +570,39 @@ const Forum = () => {
   
                   {/* Right Section: Update and Delete Buttons */}
                   <div className="flex space-x-2">
-                      {auth.currentUser?.uid === post.userId && !isEditingPost && (
-                        <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                          <button
-                            onClick={() => handleUpdatePost(post.id)}
-                            className="text-white hover:text-yellow-500"
-                          >
-                            <FaEdit className="w-5 h-5" />
-                          </button>
-                          <button
-                            onClick={() => handleDeletePost(post.id)}
-                            className="text-white hover:text-yellow-500"
-                          >
-                            <FaTrash className="w-5 h-5" />
-                          </button>
-                        </div>
-                      )}
+                  {auth.currentUser?.uid === post.userId && !isEditingPost && (
+                    <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
+                      {/* Bookmark Button */}
+                      <button
+                        onClick={() => handleBookmarkPost(post.id)}
+                        className={`${
+                          post.bookmarks?.some(
+                            (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
+                          )
+                            ? "text-yellow-500"
+                            : "text-white"
+                        } hover:text-yellow-500`}
+                      >
+                        <FaBookmark className="w-5 h-5" />
+                      </button>
+
+                      {/* Edit Button */}
+                      <button
+                        onClick={() => handleUpdatePost(post.id)}
+                        className="text-white hover:text-yellow-500"
+                      >
+                        <FaEdit className="w-5 h-5" />
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={() => handleDeletePost(post.id)}
+                        className="text-white hover:text-yellow-500"
+                      >
+                        <FaTrash className="w-5 h-5" />
+                      </button>
+                    </div>
+                  )}
                   </div>
                 </div>
                 <p className="text-lg text-white mb-4" style={{ whiteSpace: 'pre-wrap' }}>
