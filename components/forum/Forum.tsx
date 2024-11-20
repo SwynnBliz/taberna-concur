@@ -8,6 +8,7 @@ import { formatDistanceToNow } from 'date-fns'; // Import the function from date
 import { getAuth } from 'firebase/auth';
 import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
+import useBannedWords from "./hooks/useBannedWords"; // Import custom hook
 
 interface Post {
   id: string;
@@ -54,7 +55,11 @@ const Forum = () => {
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
   const [isPostForumVisible, setIsPostForumVisible] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
+  const [editImageFile, setEditImageFile] = useState<File | null>(null); // Store selected image file
+  const [editCurrentImageUrl, setEditCurrentImageUrl] = useState<string | null>(null); // Store the current image URL
+  const { bannedWords, loading } = useBannedWords(); // Get banned words from Firestore
 
+  // Handles the like and dislike tracking
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
 
@@ -85,6 +90,64 @@ const Forum = () => {
       unsubscribe();
     };
   }, []);
+
+  const filterBannedWords = (message: string): string => {
+    if (!bannedWords || bannedWords.length === 0) return message; // No banned words to filter
+  
+    let filteredMessage = message;
+    
+    bannedWords.forEach((word) => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Case-insensitive word match
+      const replacement = '*'.repeat(word.length); // Generate a string of asterisks matching the length of the word
+      filteredMessage = filteredMessage.replace(regex, replacement); // Replace with asterisks
+    });
+    
+    return filteredMessage;
+  };
+
+  // Function to filter posts based on the search query
+  const filterPosts = (postsData: Post[]) => {
+    if (searchQuery.trim() === "") {
+      setFilteredPosts(postsData); // If search is empty, show all posts
+    } else {
+      const filtered = postsData.filter((post) =>
+        post.message.toLowerCase().includes(searchQuery.toLowerCase()) // Filter by message content
+      );
+      setFilteredPosts(filtered); // Update filtered posts
+    }
+  };
+
+  useEffect(() => {
+    const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
+  
+    // Real-time listener to fetch posts from Firestore
+    const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
+      const postsData: Post[] = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Post[];
+  
+      // Apply the banned word filtering to each post
+      const filteredPostsData = postsData.map((post) => ({
+        ...post,
+        message: filterBannedWords(post.message) // Filter banned words in message
+      }));
+  
+      setPosts(filteredPostsData); // Set all posts after filtering
+  
+      // Apply filtering logic based on search query
+      filterPosts(filteredPostsData); // Filter posts whenever data changes
+    });
+  
+    return () => {
+      // Clean up the listener when the component unmounts
+      unsubscribe();
+    };
+  }, [bannedWords]); // Runs when bannedWords changes
+
+  useEffect(() => {
+    filterPosts(posts); // Filter posts whenever the searchQuery state changes
+  }, [searchQuery, posts]); // Trigger when either posts or searchQuery change
 
   const handleLike = async (postId: string) => {
     const userId = auth.currentUser?.uid;
@@ -427,10 +490,11 @@ const Forum = () => {
   }, [posts]);
 
   const handleUpdatePost = (postId: string) => {
-    const postToEdit = posts.find(post => post.id === postId);
+    const postToEdit = posts.find((post) => post.id === postId);
     if (postToEdit) {
-      setEditingPostId(postId);  // Track the post being edited
+      setEditingPostId(postId); // Track the post being edited
       setEditContentPost(postToEdit.message); // Pre-fill the content
+      setEditCurrentImageUrl(postToEdit.imageUrl); // Pre-fill the current image URL
       setIsEditingPost(true); // Enable editing mode
     }
   };
@@ -442,17 +506,48 @@ const Forum = () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return; // Ensure the user is authenticated
   
-    // Reference the post to update based on editingPostId
-    const postRef = doc(firestore, 'posts', editingPostId); 
-    await updateDoc(postRef, {
-      message: editContentPost, // Update the content of the post
-      updatedAt: new Date(), // Set the updated timestamp
-    });
+    try {
+      let imageUrl = null;
   
-    setIsEditingPost(false); // Exit editing mode
-    setEditContentPost(''); // Clear the edit content
-    setEditingPostId(null); // Clear the tracking state after saving
-  };
+      // If a new image file is selected, upload it to Cloudinary
+      if (editImageFile) {
+        const formData = new FormData();
+        formData.append('file', editImageFile);
+        formData.append('upload_preset', 'post-image-upload'); // Your Cloudinary upload preset
+  
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+  
+        if (!res.ok) {
+          throw new Error('Image upload failed');
+        }
+  
+        const data = await res.json();
+        imageUrl = data.secure_url; // Get the URL of the uploaded image
+      }
+  
+      // Reference the post to update in Firestore
+      const postRef = doc(firestore, 'posts', editingPostId);
+      await updateDoc(postRef, {
+        message: editContentPost, // Update the content of the post
+        ...(imageUrl && { imageUrl }), // Update the imageUrl only if a new image was uploaded
+        updatedAt: new Date(), // Set the updated timestamp
+      });
+  
+      // Reset editing states
+      setIsEditingPost(false);
+      setEditContentPost('');
+      setEditingPostId(null);
+      setEditImageFile(null); // Reset the selected file
+    } catch (error) {
+      console.error('Error updating post:', error);
+    }
+  };  
 
   const handleUpdateComment = (postId: string, commentIndex: number) => {
     const postToEdit = posts.find(post => post.id === postId);
@@ -532,44 +627,6 @@ const Forum = () => {
     }
   };
 
-  useEffect(() => {
-    const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
-  
-    // Real-time listener to fetch posts from Firestore
-    const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
-      const postsData: Post[] = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Post[];
-  
-      setPosts(postsData); // Set all posts
-  
-      // Apply filtering logic based on search query
-      filterPosts(postsData); // Filter posts whenever data changes
-    });
-  
-    return () => {
-      // Clean up the listener when the component unmounts
-      unsubscribe();
-    };
-  }, []); // Empty dependency array ensures this runs only once on mount
-  
-  // Function to filter posts based on the search query
-  const filterPosts = (postsData: Post[]) => {
-    if (searchQuery.trim() === "") {
-      setFilteredPosts(postsData); // If search is empty, show all posts
-    } else {
-      const filtered = postsData.filter((post) =>
-        post.message.toLowerCase().includes(searchQuery.toLowerCase()) // Filter by message content
-      );
-      setFilteredPosts(filtered); // Update filtered posts
-    }
-  };
-
-  useEffect(() => {
-    filterPosts(posts); // Filter posts whenever the searchQuery state changes
-  }, [searchQuery, posts]); // Trigger when either posts or searchQuery change
-
   // Function to toggle PostForum visibility
   const togglePostForum = () => {
     setIsPostForumVisible((prevState) => !prevState);
@@ -579,6 +636,20 @@ const Forum = () => {
   const toggleSearch = () => {
     setIsSearchVisible((prevState) => !prevState);
   };
+
+  // Utility function to censor words in a text
+  const censorText = (text: string, bannedWords: string[]): string => {
+    let censoredText = text;
+    
+    bannedWords.forEach((word) => {
+      // Replace the word with asterisks (*) matching the word length
+      const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Match whole word, case insensitive
+      censoredText = censoredText.replace(regex, (match) => '*'.repeat(match.length));
+    });
+    
+    return censoredText;
+  };
+
 
   return (
     <div className="flex flex-col">
@@ -743,22 +814,65 @@ const Forum = () => {
 
                 {isEditingPost && (
                   <div className="fixed inset-0 bg-[#484242] bg-opacity-80 flex items-center justify-center z-50">
-                    <div className="bg-[#383434] p-6 rounded-lg w-2/4">
+                    <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                      {/* Textarea for Editing Content */}
                       <textarea
                         value={editContentPost}
-                        onChange={(e) => setEditContentPost(e.target.value)} // Update content as you type
-                        className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] min-h-52 resize-none"
+                        onChange={(e) => setEditContentPost(e.target.value)}
+                        className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
                         rows={5}
+                        placeholder="Edit your post..."
                       />
+
+                      {/* Current Image Display */}
+                      {editCurrentImageUrl && (
+                        <div className="mt-4">
+                          <p className="text-white">Current Image:</p>
+                          <img
+                            src={editCurrentImageUrl}
+                            alt="Current Post Image"
+                            className="w-full object-cover rounded-lg mt-2"
+                          />
+                        </div>
+                      )}
+
+                      {/* Selected Image Preview */}
+                      {editImageFile && (
+                        <div className="mt-4">
+                          <p className="text-white">New Image Preview:</p>
+                          <img
+                            src={URL.createObjectURL(editImageFile)} // Preview selected image
+                            alt="Selected Image Preview"
+                            className="w-full object-cover rounded-lg mt-2"
+                          />
+                        </div>
+                      )}
+
+                      {/* File Input for Selecting New Image */}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setEditImageFile(e.target.files[0]); // Capture the selected image
+                          }
+                        }}
+                        className="mt-4 text-white"
+                      />
+
+                      {/* Buttons */}
                       <div className="mt-4 flex justify-end space-x-2">
                         <button
-                          onClick={() => setIsEditingPost(false)} // Cancel editing
+                          onClick={() => {
+                            setIsEditingPost(false);
+                            setEditImageFile(null); // Clear selected image when canceling
+                          }}
                           className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
                         >
                           Cancel
                         </button>
                         <button
-                          onClick={handleSavePost} // Save post
+                          onClick={handleSavePost}
                           className="bg-blue-500 text-white px-4 py-2 rounded-lg"
                         >
                           Save
