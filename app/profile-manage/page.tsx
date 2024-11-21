@@ -207,7 +207,7 @@ const ProfilePage = () => {
                 />
                 
                 {/* Tooltip */}
-                <div className="absolute top-full transform -translate-x-3 -translate-y-9 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                <div className="absolute bottom-full transform -translate-x-3 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                   Upload Profile Photo
                 </div>
               </div>

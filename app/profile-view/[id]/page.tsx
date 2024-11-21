@@ -9,7 +9,7 @@ import { getAuth } from 'firebase/auth'; // For getting the current logged-in us
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment } from 'react-icons/fa'; // Importing React Icons
 
 interface User {
   profilePhoto: string;
@@ -479,7 +479,7 @@ const ProfileView = () => {
               </button>
 
               {/* Tooltip */}
-              <div className="absolute top-full mt-4 -right-9 transform translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+              <div className="absolute bottom-full mt-4 -right-9 transform -translate-y-4 translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                 Edit Profile
               </div>
             </div>
@@ -708,25 +708,55 @@ const ProfileView = () => {
                           className="w-full h-full object-cover rounded-lg mb-4"
                         />
                       )}
-                      <div className="flex gap-4 mb-4">
+                      <div className="flex gap-2 mb-4 items-center">
+                        {/* Like Button with Tooltip */}
+                        <div className="relative group inline-flex items-center">
+                          <button
+                            onClick={() => handleLike(post.id)}
+                            className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
+                          >
+                            <FaThumbsUp className="w-4 h-4" />
+                            <span>{post.likes}</span>
+                          </button>
+                          {/* Tooltip for Like Button */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                            Like Post
+                          </div>
+                        </div>
+
+                        {/* Dislike Button with Tooltip */}
+                        <div className="relative group inline-flex items-center">
+                          <button
+                            onClick={() => handleDislike(post.id)}
+                            className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
+                          >
+                            <FaThumbsDown className="w-4 h-4" />
+                            <span>{post.dislikes}</span>
+                          </button>
+                          {/* Tooltip for Dislike Button */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                            Dislike Post
+                          </div>
+                        </div>
+
+                        {/* Comment Button with Tooltip (View Post to Comment and Navigate to Post) */}
                         <button
-                          onClick={() => handleLike(post.id)}
-                          className={`${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
+                          onClick={() => {
+                            router.push('/discussion-board'); // Navigate to the homepage
+                          }}
+                          className="relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto text-gray-400"
                         >
-                          <FaThumbsUp className="w-4 h-4" />
-                          {post.likes}
-                        </button>
-                        <button
-                          onClick={() => handleDislike(post.id)}
-                          className={`${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
-                        >
-                          <FaThumbsDown className="w-4 h-4" />
-                          {post.dislikes}
+                          <FaComment className="w-4 h-4" />
+                          <span>{post.comments.length}</span>
+
+                          {/* Tooltip for "View Post to Comment" */}
+                          <div
+                            className="absolute bottom-full left-1/2 transform -translate-x-1/2 p-1 bg-[#2c2c2c] text-white text-xs rounded-md whitespace-nowrap hidden group-hover:block"
+                          >
+                            View Post to Comment
+                          </div>
                         </button>
                       </div>
-                      <p className="border-b-2 border-white py-2 w-auto text-white text-xl p-2 ml-2 mb-2">
-                        Comments ({post.comments.length})
-                      </p>
                     </div>
                   ))
                 )}

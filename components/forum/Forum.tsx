@@ -6,7 +6,7 @@ import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 import useBannedWords from "./hooks/useBannedWords"; // Import custom hook
 
@@ -673,7 +673,7 @@ const Forum = () => {
       )}
 
       {/* Posts Section with Title and Divider */}
-       <div className="mt-4 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
+       <div className="mt-6 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
         <div>
           {/* Posts Text with Border */}
           <p className="text-white text-xl">Posts</p>
@@ -691,7 +691,7 @@ const Forum = () => {
             </button>
 
             {/* Tooltip */}
-            <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+            <div className="absolute bottom-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
               Create Post
             </div>
           </div>
@@ -706,7 +706,7 @@ const Forum = () => {
             </button>
 
             {/* Tooltip */}
-            <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+            <div className="absolute bottom-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
               Search Posts
             </div>
           </div>
@@ -818,6 +818,7 @@ const Forum = () => {
                     </div>
                   </div>
                 </div>
+                
                 <p className="text-lg text-white mb-4" style={{ whiteSpace: 'pre-wrap' }}>
                   {post.message}
                 </p>
@@ -900,42 +901,70 @@ const Forum = () => {
                     className="w-full h-full object-cover rounded-lg mb-4"
                   />
                 )}
-                <div className="flex gap-4 mb-4">
+                <div className="flex gap-2 mb-4 items-center">
+                  {/* Like Button with Tooltip */}
+                  <div className="relative group inline-flex items-center">
+                    <button
+                      onClick={() => handleLike(post.id)}
+                      className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
+                    >
+                      <FaThumbsUp className="w-4 h-4" />
+                      <span>{post.likes}</span>
+                    </button>
+                    {/* Tooltip for Like Button */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                      Like Post
+                    </div>
+                  </div>
+
+                  {/* Dislike Button with Tooltip */}
+                  <div className="relative group inline-flex items-center">
+                    <button
+                      onClick={() => handleDislike(post.id)}
+                      className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
+                    >
+                      <FaThumbsDown className="w-4 h-4" />
+                      <span>{post.dislikes}</span>
+                    </button>
+                    {/* Tooltip for Dislike Button */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                      Dislike Post
+                    </div>
+                  </div>
+
+                  {/* Comment Button with Tooltip (Show/Hide Comments with Counter) */}
                   <button
-                    onClick={() => handleLike(post.id)}
-                    className={`${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
+                    onClick={() =>
+                      setShowComments((prevState) => ({
+                        ...prevState,
+                        [post.id]: !prevState[post.id], // Toggle visibility for the current post
+                      }))
+                    }
+                    className={`relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto ${showComments[post.id] ? 'text-yellow-500' : 'text-gray-400'}`}
                   >
-                    <FaThumbsUp className="w-4 h-4" />
-                    {post.likes}
-                  </button>
-                  <button
-                    onClick={() => handleDislike(post.id)}
-                    className={`${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
-                  >
-                    <FaThumbsDown className="w-4 h-4" />
-                    {post.dislikes}
+                    <FaComment className="w-4 h-4" />
+                    <span>{post.comments.length}</span>
+
+                    {/* Tooltip for Show Comments */}
+                    <div
+                      className={`absolute bottom-full left-4 transform -translate-x-1/2 p-1 bg-[#2c2c2c] text-white text-xs rounded-md whitespace-nowrap ${
+                        !showComments[post.id] ? 'hidden group-hover:block' : 'hidden'
+                      }`}
+                    >
+                      Show Comments
+                    </div>
+
+                    {/* Tooltip for Hide Comments */}
+                    <div
+                      className={`absolute bottom-full left-4 transform -translate-x-1/2 p-1 bg-[#2c2c2c] text-white text-xs rounded-md whitespace-nowrap ${
+                        showComments[post.id] ? 'hidden group-hover:block' : 'hidden'
+                      }`}
+                    >
+                      Hide Comments
+                    </div>
                   </button>
                 </div>
-                <p className="border-b-2 border-white py-2 w-auto text-white text-xl p-2 ml-2 mb-2">
-                  Comments ({post.comments.length})
-                </p>
 
-                {/* Toggle Comments Button */}
-                <button
-                  onClick={() =>
-                    setShowComments((prevState) => ({
-                      ...prevState,
-                      [post.id]: !prevState[post.id], // Toggle visibility for the current post
-                    }))
-                  }
-                  className={`ml-1 mb-4 text-white px-4 py-2 rounded-md ${
-                    showComments[post.id] ? 'bg-yellow-500' : 'bg-[#2c2c2c] hover:bg-yellow-500'
-                  }`}
-                >
-                  {showComments[post.id] ? "Hide Comments" : "Show Comments"}
-                </button>
-
-                {/* Comments Section */}
                 {showComments[post.id] && (
                   <div className="comments-section ml-2">
                     <div className="text-white">
@@ -1033,29 +1062,43 @@ const Forum = () => {
 
                               <p>{filterBannedWords(comment.comment)}</p>
 
-                              <div className="flex gap-4 mt-2">
-                                <button
-                                  onClick={() => handleLikeComment(post.id, index)}
-                                  className={`${
-                                    comment.likedBy?.includes(auth.currentUser?.uid || "")
-                                      ? "text-yellow-500"
-                                      : "text-gray-400"
-                                  }`}
-                                >
-                                  <FaThumbsUp className="w-4 h-4" />
-                                  {comment.likes}
-                                </button>
-                                <button
-                                  onClick={() => handleDislikeComment(post.id, index)}
-                                  className={`${
-                                    comment.dislikedBy.includes(auth.currentUser?.uid || "")
-                                      ? "text-yellow-500"
-                                      : "text-gray-400"
-                                  }`}
-                                >
-                                  <FaThumbsDown className="w-4 h-4" />
-                                  {comment.dislikes}
-                                </button>
+                              <div className="flex gap-2 mt-2">
+                                {/* Like Button (Comment) with Tooltip */}
+                                <div className="relative group inline-flex items-center">
+                                  <button
+                                    onClick={() => handleLikeComment(post.id, index)}
+                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                      comment.likedBy?.includes(auth.currentUser?.uid || "")
+                                        ? "text-yellow-500"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    <FaThumbsUp className="w-3 h-3" />
+                                    <span>{comment.likes}</span>
+                                  </button>
+                                  {/* Tooltip for Like Button (Comment) */}
+                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                    Like Comment
+                                  </div>
+                                </div>
+                                {/* Dislike Button (Comment) with Tooltip */}
+                                <div className="relative group inline-flex items-center">
+                                  <button
+                                    onClick={() => handleDislikeComment(post.id, index)}
+                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                      comment.dislikedBy.includes(auth.currentUser?.uid || "")
+                                        ? "text-yellow-500"
+                                        : "text-gray-400"
+                                    }`}
+                                  >
+                                    <FaThumbsDown className="w-3 h-3" />
+                                    <span>{comment.dislikes}</span>
+                                  </button>
+                                  {/* Tooltip for Dislike Button (Comment) */}
+                                  <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                    Dislike Comment
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           </div>
