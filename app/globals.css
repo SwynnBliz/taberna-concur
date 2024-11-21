@@ -27,3 +27,22 @@ html, body {
   background: var(--background);
   font-family: 'Inria Serif', serif; /* Set the body font to Inria Serif */
 }
+
+/* Custom scrollbar for webkit browsers (Chrome, Safari, etc.) */
+::-webkit-scrollbar {
+  width: 12px; /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #333; /* Dark thumb color */
+  border-radius: 6px; /* Rounded corners for the thumb */
+  border: 3px solid #484242; /* Border around the thumb */
+}
+
+::-webkit-scrollbar-track {
+  background: #222; /* Dark track color */
+}
+
+::-webkit-scrollbar-button {
+  display: none; /* Hide the scrollbar buttons */
+}

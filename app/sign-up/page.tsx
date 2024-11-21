@@ -1,11 +1,12 @@
+/** src/app/sign-up/page.tsx */
 'use client';
-
 import { useState, useEffect } from "react";
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from '../firebase/config';
 import { useRouter } from 'next/navigation';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import PasswordStrengthChecker from '../../components/auth/PasswordStrengthChecker'; // Importing PasswordStrengthChecker
+import useBannedWords from '../../components/forum/hooks/useBannedWords'; // Assuming you have this hook for banned words
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -20,6 +21,9 @@ const SignUp = () => {
 
   const [createUserWithEmailAndPassword, user, loading, error] = useCreateUserWithEmailAndPassword(auth);
   const router = useRouter();
+
+  // Fetch banned words using the custom hook
+  const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
@@ -36,21 +40,37 @@ const SignUp = () => {
     return emailPattern.test(email);
   };
 
+  const validateUsername = (username: string): boolean => {
+    // Check if the username contains any banned words
+    if (bannedWordsLoading) return false; // Ensure banned words are loaded before checking
+    return bannedWords.some((word) => username.toLowerCase().includes(word.toLowerCase()));
+  };
+
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setErrorMessage("");
+    
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.");
       return;
     }
+
     if (password.length < 8) {
       setErrorMessage("Password must be at least 8 characters.");
       return;
     }
+
     if (!validateEmail(email)) {
       setErrorMessage("Please enter a valid email address.");
       return;
     }
+
+    // Check if the username contains any banned words
+    if (validateUsername(username)) {
+      setErrorMessage("Username contains a banned word, please change.");
+      return;
+    }
+
     try {
       const res = await createUserWithEmailAndPassword(email, password);
       if (!res || !res.user) {
@@ -102,7 +122,7 @@ const SignUp = () => {
             onChange={(e) => setUsername(e.target.value)}
             required
           />
-          
+
           {/* Password Input with Show/Hide toggle */}
           <div className="relative">
             <input

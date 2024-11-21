@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { firestore } from "../../../app/firebase/config"; // Import firestore instance
 import { doc, getDoc } from "firebase/firestore";
-import { filterText } from "../utils/filterText"; // Import the filterText utility
 
 const useBannedWords = () => {
   const [bannedWords, setBannedWords] = useState<string[]>([]);

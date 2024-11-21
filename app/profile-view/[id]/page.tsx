@@ -7,6 +7,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { firestore } from '../../firebase/config'; // Import Firestore instance
 import { getAuth } from 'firebase/auth'; // For getting the current logged-in user's UID
 import { FaEdit } from 'react-icons/fa'; // Importing the Edit icon from react-icons
+import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 
 interface User {
   profilePhoto: string;
@@ -22,6 +23,7 @@ const ProfileView = () => {
   const [error, setError] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null); // To store current logged-in user's UID
   const router = useRouter();
+  const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
 
   useEffect(() => {
     // Get the current user's ID from Firebase Authentication
@@ -40,7 +42,23 @@ const ProfileView = () => {
         setLoading(true);
         const userDoc = await getDoc(doc(firestore, 'users', id)); // Fetch user data
         if (userDoc.exists()) {
-          setUserData(userDoc.data() as User);
+          const data = userDoc.data() as User;
+  
+          // Filter banned words from bio and contactNumber
+          let filteredBio = data.bio || "";
+          let filteredContact = data.contactNumber || "";
+  
+          bannedWords.forEach((word) => {
+            const regex = new RegExp(`\\b${word}\\b`, "gi"); // Match full words, case insensitive
+            filteredBio = filteredBio.replace(regex, "*".repeat(word.length));
+            filteredContact = filteredContact.replace(regex, "*".repeat(word.length));
+          });
+  
+          setUserData({
+            ...data,
+            bio: filteredBio,
+            contactNumber: filteredContact,
+          });
         } else {
           setError('User not found.');
         }
@@ -52,9 +70,9 @@ const ProfileView = () => {
     };
   
     fetchUserData();
-  }, [id]);
+  }, [id, bannedWords]);
 
-  if (loading) {
+  if (loading || bannedWordsLoading) {
     return (
       <Layout>
         <div>

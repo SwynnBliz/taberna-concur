@@ -1,7 +1,7 @@
 // components/forum/Forum.tsx
 'use client';
 import { useState, useEffect } from 'react';
-import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where } from 'firebase/firestore';
 import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
@@ -51,13 +51,14 @@ const Forum = () => {
   const [isEditingComment, setIsEditingComment] = useState(false); // State to toggle editing mode
   const [editContentComment, setEditContentComment] = useState(''); // Store the new comment content
   const [showComments, setShowComments] = useState<{ [key: string]: boolean }>({});
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); // Store posts after filtering
   const [searchQuery, setSearchQuery] = useState(''); // State for search query
   const [isPostForumVisible, setIsPostForumVisible] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [editImageFile, setEditImageFile] = useState<File | null>(null); // Store selected image file
   const [editCurrentImageUrl, setEditCurrentImageUrl] = useState<string | null>(null); // Store the current image URL
-  const { bannedWords, loading } = useBannedWords(); // Get banned words from Firestore
+  const { bannedWords } = useBannedWords(); // Get banned words from Firestore
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); // Store posts after filtering
+  const [isSaving, setIsSaving] = useState<boolean>(false); // Loading state for saving post
 
   // Handles the like and dislike tracking
   useEffect(() => {
@@ -387,6 +388,10 @@ const Forum = () => {
 
   const handleDeletePost = async (postId: string) => {
     try {
+      // Prompt the user to confirm post deletion
+      const confirmDelete = window.confirm("Are you sure you want to delete this post? This cannot be undone!");
+      if (!confirmDelete) return; // If user cancels, exit the function
+  
       console.log("Attempting to delete post with ID:", postId);
       const userId = auth.currentUser?.uid;
   
@@ -418,10 +423,14 @@ const Forum = () => {
     } catch (error) {
       console.error("Error deleting post:", error);
     }
-  };
+  };  
 
   const handleDeleteComment = async (postId: string, commentIndex: number) => {
     try {
+      // Prompt the user to confirm comment deletion
+      const confirmDelete = window.confirm("Are you sure you want to delete this comment? This cannot be undone!");
+      if (!confirmDelete) return; // If user cancels, exit the function
+  
       const userId = auth.currentUser?.uid;
       if (!userId) {
         console.error("You must be logged in to delete comments.");
@@ -454,7 +463,7 @@ const Forum = () => {
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
-  };
+  };  
 
   const getUsernameFromDatabase = async (userId: string): Promise<string> => {
     try {
@@ -505,6 +514,8 @@ const Forum = () => {
   
     const userId = auth.currentUser?.uid;
     if (!userId) return; // Ensure the user is authenticated
+
+    setIsSaving(true); // Set loading state when saving
   
     try {
       let imageUrl = null;
@@ -546,6 +557,8 @@ const Forum = () => {
       setEditImageFile(null); // Reset the selected file
     } catch (error) {
       console.error('Error updating post:', error);
+    } finally {
+      setIsSaving(false); // Reset loading state after operation
     }
   };  
 
@@ -562,36 +575,43 @@ const Forum = () => {
     }
   };
   
-
   const handleSaveComment = async () => {
     if (editingPostId === null || editingCommentIndex === null) return;
-  
+
+    setIsSaving(true); // Set loading state when saving
+
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-  
+
     const postRef = doc(firestore, 'posts', editingPostId);
     const postToUpdate = await getDoc(postRef);
     const postData = postToUpdate.data() as Post;
-  
+
     // Get the comment to update using its index
     const commentToUpdate = postData.comments[editingCommentIndex];
-  
+
     // Update the comment's content
     postData.comments[editingCommentIndex] = {
       ...commentToUpdate,
       comment: editContentComment,
       updatedAt: new Date(),
     };
-  
+
     // Save the updated post
-    await updateDoc(postRef, {
-      comments: postData.comments,
-    });
-  
-    setIsEditingComment(false);
-    setEditContentComment('');
-    setEditingPostId(null);
-    setEditingCommentIndex(null); // Reset the index after saving
+    try {
+      await updateDoc(postRef, {
+        comments: postData.comments,
+      });
+      // Reset editing states
+      setIsEditingComment(false);
+      setEditContentComment('');
+      setEditingPostId(null);
+      setEditingCommentIndex(null); // Reset the index after saving
+    } catch (error) {
+      console.error("Error saving comment:", error);
+    } finally {
+      setIsSaving(false); // Reset loading state after saving
+    }
   };
 
   // Assuming `handleBookmarkPost` is the function handling the bookmark toggle
@@ -751,11 +771,11 @@ const Forum = () => {
                     </div>
                   </div>
   
-                  {/* Right Section: Update and Delete Buttons */}
+                  {/* Right Section: Update, Delete, and Bookmark Buttons */}
                   <div className="flex space-x-2">
-                  {auth.currentUser?.uid === post.userId && !isEditingPost && (
+                    {/* Container for all buttons */}
                     <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                      {/* Bookmark Button with Tooltip */}
+                      {/* Bookmark Button - Always visible */}
                       <div className="relative group inline-flex items-center">
                         <button
                           onClick={() => handleBookmarkPost(post.id)}
@@ -770,42 +790,46 @@ const Forum = () => {
                           <FaBookmark className="w-5 h-5" />
                         </button>
 
-                        {/* Tooltip */}
+                        {/* Tooltip for Bookmark */}
                         <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                           Bookmark Post
                         </div>
                       </div>
 
-                      {/* Edit Button with Tooltip */}
-                      <div className="relative group inline-flex items-center">
-                        <button
-                          onClick={() => handleUpdatePost(post.id)}
-                          className="text-white hover:text-yellow-500"
-                        >
-                          <FaEdit className="w-5 h-5" />
-                        </button>
+                      {/* Conditionally rendered Update and Delete Buttons */}
+                      {auth.currentUser?.uid === post.userId && !isEditingPost && (
+                        <>
+                          {/* Edit Button with Tooltip */}
+                          <div className="relative group inline-flex items-center">
+                            <button
+                              onClick={() => handleUpdatePost(post.id)}
+                              className="text-white hover:text-yellow-500"
+                            >
+                              <FaEdit className="w-5 h-5" />
+                            </button>
 
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                          Update Post
-                        </div>
-                      </div>
+                            {/* Tooltip for Edit Button */}
+                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                              Update Post
+                            </div>
+                          </div>
 
-                      {/* Delete Button with Tooltip */}
-                      <div className="relative group inline-flex items-center">
-                        <button
-                          onClick={() => handleDeletePost(post.id)}
-                          className="text-white hover:text-yellow-500"
-                        >
-                          <FaTrash className="w-5 h-5" />
-                        </button>
-                        {/* Tooltip */}
-                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                            Delete Post
-                        </div>
-                      </div>
+                          {/* Delete Button with Tooltip */}
+                          <div className="relative group inline-flex items-center">
+                            <button
+                              onClick={() => handleDeletePost(post.id)}
+                              className="text-white hover:text-yellow-500"
+                            >
+                              <FaTrash className="w-5 h-5" />
+                            </button>
+                            {/* Tooltip for Delete Button */}
+                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                              Delete Post
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
-                  )}
                   </div>
                 </div>
                 <p className="text-lg text-white mb-4" style={{ whiteSpace: 'pre-wrap' }}>
@@ -867,15 +891,16 @@ const Forum = () => {
                             setIsEditingPost(false);
                             setEditImageFile(null); // Clear selected image when canceling
                           }}
-                          className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                          className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSavePost}
-                          className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                          className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+                          disabled={isSaving} // Disable button while saving
                         >
-                          Save
+                          {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
                         </button>
                       </div>
                     </div>
@@ -993,33 +1018,34 @@ const Forum = () => {
                               </div>
 
                               {isEditingComment && (
-                                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
-                                  <div className="bg-white p-6 rounded-lg w-96">
+                                <div className="fixed inset-0 bg-[#484242] bg-opacity-80 flex items-center justify-center z-50">
+                                  <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                                     <textarea
                                       value={editContentComment}
                                       onChange={(e) => setEditContentComment(e.target.value)}
-                                      className="w-full p-3 rounded-lg border border-gray-300 text-black"
+                                      className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
                                       rows={5}
                                     />
                                     <div className="mt-4 flex justify-end space-x-2">
                                       <button
                                         onClick={() => setIsEditingComment(false)}
-                                        className="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg"
+                                        className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
                                       >
                                         Cancel
                                       </button>
                                       <button
                                         onClick={handleSaveComment}
-                                        className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                                        className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+                                        disabled={isSaving} // Disable button while saving
                                       >
-                                        Save
+                                        {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
                                       </button>
                                     </div>
                                   </div>
                                 </div>
                               )}
 
-                              <p>{comment.comment}</p>
+                              <p>{filterBannedWords(comment.comment)}</p>
 
                               <div className="flex gap-4 mt-2">
                                 <button

@@ -35,7 +35,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="flex flex-col min-h-screen">
       <TopBar onLeftSidebarToggle={handleLeftSidebarToggle} />
-      <div className="flex flex-1">
+      <div className="flex flex-1 relative">
         {/* Left Sidebar */}
         <LeftSidebar 
           isVisible={isLeftSidebarVisible} 
@@ -43,13 +43,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         />
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#484242] overflow-auto">{children}</main>
+        <main className="flex-1 bg-[#484242] overflow-auto mr-60">
+          {children}
+        </main>
 
         {/* Conditionally Render Right Sidebar */}
         {isDiscussionBoard && (
-          <div className="relative">
-            <RightSidebar />
-          </div>
+          <RightSidebar />
         )}
       </div>
     </div>

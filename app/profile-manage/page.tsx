@@ -6,6 +6,7 @@ import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Cloudinary } from 'cloudinary-core';
 import Layout from '../../components/root/Layout'; // Layout component import
 import PasswordStrengthChecker from '../../components/auth/PasswordStrengthChecker'; // Import the strength checker
+import useBannedWords from '../../components/forum/hooks/useBannedWords'; // Import useBannedWords hook
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -29,6 +30,7 @@ const ProfilePage = () => {
   const firestore = getFirestore();
   const authInstance = getAuth();
   const [dataLoaded, setDataLoaded] = useState(false);
+  const { bannedWords, loading: bannedWordsLoading } = useBannedWords(); // Use bannedWords hook
 
   // Initialize Cloudinary with environment variables
   const cloudinary = new Cloudinary({ cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME });
@@ -87,10 +89,21 @@ const ProfilePage = () => {
     }
   };
 
+  // Check if username contains banned words
+  const containsBannedWords = (username: string) => {
+    return bannedWords.some((word) => username.toLowerCase().includes(word.toLowerCase()));
+  };
+
   // Update the user info in Firestore and Firebase Authentication
   const handleUpdateProfile = async () => {
     if (!userData.username) {
       setErrorMessage('Username is required.');
+      return;
+    }
+
+    // Check if username contains banned words
+    if (containsBannedWords(userData.username)) {
+      setErrorMessage('Username contains a banned word, please change.');
       return;
     }
   
@@ -144,7 +157,7 @@ const ProfilePage = () => {
       }
   
       alert('Profile updated successfully');
-      router.push('/discussion-board'); // Redirect to the discussion board
+      router.push(`/profile-view/${user.uid}`); // Redirect to the discussion board
     } catch (error: any) {
       setErrorMessage(error.message);
     }
