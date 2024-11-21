@@ -43,14 +43,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         />
 
         {/* Main Content */}
-        <main className="flex-1 bg-[#484242] overflow-auto mr-60">
+        <main 
+          className={`flex-1 bg-[#484242] overflow-auto ${isDiscussionBoard ? "mr-60" : ""}`}
+        >
           {children}
         </main>
 
         {/* Conditionally Render Right Sidebar */}
-        {isDiscussionBoard && (
-          <RightSidebar />
-        )}
+        {isDiscussionBoard && <RightSidebar />}
       </div>
     </div>
   );

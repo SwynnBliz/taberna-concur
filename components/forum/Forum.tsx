@@ -657,20 +657,6 @@ const Forum = () => {
     setIsSearchVisible((prevState) => !prevState);
   };
 
-  // Utility function to censor words in a text
-  const censorText = (text: string, bannedWords: string[]): string => {
-    let censoredText = text;
-    
-    bannedWords.forEach((word) => {
-      // Replace the word with asterisks (*) matching the word length
-      const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Match whole word, case insensitive
-      censoredText = censoredText.replace(regex, (match) => '*'.repeat(match.length));
-    });
-    
-    return censoredText;
-  };
-
-
   return (
     <div className="flex flex-col">
       {/* Conditionally show Search Input */}
