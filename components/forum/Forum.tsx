@@ -6,7 +6,7 @@ import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEye, FaEllipsisV } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 import useBannedWords from "./hooks/useBannedWords"; // Import custom hook
 
@@ -59,6 +59,7 @@ const Forum = () => {
   const { bannedWords } = useBannedWords(); // Get banned words from Firestore
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); // Store posts after filtering
   const [isSaving, setIsSaving] = useState<boolean>(false); // Loading state for saving post
+  const [showMoreOptions, setShowMoreOptions] = useState<{ [postId: string]: boolean }>({});
 
   // Handles the like and dislike tracking
   useEffect(() => {
@@ -757,66 +758,86 @@ const Forum = () => {
                     </div>
                   </div>
   
-                  {/* Right Section: Update, Delete, and Bookmark Buttons */}
-                  <div className="flex space-x-2">
-                    {/* Container for all buttons */}
-                    <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                      {/* Bookmark Button - Always visible */}
-                      <div className="relative group inline-flex items-center">
-                        <button
-                          onClick={() => handleBookmarkPost(post.id)}
-                          className={`${
-                            post.bookmarks?.some(
-                              (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
-                            )
-                              ? "text-yellow-500"
-                              : "text-white"
-                          } hover:text-yellow-500`}
-                        >
-                          <FaBookmark className="w-5 h-5" />
-                        </button>
-
-                        {/* Tooltip for Bookmark */}
-                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                          Bookmark Post
+                  {/* Right Section: View Post, Bookmark, and More Options */}
+                    <div className="flex space-x-2">
+                      {/* Container for all buttons */}
+                      <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
+                        {/* View Post Button */}
+                        <div className="relative group inline-flex items-center">
+                          <Link href={`/post-view/${post.id}`}>
+                            <button className="text-white hover:text-yellow-500 mt-2">
+                              <FaEye className="w-4 h-4" />
+                            </button>
+                          </Link>
+                          {/* Tooltip for View Post */}
+                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                            View Post
+                          </div>
                         </div>
+
+                        {/* Bookmark Button */}
+                        <div className="relative group inline-flex items-center">
+                          <button
+                            onClick={() => handleBookmarkPost(post.id)}
+                            className={`${
+                              post.bookmarks?.some(
+                                (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
+                              )
+                                ? "text-yellow-500"
+                                : "text-white"
+                            } hover:text-yellow-500`}
+                          >
+                            <FaBookmark className="w-4 h-4" />
+                          </button>
+                          {/* Tooltip for Bookmark */}
+                          <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                            Bookmark Post
+                          </div>
+                        </div>
+
+                        {/* More Options Dropdown */}
+                        {auth.currentUser?.uid === post.userId && (
+                          <div className="relative group inline-flex items-center">
+                            <button
+                              onClick={() => setShowMoreOptions((prev) => ({ ...prev, [post.id]: !prev[post.id] }))}
+                              className="text-white hover:text-yellow-500"
+                            >
+                              <FaEllipsisV className="w-4 h-4" />
+                            </button>
+
+                            {/* Tooltip for More Options */}
+                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                              More Options
+                            </div>
+
+                            {showMoreOptions[post.id] && (
+                              <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-50">
+                                {/* Triangle Pointer */}
+                                <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
+
+                                {/* Edit Button */}
+                                <button
+                                  onClick={() => handleUpdatePost(post.id)}
+                                  className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
+                                >
+                                  <FaEdit className="w-4 h-4 mr-2" />
+                                  <span className="whitespace-nowrap">Edit Post</span>
+                                </button>
+
+                                {/* Delete Button */}
+                                <button
+                                  onClick={() => handleDeletePost(post.id)}
+                                  className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
+                                >
+                                  <FaTrash className="w-4 h-4 mr-2" />
+                                  <span className="whitespace-nowrap">Delete Post</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
-
-                      {/* Conditionally rendered Update and Delete Buttons */}
-                      {auth.currentUser?.uid === post.userId && !isEditingPost && (
-                        <>
-                          {/* Edit Button with Tooltip */}
-                          <div className="relative group inline-flex items-center">
-                            <button
-                              onClick={() => handleUpdatePost(post.id)}
-                              className="text-white hover:text-yellow-500"
-                            >
-                              <FaEdit className="w-5 h-5" />
-                            </button>
-
-                            {/* Tooltip for Edit Button */}
-                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                              Update Post
-                            </div>
-                          </div>
-
-                          {/* Delete Button with Tooltip */}
-                          <div className="relative group inline-flex items-center">
-                            <button
-                              onClick={() => handleDeletePost(post.id)}
-                              className="text-white hover:text-yellow-500"
-                            >
-                              <FaTrash className="w-5 h-5" />
-                            </button>
-                            {/* Tooltip for Delete Button */}
-                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                              Delete Post
-                            </div>
-                          </div>
-                        </>
-                      )}
                     </div>
-                  </div>
                 </div>
                 
                 <p className="text-lg text-white mb-4" style={{ whiteSpace: 'pre-wrap' }}>
@@ -824,7 +845,7 @@ const Forum = () => {
                 </p>
 
                 {isEditingPost && (
-                  <div className="fixed inset-0 bg-[#484242] bg-opacity-80 flex items-center justify-center z-50">
+                  <div className="fixed inset-0 bg-[#484242] bg-opacity-20 flex items-center justify-center z-50">
                     <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                       {/* Textarea for Editing Content */}
                       <textarea
@@ -856,6 +877,13 @@ const Forum = () => {
                             alt="Selected Image Preview"
                             className="w-full object-cover rounded-lg mt-2"
                           />
+                        </div>
+                      )}
+
+                      {/* Current Image Display */}
+                      {editCurrentImageUrl && (
+                        <div className="mt-4">
+                          <p className="text-white">Select an Image to Change (Optional):</p>
                         </div>
                       )}
 
@@ -901,6 +929,7 @@ const Forum = () => {
                     className="w-full h-full object-cover rounded-lg mb-4"
                   />
                 )}
+                
                 <div className="flex gap-2 mb-4 items-center">
                   {/* Like Button with Tooltip */}
                   <div className="relative group inline-flex items-center">
@@ -998,15 +1027,16 @@ const Forum = () => {
                                     )}
                                   </p>
                                 </div>
+                                
                                 {auth.currentUser?.uid === comment.userId && (
-                                  <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
+                                  <div className="bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
                                     {/* Update Button with Tooltip */}
                                     <div className="relative group inline-flex items-center">
                                       <button
                                         onClick={() => handleUpdateComment(post.id, index)}
                                         className="hover:text-yellow-500"
                                       >
-                                        <FaEdit className="w-5 h-5" />
+                                        <FaEdit className="w-3 h-3" />
                                       </button>
 
                                       {/* Tooltip */}
@@ -1020,7 +1050,7 @@ const Forum = () => {
                                         onClick={() => handleDeleteComment(post.id, index)}
                                         className="hover:text-yellow-500"
                                       >
-                                        <FaTrash className="w-5 h-5" />
+                                        <FaTrash className="w-3 h-3" />
                                       </button>
 
                                       {/* Tooltip */}
@@ -1033,7 +1063,7 @@ const Forum = () => {
                               </div>
 
                               {isEditingComment && (
-                                <div className="fixed inset-0 bg-[#484242] bg-opacity-80 flex items-center justify-center z-50">
+                                <div className="fixed inset-0 bg-[#484242] bg-opacity-20 flex items-center justify-center z-50">
                                   <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                                     <textarea
                                       value={editContentComment}

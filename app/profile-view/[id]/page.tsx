@@ -1,4 +1,4 @@
-// app/discussion-board/page.tsx (Discussion Board Page)
+// app/profile-view/[id]/page.tsx (Profile View Page)
 'use client';
 import Layout from '../../../components/root/Layout'; // Layout component
 import { useEffect, useState } from 'react';
