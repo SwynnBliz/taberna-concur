@@ -63,7 +63,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
         <li>
           <button
             className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-            onClick={() => router.push('/discussion-board')}
+            onClick={() => router.push('/quiz')}
           >
             Quiz
           </button>
