@@ -1,12 +1,12 @@
 // components/forum/Forum.tsx
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where } from 'firebase/firestore';
 import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEye, FaEllipsisV } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEye, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 import useBannedWords from "./hooks/useBannedWords"; // Import custom hook
 
@@ -60,6 +60,10 @@ const Forum = () => {
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); // Store posts after filtering
   const [isSaving, setIsSaving] = useState<boolean>(false); // Loading state for saving post
   const [showMoreOptions, setShowMoreOptions] = useState<{ [postId: string]: boolean }>({});
+  const [isExpanded, setIsExpanded] = useState<{ [postId: string]: boolean }>({});
+  const [isTruncated, setIsTruncated] = useState<{ [postId: string]: boolean }>({});
+  const contentRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
+  const [notification, setNotification] = useState<string | null>(null);
 
   // Handles the like and dislike tracking
   useEffect(() => {
@@ -412,7 +416,7 @@ const Forum = () => {
           return;
         }
   
-        // Uncomment for soft delete:
+        // For soft delete:
         // await updateDoc(postRef, { deleted: true });
   
         // For hard delete:
@@ -615,7 +619,7 @@ const Forum = () => {
     }
   };
 
-  // Assuming `handleBookmarkPost` is the function handling the bookmark toggle
+  // Handle Bookmark Button Click
   const handleBookmarkPost = async (postId: string) => {
     const currentUserId = auth.currentUser?.uid;
     if (!currentUserId) return; // Make sure user is authenticated
@@ -633,18 +637,27 @@ const Forum = () => {
       if (existingBookmarkIndex !== -1) {
         // Remove bookmark (user is unbookmarking the post)
         bookmarks.splice(existingBookmarkIndex, 1); // Remove the bookmark for that user
+        // Set notification message for removed bookmark
+        setNotification("Removed Post Bookmark");
       } else {
         // Add bookmark (user is bookmarking the post)
         bookmarks.push({
           userId: currentUserId,
           bookmarkCreatedAt: new Date(), // Using Firestore Timestamp is preferable
         });
+        // Set notification message for added bookmark
+        setNotification("Post bookmarked");
       }
 
       // Update the post document with the modified bookmarks array
       await updateDoc(postRef, {
         bookmarks: bookmarks,
       });
+
+      // Remove notification after 3 seconds
+      setTimeout(() => {
+        setNotification(null);
+      }, 2000); // Adjust the time (in ms) as needed
     }
   };
 
@@ -656,6 +669,50 @@ const Forum = () => {
   // Function to toggle Search input visibility
   const toggleSearch = () => {
     setIsSearchVisible((prevState) => !prevState);
+  };
+
+  // Function to toggle the message display
+  const toggleMessage = (postId: string) => {
+    setIsExpanded((prev) => ({
+      ...prev,
+      [postId]: !prev[postId],
+    }));
+  };
+
+  // Check if the content is truncated
+  const checkTruncation = (postId: string) => {
+    const element = contentRefs.current[postId];
+    if (element) {
+      // Compare scrollHeight and clientHeight to detect truncation
+      setIsTruncated((prev) => ({
+        ...prev,
+        [postId]: element.scrollHeight > element.clientHeight,
+      }));
+    }
+  };
+
+  // Run the truncation check after the component is rendered and the content is available
+  useEffect(() => {
+    posts.forEach((post) => checkTruncation(post.id));
+  }, [posts]);
+
+  const handleShare = (postId: string) => {
+    // Copy the URL of the post to the clipboard
+    const url = `${window.location.origin}/post-view/${postId}`;
+    navigator.clipboard.writeText(url)
+      .then(() => {
+        setNotification('Link copied!');
+        setTimeout(() => {
+          setNotification(null); // Hide notification after 3 seconds
+        }, 2000);
+      })
+      .catch((err) => {
+        console.error('Failed to copy the URL', err);
+        setNotification('Failed to copy the link!');
+        setTimeout(() => {
+          setNotification(null); // Hide notification after 3 seconds
+        }, 2000);
+      });
   };
 
   return (
@@ -732,14 +789,22 @@ const Forum = () => {
                 <div className="flex items-center justify-between mb-4">
                   {/* Left Section: Image, Username, and Timestamp */}
                   <div className="flex items-center">
-                    <Link href={`/profile-view/${post.userId}`}>
-                      <img
-                        src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
-                        alt="Profile"
-                        className="w-12 h-12 rounded-full mr-4 cursor-pointer"
-                        onLoad={() => fetchUserPhoto(post.userId)}
-                      />
-                    </Link>
+                    <div className="relative group inline-flex items-center">
+                      <Link href={`/profile-view/${post.userId}`}>
+                        <img
+                          src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
+                          alt="Profile"
+                          className="w-12 h-12 rounded-full mr-4 cursor-pointer"
+                          onLoad={() => fetchUserPhoto(post.userId)}
+                        />
+                      </Link>
+
+                      {/* Tooltip for View User's Profile */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                        View User's Profile
+                      </div>
+                    </div>
+                  
                     <div>
                       <p className="text-xl font-semibold text-white">
                         {usernames.get(post.userId) || "Loading..."}
@@ -840,9 +905,40 @@ const Forum = () => {
                     </div>
                 </div>
                 
-                <p className="text-lg text-white mb-4" style={{ whiteSpace: 'pre-wrap' }}>
-                  {post.message}
-                </p>
+                <div className="mb-2">
+                  <p
+                    ref={(el) => { contentRefs.current[post.id] = el; }}  // Assign ref to each paragraph element
+                    className={`text-lg text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      display: '-webkit-box',
+                      WebkitBoxOrient: 'vertical',
+                      WebkitLineClamp: isExpanded[post.id] ? 'none' : 2,
+                    }}
+                  >
+                    {post.message}
+                  </p>
+
+                  {/* Show "See more" if the message is truncated and not expanded */}
+                  {isTruncated[post.id] && !isExpanded[post.id] && (
+                    <button
+                      onClick={() => toggleMessage(post.id)}
+                      className="text-white cursor-pointer underline hover:text-yellow-500"
+                    >
+                      See more
+                    </button>
+                  )}
+
+                  {/* Show "See less" when the message is expanded */}
+                  {isExpanded[post.id] && (
+                    <button
+                      onClick={() => toggleMessage(post.id)}
+                      className="text-white cursor-pointer underline hover:text-yellow-500"
+                    >
+                      See less
+                    </button>
+                  )}
+                </div>
 
                 {isEditingPost && (
                   <div className="fixed inset-0 bg-[#484242] bg-opacity-20 flex items-center justify-center z-50">
@@ -992,6 +1088,21 @@ const Forum = () => {
                       Hide Comments
                     </div>
                   </button>
+
+                  {/* Share Button */}
+                  <div className="relative group inline-flex items-center">
+                    <button
+                      onClick={() => handleShare(post.id)}
+                      className="flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 text-gray-400 hover:text-yellow-500"
+                    >
+                      <FaShare className="w-4 h-4" />
+                      <span>Share</span>
+                    </button>
+                    {/* Tooltip for Share Button */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                      Share Post
+                    </div>
+                  </div>
                 </div>
 
                 {showComments[post.id] && (
@@ -1155,6 +1266,15 @@ const Forum = () => {
           )}
         </div>
       </div>
+      {/* Notification */}
+      {notification && (
+        <div
+          className="fixed bottom-4 left-4 bg-[#2c2c2c] text-white text-lg p-4 rounded-md shadow-lg max-w-xs"
+          style={{ transition: 'opacity 0.3s ease-in-out' }}
+        >
+          {notification}
+        </div>
+      )}
     </div>
   );
 };
