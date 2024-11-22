@@ -1182,7 +1182,7 @@ const Forum = () => {
                               </div>
 
                               {isEditingComment && (
-                                <div className="fixed inset-0 bg-[#484242] bg-opacity-20 flex items-center justify-center z-50">
+                                <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
                                   <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                                     <textarea
                                       value={editContentComment}

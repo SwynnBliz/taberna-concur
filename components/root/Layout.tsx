@@ -25,6 +25,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   // Check if the current route is the profile-view route
   const isProfileView = pathname.startsWith('/profile-view/');
 
+  // Check if the current route is the post-view route
+  const isPostView = pathname.startsWith('/post-view/');
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
@@ -47,13 +50,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Main Content */}
         <main 
-          className={`flex-1 bg-[#484242] overflow-auto ${isDiscussionBoard || isProfileView ? "mr-60" : ""}`}
+          className={`flex-1 bg-[#484242] overflow-auto ${isDiscussionBoard || isProfileView || isPostView ? "mr-60" : ""}`}
         >
           {children}
         </main>
 
         {/* Conditionally Render Right Sidebar */}
-        {(isDiscussionBoard || isProfileView) && <RightSidebar />}
+        {(isDiscussionBoard || isProfileView || isPostView) && <RightSidebar />}
       </div>
     </div>
   );
