@@ -715,6 +715,14 @@ const Forum = () => {
       });
   };
 
+  const formatNumberIntl = (num: number) => {
+    return new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      compactDisplay: "short",
+      maximumFractionDigits: 1,
+    }).format(num);
+  };
+
   return (
     <div className="flex flex-col">
       {/* Conditionally show Search Input */}
@@ -1034,7 +1042,7 @@ const Forum = () => {
                       className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
                       <FaThumbsUp className="w-4 h-4" />
-                      <span>{post.likes}</span>
+                      <span>{formatNumberIntl(post.likes)}</span> {/* Format the likes */}
                     </button>
                     {/* Tooltip for Like Button */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1049,7 +1057,7 @@ const Forum = () => {
                       className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
                       <FaThumbsDown className="w-4 h-4" />
-                      <span>{post.dislikes}</span>
+                      <span>{formatNumberIntl(post.dislikes)}</span> {/* Format the dislikes */}
                     </button>
                     {/* Tooltip for Dislike Button */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1068,7 +1076,7 @@ const Forum = () => {
                     className={`relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto ${showComments[post.id] ? 'text-yellow-500' : 'text-gray-400'}`}
                   >
                     <FaComment className="w-4 h-4" />
-                    <span>{post.comments.length}</span>
+                    <span>{formatNumberIntl(post.comments.length)}</span> {/* Format the comments */}
 
                     {/* Tooltip for Show Comments */}
                     <div
@@ -1215,7 +1223,7 @@ const Forum = () => {
                                     }`}
                                   >
                                     <FaThumbsUp className="w-3 h-3" />
-                                    <span>{comment.likes}</span>
+                                    <span>{formatNumberIntl(comment.likes)}</span> {/* Format the likes */}
                                   </button>
                                   {/* Tooltip for Like Button (Comment) */}
                                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1233,7 +1241,7 @@ const Forum = () => {
                                     }`}
                                   >
                                     <FaThumbsDown className="w-3 h-3" />
-                                    <span>{comment.dislikes}</span>
+                                    <span>{formatNumberIntl(comment.dislikes)}</span> {/* Format the dislikes */}
                                   </button>
                                   {/* Tooltip for Dislike Button (Comment) */}
                                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
