@@ -9,13 +9,14 @@ import { getAuth } from 'firebase/auth'; // For getting the current logged-in us
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEye, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEye, FaEllipsisV, FaShare, FaCaretDown } from 'react-icons/fa'; // Importing React Icons
 
 interface User {
   profilePhoto: string;
   username: string;
   bio: string;
   contactNumber: string;
+  visibility: 'public' | 'private';
 }
 
 interface Post {
@@ -68,6 +69,7 @@ const ProfileView = () => {
   const [isTruncated, setIsTruncated] = useState<{ [postId: string]: boolean }>({});
   const contentRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
   const [notification, setNotification] = useState<string | null>(null);
+  const [isProfilePublic, setIsProfilePublic] = useState(true); // Default to public until we fetch the correct data
 
   // Function to toggle the message display
   const toggleMessage = (postId: string) => {
@@ -220,9 +222,12 @@ const ProfileView = () => {
   
     const fetchUserData = async () => {
       try {
-        const userDoc = await getDoc(doc(firestore, 'users', id)); // Fetch user data
+        const userDoc = await getDoc(doc(firestore, 'users', id)); // Fetch the data for the user whose profile is being viewed
         if (userDoc.exists()) {
           const data = userDoc.data() as User;
+  
+          // Set the profile's visibility status here
+          setIsProfilePublic(data.visibility === 'public'); // Set the profile visibility for the viewed profile
   
           // Filter banned words from bio and contactNumber
           let filteredBio = data.bio || "";
@@ -522,78 +527,138 @@ const ProfileView = () => {
     }
   };
 
+  const toggleProfileVisibility = async () => {
+    try {
+      // Toggle the visibility in local state
+      setIsProfilePublic((prevState) => {
+        const newState = !prevState; // This will toggle between true and false
+        updateProfileVisibilityInDatabase(newState); // Update Firestore
+        return newState;
+      });
+    } catch (error) {
+      console.error("Error toggling profile visibility: ", error);
+    }
+  };
+
+  const updateProfileVisibilityInDatabase = async (newState: boolean) => {
+    try {
+      // Ensure `id` is a valid string before proceeding
+      if (typeof id !== 'string') {
+        console.error("Invalid user ID");
+        return;
+      }
+  
+      const userRef = doc(firestore, 'users', id); // Create reference to the user document
+      await updateDoc(userRef, {
+        visibility: newState ? 'public' : 'private', // Update visibility
+      });
+    } catch (error) {
+      console.error("Error updating profile visibility in Firestore: ", error);
+    }
+  };
+
   return (
     <Layout>
       <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative flex flex-col">
         <section>
-          {/* Edit Button with Tooltip - Visible only if the logged-in user is the same as the profile */}
+          {/* Container for Edit Button and Visibility Toggle */}
           {currentUserId === id && (
-            <div className="relative group">
-              <button
-                onClick={handleEditProfile}
-                className="absolute -top-4 -right-4 p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500"
-              >
-                <FaEdit />
-              </button>
+            <div className="absolute top-3 right-4 flex space-x-2">
+              {/* Visibility Toggle Button with Dropdown Indicator */}
+              <div className="relative group">
+                <button
+                  onClick={toggleProfileVisibility}
+                  className="p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500 text-xs flex items-center space-x-2"
+                >
+                  <span>{isProfilePublic ? 'Public' : 'Private'}</span>
+                  <FaCaretDown className="text-xs" />
+                </button>
 
-              {/* Tooltip */}
-              <div className="absolute bottom-full mt-4 -right-9 transform -translate-y-4 translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                Edit Profile
+                {/* Tooltip for Visibility Toggle */}
+                <div className="absolute bottom-full mt-2 -right-6 transform -translate-y-0 translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                  {isProfilePublic ? 'Set Profile to Private' : 'Set Profile to Public'}
+                </div>
+              </div>
+
+              {/* Edit Button */}
+              <div className="relative group">
+                <button
+                  onClick={handleEditProfile}
+                  className="p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500"
+                >
+                  <FaEdit />
+                </button>
+
+                {/* Tooltip for Edit Button */}
+                <div className="absolute bottom-full mt-2 -right-6 transform -translate-y-0 translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                  Edit Profile
+                </div>
               </div>
             </div>
           )}
-
-          <div className="mt-6 flex items-start space-x-8"> {/* Flex container with space between */}
-            
+    
+          <div className="mt-6 flex items-start space-x-8">
             {/* Left Section: Profile Image and Username */}
             <div className="flex flex-col items-center w-1/3">
               <img
                 src={userData.profilePhoto || 'https://via.placeholder.com/150'}
                 alt="Profile"
-                className="w-60 h-60 rounded-full mb-4" // Adjusted for bigger image
+                className="w-60 h-60 rounded-full mb-4"
               />
               <h1 className="text-2xl text-white font-bold">{userData.username}</h1>
             </div>
-
+    
             {/* Right Section: Bio and Contact Number */}
             <div className="flex flex-col w-2/3">
               {/* Bio */}
               <div className="bg-[#4A4A4A] p-4 rounded-lg mb-4 max-h-60 overflow-auto">
                 <p className="text-gray-300 whitespace-pre-wrap">
                   <span className="font-bold text-white">Bio: </span><br />
-                  {userData.bio || 'No bio available'}
+                  {currentUserId === id || isProfilePublic ? (
+                    userData.bio || 'No bio available'
+                  ) : (
+                    'Profile set to private'
+                  )}
                 </p>
               </div>
-
+    
               {/* Contact Number */}
               <div className="bg-[#4A4A4A] p-4 rounded-lg">
-                <p className="text-white">
-                  <span className="font-bold">Contact: </span>
-                  {userData.contactNumber || 'Not provided'}
+                <p className="text-gray-300">
+                  <span className="font-bold text-white">Contact: </span><br />
+                  {currentUserId === id || isProfilePublic ? (
+                    userData.contactNumber || 'Not provided'
+                  ) : (
+                    'Profile set to private'
+                  )}
                 </p>
               </div>
             </div>
           </div>
         </section>
-
+    
         <section>
-          {/* Posts Section with Title and Divider */}
+          {/* Posts Section */}
           <div className="flex flex-col">
             <div className="mt-4 mb-4 w-full mx-auto flex flex-col justify-center items-center border-b-2 border-white pb-2">
               <div>
-                {/* Posts Text with Border */}
                 <p className="text-white text-xl">Posts</p>
               </div>
             </div>
-
-            {/* Contains the Posts and Comments Sections*/}
+    
+            {/* Contains the Posts and Comments Sections */}
             <div>
               <div className="p-3 w-full bg-[#383434] mx-auto">
-                {filteredPosts.length === 0 ? (
+                {!isProfilePublic && currentUserId !== id ? (
+                  // If the profile is private and the current user is not the owner, show a private post message
+                  <p className="text-center text-yellow-500 w-full">This post is set to private.</p>
+                ) : filteredPosts.length === 0 ? (
+                  // If no posts match the search query, show this message
                   <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                 ) : (
                   filteredPosts.map((post) => (
                     <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#4A4A4A] p-6">
+                      
                       <div className="flex items-center justify-between mb-4">
                         {/* Left Section: Image, Username, and Timestamp */}
                         <div className="flex items-center">

@@ -42,6 +42,7 @@ const SignIn = () => {
           email: user.email,
           username: defaultUsername,
           createdAt: new Date(),
+          visibility: 'public',
         });
       }
       router.push('/discussion-board');

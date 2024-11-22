@@ -82,6 +82,7 @@ const SignUp = () => {
         email,
         username,
         createdAt: new Date(),
+        visibility: 'public',
       });
       setEmail("");
       setPassword("");
