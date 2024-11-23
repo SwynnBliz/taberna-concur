@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { auth, googleProvider } from '../firebase/config';
 import { signInWithPopup } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+import { FcGoogle } from "react-icons/fc";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -75,11 +76,7 @@ const SignIn = () => {
           onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center py-2 mt-4 mb-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 border border-gray-300"
         >
-          <img
-            src="https://logos-world.net/wp-content/uploads/2020/09/Google-Symbol.png"
-            alt="Google Icon"
-            className="w-6 h-4 mr-2"
-          />
+          <FcGoogle className="w-4 h-4 mr-2" />
           Continue with Google
         </button>
 
