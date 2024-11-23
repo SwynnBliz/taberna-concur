@@ -1,6 +1,6 @@
 // components/root/LeftSidebar.tsx
 import { useRouter } from 'next/navigation';
-import { getAuth, signOut } from 'firebase/auth';
+import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useState, useEffect } from 'react';
 
 interface LeftSidebarProps {
@@ -13,13 +13,19 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
 
-  // Get the current user's ID from Firebase Authentication
+  // Listen for changes in authentication state
   useEffect(() => {
     const auth = getAuth();
-    const user = auth.currentUser;
-    if (user) {
-      setUserId(user.uid);
-    }
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserId(user.uid); // Set the userId when the user is logged in
+      } else {
+        setUserId(null); // Clear the userId if the user is logged out
+      }
+    });
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
   }, []);
 
   const handleLogout = async () => {

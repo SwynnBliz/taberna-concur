@@ -5,11 +5,13 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { getAuth, signOut } from "firebase/auth"; // Import signOut
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { FaSpinner } from "react-icons/fa";
 
 const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null); // Allow null
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Local state for sidebar open status
+  const [loading, setLoading] = useState(true); // Loading state for the profile image
   const router = useRouter();
   const authInstance = getAuth();
   const firestore = getFirestore();
@@ -47,11 +49,27 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         if (userDoc.exists()) {
           setProfilePhoto(userDoc.data()?.profilePhoto || "https://via.placeholder.com/150"); // Default image if no profile photo
         }
+      } else {
+        setProfilePhoto("https://via.placeholder.com/150"); // Handle case where no user is logged in
       }
+      setLoading(false); // Stop loading once data is fetched
     };
 
-    fetchUserData();
-  }, [authInstance.currentUser, firestore]);
+    // Ensure the effect runs only after authentication is initialized
+    if (authInstance.currentUser) {
+      fetchUserData();
+    }
+
+    // Listen for authentication changes (if user logs in after page load)
+    const unsubscribe = authInstance.onAuthStateChanged(user => {
+      if (user) {
+        fetchUserData();
+      }
+    });
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, [authInstance, firestore]); // Ensure it re-runs if auth or firestore instance changes
 
   return (
     <div className="sticky top-0 z-50 flex justify-between items-center bg-[#302C2C] text-white p-4 shadow-md">
@@ -87,13 +105,19 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         >
           <div className="absolute top-0 left-0 w-full h-full bg-yellow-500 opacity-0 hover:opacity-50 transition-all"></div>
           {/* Profile image */}
-          <Image
-            src={profilePhoto || "https://via.placeholder.com/150"} // Fallback to default image if profilePhoto is null
-            alt="Profile"
-            width={40}
-            height={40}
-            className="w-full h-full object-cover"
-          />
+          {loading ? (
+            <div className="w-full h-full flex items-center justify-center bg-gray-400 animate-pulse rounded-full">
+              <FaSpinner className="animate-spin text-white text-lg" />
+            </div>
+          ) : (
+            <Image
+              src={profilePhoto || "https://via.placeholder.com/150"} // Fallback to default image if profilePhoto is null
+              alt="Profile"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+            />
+          )}
         </button>
 
         {/* Tooltip */}

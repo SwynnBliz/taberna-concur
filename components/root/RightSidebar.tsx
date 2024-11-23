@@ -99,9 +99,9 @@ const RightSidebar = () => {
       {/* Separator Line */}
       <hr className="my-4 border-white w-5/6 mx-auto mb-0" />
       {loading || bannedWordsLoading ? (
-        <p className="text-white pt-2">Loading bookmarked posts...</p>
+        <p className="text-white pt-2 pl-5 text-xs">Loading bookmarked posts...</p>
       ) : bookmarkedPosts.length === 0 ? (
-        <p className="text-white pt-2">No bookmarked posts yet.</p>
+        <p className="text-white pt-2 pl-5 text-xs">No bookmarked posts yet.</p>
       ) : (
         <ul className="pt-1">
           {bookmarkedPosts.map((post, index) => (

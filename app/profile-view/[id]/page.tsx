@@ -5,11 +5,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation'; // For dynamic route params
 import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where } from 'firebase/firestore';
 import { firestore } from '../../firebase/config'; // Import Firestore instance
-import { getAuth } from 'firebase/auth'; // For getting the current logged-in user's UID
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; // For getting the current logged-in user's UID
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEye, FaEllipsisV, FaShare, FaCaretDown } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEye, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
 
 interface User {
   profilePhoto: string;
@@ -209,12 +209,19 @@ const ProfileView = () => {
   };
 
   useEffect(() => {
-    // Get the current user's ID from Firebase Authentication
     const auth = getAuth();
-    const user = auth.currentUser;
-    if (user) {
-      setCurrentUserId(user.uid); // Store the UID of the logged-in user
-    }
+
+    // Set up the listener to track authentication state changes
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUserId(user.uid); // Store the current user's ID
+      } else {
+        setCurrentUserId(null); // No user logged in
+      }
+    });
+
+    // Clean up the listener when the component unmounts
+    return () => unsubscribe();
   }, []);
 
   useEffect(() => {
@@ -572,18 +579,18 @@ const ProfileView = () => {
           {/* Container for Edit Button and Visibility Toggle */}
           {currentUserId === id && (
             <div className="absolute top-3 right-4 flex space-x-2">
+              <label className="text-xs text-white text-opacity-60 mt-2">Set Privacy:</label>
               {/* Visibility Toggle Button with Dropdown Indicator */}
               <div className="relative group">
                 <button
                   onClick={toggleProfileVisibility}
-                  className="p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500 text-xs flex items-center space-x-2"
+                  className="p-2 bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500 text-xs flex items-center space-x-2"
                 >
                   <span>{isProfilePublic ? 'Public' : 'Private'}</span>
-                  <FaCaretDown className="text-xs" />
                 </button>
 
                 {/* Tooltip for Visibility Toggle */}
-                <div className="absolute bottom-full mt-2 -right-6 transform -translate-y-0 translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                <div className="absolute bottom-full mt-2 -right-9 transform -translate-y-0 translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                   {isProfilePublic ? 'Set Profile to Private' : 'Set Profile to Public'}
                 </div>
               </div>
@@ -592,7 +599,7 @@ const ProfileView = () => {
               <div className="relative group">
                 <button
                   onClick={handleEditProfile}
-                  className="p-2 bg-[#4A4A4A] rounded-full text-white hover:bg-yellow-500"
+                  className="p-2 bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500"
                 >
                   <FaEdit />
                 </button>
@@ -619,7 +626,7 @@ const ProfileView = () => {
             {/* Right Section: Bio and Contact Number */}
             <div className="flex flex-col w-2/3">
               {/* Bio */}
-              <div className="bg-[#4A4A4A] p-4 rounded-lg mb-4 max-h-60 overflow-auto">
+              <div className="bg-[#424242] p-4 rounded-lg mb-4 max-h-60 overflow-auto">
                 <p className="text-gray-300 whitespace-pre-wrap">
                   <span className="font-bold text-white">Bio: </span><br />
                   {currentUserId === id || isProfilePublic ? (
@@ -631,7 +638,7 @@ const ProfileView = () => {
               </div>
     
               {/* Contact Number */}
-              <div className="bg-[#4A4A4A] p-4 rounded-lg">
+              <div className="bg-[#424242] p-4 rounded-lg">
                 <p className="text-gray-300">
                   <span className="font-bold text-white">Contact: </span><br />
                   {currentUserId === id || isProfilePublic ? (
@@ -665,7 +672,7 @@ const ProfileView = () => {
                   <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                 ) : (
                   filteredPosts.map((post) => (
-                    <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#4A4A4A] p-6">
+                    <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#424242] p-6">
                       
                       <div className="flex items-center justify-between mb-4">
                         {/* Left Section: Image, Username, and Timestamp */}

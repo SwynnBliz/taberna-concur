@@ -733,7 +733,7 @@ const Forum = () => {
             placeholder="Search posts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} // Update searchQuery on input change
-            className="w-full p-2 bg-[#383434] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
+            className="w-full p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
           />
         </div>
       )}

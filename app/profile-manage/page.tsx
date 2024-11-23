@@ -7,6 +7,7 @@ import { Cloudinary } from 'cloudinary-core';
 import Layout from '../../components/root/Layout'; // Layout component import
 import PasswordStrengthChecker from '../../components/auth/PasswordStrengthChecker'; // Import the strength checker
 import useBannedWords from '../../components/forum/hooks/useBannedWords'; // Import useBannedWords hook
+import { FaSpinner } from "react-icons/fa";
 
 const ProfilePage = () => {
   const router = useRouter();
@@ -179,12 +180,12 @@ const ProfilePage = () => {
             <div className="text-center">
                 {/* Show loading state while data is being fetched */}
                 {!dataLoaded ? (
-                  <div className="w-56 h-56 rounded-full bg-[#cccccc] flex items-center justify-center ml-10 mb-10 mt-0 mr-36">
-                    <p className="text-[#aaaaaa] text-lg font-semibold">Loading Profile...</p>
+                  <div className="w-56 h-56 rounded-full bg-gray-300 animate-pulse flex items-center justify-center ml-10 mb-10 mt-0 mr-36">
+                    <FaSpinner className="w-16 h-16 animate-spin text-white text-lg" />
                   </div>
                 ) : isLoading ? (
-                  <div className="w-56 h-56 rounded-full bg-[#cccccc] flex items-center justify-center ml-10 mb-10 mt-0 mr-36">
-                    <p className="text-[#aaaaaa] text-lg font-semibold">Loading Image...</p>
+                  <div className="w-56 h-56 rounded-full bg-gray-300 animate-pulse flex items-center justify-center ml-10 mb-10 mt-0 mr-36">
+                    <FaSpinner className="w-16 h-16 animate-spin text-white text-lg" />
                   </div>
                 ) : (
                   <img
@@ -197,24 +198,31 @@ const ProfilePage = () => {
 
             <div className="flex flex-col items-start w-2/3">
               <label className="text-white">Profile Picture</label>
-              <div className="relative group">
-                {/* File Input */}
-                <input
-                  type="file"
-                  onChange={handleProfilePhotoChange}
-                  className="mb-10 text-white"
-                  accept="image/*"
-                />
-                
-                {/* Tooltip */}
-                <div className="absolute bottom-full transform -translate-x-3 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                  Upload Profile Photo
+              {!dataLoaded ? (
+                  <div className="w-full h-10 mb-10 bg-gray-300 animate-pulse rounded-lg"></div>
+              ) : (
+                <div className="relative group">
+                  {/* File Input */}
+
+                    <input
+                      type="file"
+                      onChange={handleProfilePhotoChange}
+                      className="mb-10 text-white"
+                      accept="image/*"
+                    />
+
+                  
+                  {/* Tooltip */}
+                  <div className="absolute bottom-full transform -translate-x-3 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                    Upload Profile Photo
+                  </div>
                 </div>
-              </div>
+              )}
+              
               <label htmlFor="username" className="text-white mb-2">Username</label>
               {/* Show loading text for username */}
               {!dataLoaded ? (
-                  <div className="w-full h-10 bg-gray-300 animate-pulse"></div>
+                  <div className="w-full h-10 bg-gray-300 animate-pulse rounded-lg"></div>
                 ) : (
                 <input
                   id="username"
@@ -230,117 +238,125 @@ const ProfilePage = () => {
 
           {/* Bottom Section */}
           <div className="flex justify-between">
+            {/* Bio Section */}
             <div className="w-1/2 pr-4">
-              {/* Bio Section */}
               <div className="mb-2">
                 <label htmlFor="bio" className="text-white mb-2">Additional Info (Bio)</label>
                 {/* Loading state for Bio */}
                 {!dataLoaded ? (
-                  <div className="w-full h-32 bg-gray-300 animate-pulse"></div>
+                  <div className="w-full h-56 bg-gray-300 animate-pulse rounded-lg"></div>
                 ) : (
                   <textarea
                     id="bio"
                     value={userData.bio || ''}
                     onChange={(e) => setUserData({ ...userData, bio: e.target.value })}
                     placeholder="Write a short bio"
-                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 h-32 resize-none"
-                  />
-                )}
-              </div>
-
-              {/* Contact Number */}
-              <div className="mb-4">
-                <label htmlFor="contactNumber" className="text-white mb-2">Contact Number</label>
-                {/* Show loading state for Contact Number */}
-                {!dataLoaded ? (
-                  <div className="w-full h-10 bg-gray-300 animate-pulse"></div>
-                ) : (
-                  <input
-                    id="contactNumber"
-                    type="text"
-                    value={userData.contactNumber || ''}
-                    onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
-                    placeholder="Contact Number"
-                    className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                    className="w-full h-56 px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 resize-none"
                   />
                 )}
               </div>
             </div>
 
             {/* Password Section */}
-            <div className="w-1/2 pl-4">
-              {/* Only show password change section for non-Google users */}
-              {!isGoogleUser && (
-                <>
-                  <div className="mb-2">
-                    <label htmlFor="oldPassword" className="text-white mb-2">Old Password</label>
-                    <div className="relative">
+              <div className="w-1/2 pl-4">
+                {/* Contact Number */}
+                <div className="mb-4">
+                  <label htmlFor="contactNumber" className="text-white mb-2">Contact Number</label>
+                    {/* Loading state for Bio */}
+                    {!dataLoaded ? (
+                      <div className="w-full h-10 bg-gray-300 animate-pulse rounded-lg"></div>
+                    ) : (
                       <input
-                        id="oldPassword"
-                        type={showOldPassword ? 'text' : 'password'}
-                        value={oldPassword}
-                        onChange={(e) => setOldPassword(e.target.value)}
-                        placeholder="Old Password"
+                        id="contactNumber"
+                        type="text"
+                        value={userData.contactNumber || ''}
+                        onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
+                        placeholder="Contact Number"
                         className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowOldPassword(!showOldPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      >
-                        {showOldPassword ? 'Hide' : 'Show'}
-                      </button>
-                    </div>
-                  </div>
-                  <div className="mb-2">
-                    <label htmlFor="newPassword" className="text-white mb-2">New Password</label>
-                    <div className="relative">
-                      <input
-                        id="newPassword"
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="New Password"
-                        className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(!showNewPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      >
-                        {showNewPassword ? 'Hide' : 'Show'}
-                      </button>
-                    </div>
-                  </div>
+                    )}
+                </div>
 
-                  <PasswordStrengthChecker password={newPassword} />
-
-                  <div className="mb-2">
-                    <label htmlFor="confirmPassword" className="text-white mb-2">Confirm New Password</label>
-                    <div className="relative">
-                      <input
-                        id="confirmPassword"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm Password"
-                        className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
-                      >
-                        {showConfirmPassword ? 'Hide' : 'Show'}
-                      </button>
-                    </div>
+                <label htmlFor="changePassword" className="text-white mb-2">Change Password</label>
+                {!dataLoaded ? (
+                  // Skeleton loader for the entire password section
+                  <div className="w-full">
+                    <div className="h-40 bg-gray-300 animate-pulse rounded-lg"></div>
                   </div>
-                </>
-              )}
+                ) : (
+                  <div>
+                  {/* Only show password change section for non-Google users */}
+                  {!isGoogleUser && (
+                    <>
+                      <div className="mb-2">
+                        <div className="relative">
+                          <input
+                            id="oldPassword"
+                            type={showOldPassword ? 'text' : 'password'}
+                            value={oldPassword}
+                            onChange={(e) => setOldPassword(e.target.value)}
+                            placeholder="Old Password"
+                            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowOldPassword(!showOldPassword)}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          >
+                            {showOldPassword ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                      </div>
 
-              {isGoogleUser && (
-                <div className="text-white text-center">
-                  <p>You cannot change your password because you signed in with Google.</p>
+                      <div className="mb-2">
+                        <div className="relative">
+                          <input
+                            id="newPassword"
+                            type={showNewPassword ? 'text' : 'password'}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="New Password"
+                            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          >
+                            {showNewPassword ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mb-2">
+                        <div className="relative">
+                          <input
+                            id="confirmPassword"
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm Password"
+                            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400"
+                          >
+                            {showConfirmPassword ? 'Hide' : 'Show'}
+                          </button>
+                        </div>
+                      </div>
+
+                      <PasswordStrengthChecker password={newPassword} />
+                    </>
+                  )}
+
+                  {isGoogleUser && (
+                    <div className="text-white text-center">
+                      <p>You cannot change your password because you signed in with Google.</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
