@@ -1,14 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { firestore } from './../../app/firebase/config';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import Layout from '../../components/root/Layout';
 
 interface Question {
   question: string;
-  options: string[];
+  type: 'multiple-choice' | 'fill-in-the-blank';
+  options?: string[];
   correctAnswer: string;
+}
+
+interface Quiz {
+  name: string;
+  code: string;
+  id: string;
 }
 
 const QuizCreatorPage = () => {
@@ -16,24 +23,48 @@ const QuizCreatorPage = () => {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<Question>({
     question: '',
-    options: ['', '', '', ''],
+    type: 'multiple-choice',
+    options: [''],
     correctAnswer: '',
   });
   const [quizCode, setQuizCode] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState<boolean>(false);
+  const [createdExams, setCreatedExams] = useState<Quiz[]>([]); // List of created exams
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null); // The selected quiz
+  const [showQuestions, setShowQuestions] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Fetch all quizzes on component mount
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      const quizSnapshot = await getDocs(collection(firestore, 'quizzes'));
+      const quizzes = quizSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Quiz[];
+
+      setCreatedExams(quizzes);
+    };
+
+    fetchQuizzes();
+  }, []);
 
   const handleAddQuestion = () => {
-    if (!currentQuestion.question.trim() || currentQuestion.options.some(opt => !opt.trim())) {
-      alert('Please fill in all fields for the question and options!');
+    if (!currentQuestion.question.trim() || !currentQuestion.correctAnswer.trim()) {
+      alert('Please provide a question and correct answer.');
       return;
     }
 
-    if (questions.length >= 60) {
-      alert('You can only add up to 60 questions.');
+    if (
+      currentQuestion.type === 'multiple-choice' &&
+      currentQuestion.options?.some(opt => !opt.trim())
+    ) {
+      alert('Please fill in all multiple-choice options!');
       return;
     }
 
     setQuestions([...questions, currentQuestion]);
-    setCurrentQuestion({ question: '', options: ['', '', '', ''], correctAnswer: '' });
+    setCurrentQuestion({ question: '', type: 'multiple-choice', options: [''], correctAnswer: '' });
   };
 
   const handleCreateQuiz = async () => {
@@ -43,6 +74,17 @@ const QuizCreatorPage = () => {
     }
 
     try {
+      // Check if quiz name or code already exists
+      const quizSnapshot = await getDocs(collection(firestore, 'quizzes'));
+      const existingQuiz = quizSnapshot.docs.find(
+        (doc) => doc.data().name.toLowerCase() === quizName.toLowerCase() || doc.data().code === quizName.toLowerCase().replace(/ /g, '_')
+      );
+
+      if (existingQuiz) {
+        setErrorMessage('A quiz with this name or code already exists. Please choose another.');
+        return;
+      }
+
       const code = quizName.toLowerCase().replace(/ /g, '_');
 
       // Save quiz
@@ -60,12 +102,70 @@ const QuizCreatorPage = () => {
       );
 
       setQuizCode(code); // Display the code to the user
-      setQuizName('');
-      setQuestions([]);
+      setQuizName(''); // Clear quiz name
+      setQuestions([]); // Clear questions
+      setErrorMessage(null); // Clear any previous error message
       alert('Quiz created successfully!');
+      setShowModal(true); // Show the modal with the questions
     } catch (error) {
       console.error('Error creating quiz:', error);
       alert('An error occurred while creating the quiz.');
+    }
+  };
+
+  const handleViewQuestions = async (quiz: Quiz) => {
+    setSelectedQuiz(quiz);
+    setShowQuestions(true);
+
+    // Fetch questions for the selected quiz
+    const questionsSnapshot = await getDocs(collection(firestore, 'questions'));
+    const quizQuestions = questionsSnapshot.docs
+      .map(doc => doc.data())
+      .filter((question: any) => question.quizId === quiz.id) as Question[];
+
+    setQuestions(quizQuestions); // Display questions for the selected quiz
+  };
+
+  const handleDeleteQuiz = async (quizId: string) => {
+    try {
+      // Delete quiz
+      await deleteDoc(doc(firestore, 'quizzes', quizId));
+
+      // Delete associated questions
+      const questionsSnapshot = await getDocs(collection(firestore, 'questions'));
+      const questionsToDelete = questionsSnapshot.docs.filter(
+        (doc) => doc.data().quizId === quizId
+      );
+
+      await Promise.all(
+        questionsToDelete.map(questionDoc =>
+          deleteDoc(doc(firestore, 'questions', questionDoc.id))
+        )
+      );
+
+      alert('Quiz deleted successfully!');
+      setCreatedExams(createdExams.filter(quiz => quiz.id !== quizId)); // Remove from the local state
+    } catch (error) {
+      console.error('Error deleting quiz:', error);
+      alert('An error occurred while deleting the quiz.');
+    }
+  };
+
+  const handleUpdateQuiz = async (quizId: string) => {
+    try {
+      const updatedQuizName = prompt('Enter new quiz name:');
+      if (!updatedQuizName) return;
+
+      await updateDoc(doc(firestore, 'quizzes', quizId), { name: updatedQuizName });
+      alert('Quiz updated successfully!');
+
+      // Update in the local state
+      setCreatedExams(
+        createdExams.map(quiz => (quiz.id === quizId ? { ...quiz, name: updatedQuizName } : quiz))
+      );
+    } catch (error) {
+      console.error('Error updating quiz:', error);
+      alert('An error occurred while updating the quiz.');
     }
   };
 
@@ -86,6 +186,25 @@ const QuizCreatorPage = () => {
             className="border-2 border-yellow-500 p-4 mb-6 w-full rounded-lg focus:ring focus:ring-yellow-300"
           />
 
+          {errorMessage && (
+            <div className="text-red-500 text-sm mb-4">{errorMessage}</div>
+          )}
+
+          {/* Question Type */}
+          <select
+            value={currentQuestion.type}
+            onChange={e =>
+              setCurrentQuestion({
+                ...currentQuestion,
+                type: e.target.value as 'multiple-choice' | 'fill-in-the-blank',
+              })
+            }
+            className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring focus:ring-yellow-300"
+          >
+            <option value="multiple-choice">Multiple Choice</option>
+            <option value="fill-in-the-blank">Fill in the Blank</option>
+          </select>
+
           {/* Current Question Input */}
           <div className="mb-6">
             <input
@@ -95,22 +214,46 @@ const QuizCreatorPage = () => {
               onChange={e => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
               className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring focus:ring-yellow-300"
             />
-            <div className="grid grid-cols-2 gap-4">
-              {currentQuestion.options.map((option, index) => (
-                <input
-                  key={index}
-                  type="text"
-                  placeholder={`Option ${index + 1}`}
-                  value={option}
-                  onChange={e => {
-                    const updatedOptions = [...currentQuestion.options];
-                    updatedOptions[index] = e.target.value;
-                    setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
-                  }}
-                  className="border-2 border-yellow-500 p-3 rounded-lg focus:ring focus:ring-yellow-300"
-                />
-              ))}
-            </div>
+            {currentQuestion.type === 'multiple-choice' && (
+              <div>
+                {currentQuestion.options?.map((option, index) => (
+                  <div key={index} className="mb-2 flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={`Option ${index + 1}`}
+                      value={option}
+                      onChange={e => {
+                        const updatedOptions = [...(currentQuestion.options || [])];
+                        updatedOptions[index] = e.target.value;
+                        setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
+                      }}
+                      className="border-2 border-yellow-500 p-3 w-full rounded-lg focus:ring focus:ring-yellow-300"
+                    />
+                    <button
+                      onClick={() => {
+                        const updatedOptions = [...(currentQuestion.options || [])];
+                        updatedOptions.splice(index, 1);
+                        setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
+                      }}
+                      className="bg-red-500 text-white p-2 rounded-lg"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() =>
+                    setCurrentQuestion({
+                      ...currentQuestion,
+                      options: [...(currentQuestion.options || []), ''],
+                    })
+                  }
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg"
+                >
+                  Add Option
+                </button>
+              </div>
+            )}
             <input
               type="text"
               placeholder="Correct Answer"
@@ -138,7 +281,7 @@ const QuizCreatorPage = () => {
                 key={i}
                 className="bg-gray-700 p-3 mb-2 rounded-lg shadow-md border border-yellow-400 text-yellow-300"
               >
-                {i + 1}. {q.question}
+                {i + 1}. {q.type === 'multiple-choice' ? 'MCQ' : 'Fill in the Blank'} -{' '}{q.question}
               </div>
             ))}
           </div>
@@ -151,12 +294,71 @@ const QuizCreatorPage = () => {
             Create Quiz
           </button>
 
-          {/* Display Quiz Code */}
-          {quizCode && (
-            <div className="mt-6 text-center text-green-600 font-semibold">
-              <p>
-                Quiz created successfully! Share this code: <strong>{quizCode}</strong>
-              </p>
+          {/* View Created Exams Button */}
+          <button
+            onClick={() => setShowQuestions(!showQuestions)}
+            className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full mt-6"
+          >
+            {showQuestions ? 'Hide Created Quizzes' : 'View Created Quizzes'}
+          </button>
+
+          {/* Show Created Quizzes */}
+          {showQuestions && (
+            <div className="mt-4 space-y-2">
+              <h3 className="text-2xl font-semibold text-yellow-300">Created Quizzes:</h3>
+              {createdExams.map(quiz => (
+                <div
+                  key={quiz.id}
+                  className="bg-gray-700 p-4 mb-3 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500"
+                  onClick={() => handleViewQuestions(quiz)}
+                >
+                  {quiz.name} (Code: {quiz.code})
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      onClick={() => handleUpdateQuiz(quiz.id)}
+                      className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+                    >
+                      Update
+                    </button>
+                    <button
+                      onClick={() => handleDeleteQuiz(quiz.id)}
+                      className="bg-red-500 text-white py-2 px-4 rounded-lg"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Show Created Quiz Questions */}
+          {selectedQuiz && showQuestions && (
+            <div className="mt-6">
+              <h3 className="text-2xl font-semibold text-yellow-300">
+                Questions for "{selectedQuiz.name}":
+              </h3>
+              {questions.map((q, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-700 p-4 mb-3 rounded-lg text-yellow-300"
+                >
+                  {index + 1}. {q.question}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Quiz Code Modal */}
+          {showModal && quizCode && (
+            <div className="mt-6 text-center">
+              <p className="text-lg">Your quiz code is: <strong>{quizCode}</strong></p>
+              <button
+                onClick={() => setShowModal(false)}
+                className="mt-4 text-yellow-300 hover:text-yellow-400"
+              >
+                Close
+              </button>
             </div>
           )}
         </div>

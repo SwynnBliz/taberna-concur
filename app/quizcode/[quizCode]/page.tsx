@@ -1,16 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { use } from 'react';
-import { firestore } from './../../../app/firebase/config';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useRouter, useParams } from 'next/navigation'; // Import useParams here
+import { firestore, auth } from './../../../app/firebase/config';
+import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 import Layout from '../../../components/root/Layout';
 
-const QuizPage = ({ params }: { params: Promise<{ quizCode: string }> }) => {
+const QuizPage = () => {
   const router = useRouter();
-  const unwrappedParams = use(params);
-  const [quizCode, setQuizCode] = useState<string | null>(null);
+  const { quizCode } = useParams(); // Use useParams to get quizCode
   const [quiz, setQuiz] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -19,21 +17,17 @@ const QuizPage = ({ params }: { params: Promise<{ quizCode: string }> }) => {
   const [error, setError] = useState<string | null>(null);
   const [showPopup, setShowPopup] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
-  const [passStatus, setPassStatus] = useState<string>('');
+  const [passStatus, setPassStatus] = useState<string>(''); 
+  const [userEmail, setUserEmail] = useState<string | null>(null);  // Add this to store the user's email
   const [flipped, setFlipped] = useState<boolean>(false);
   const passingPercentage = 50;
-
-  useEffect(() => {
-    if (unwrappedParams?.quizCode) {
-      setQuizCode(unwrappedParams.quizCode);
-    }
-  }, [unwrappedParams]);
 
   useEffect(() => {
     if (!quizCode) return;
 
     const fetchQuiz = async () => {
       try {
+        // Fetch the quiz data from Firestore
         const quizQuery = query(collection(firestore, 'quizzes'), where('code', '==', quizCode));
         const quizSnapshot = await getDocs(quizQuery);
 
@@ -42,6 +36,7 @@ const QuizPage = ({ params }: { params: Promise<{ quizCode: string }> }) => {
           setQuiz(quizDoc.data());
           const quizId = quizDoc.id;
 
+          // Fetch the questions for the quiz
           const questionsQuery = query(collection(firestore, 'questions'), where('quizId', '==', quizId));
           const questionsSnapshot = await getDocs(questionsQuery);
           const questionsData = questionsSnapshot.docs.map((doc) => doc.data());
@@ -60,9 +55,17 @@ const QuizPage = ({ params }: { params: Promise<{ quizCode: string }> }) => {
     fetchQuiz();
   }, [quizCode]);
 
+  useEffect(() => {
+    // Fetch user email when user is logged in
+    const user = auth.currentUser;
+    if (user) {
+      setUserEmail(user.email);
+    }
+  }, []);
+
   const handleAnswerSelection = (answer: string) => {
     const updatedAnswers = [...answers];
-    updatedAnswers[currentQuestionIndex] = answer;
+    updatedAnswers[currentQuestionIndex] = answer.trim().toLowerCase();
     setAnswers(updatedAnswers);
     setFlipped(true);
 
@@ -76,10 +79,24 @@ const QuizPage = ({ params }: { params: Promise<{ quizCode: string }> }) => {
     }, 600); // Duration of the flip animation
   };
 
-  const handleSubmit = () => {
+  const handleFillInAnswer = (answer: string) => {
+    setAnswers((prevAnswers) => {
+      const updatedAnswers = [...prevAnswers];
+      updatedAnswers[currentQuestionIndex] = answer; // Keep spaces if needed
+      return updatedAnswers;
+    });
+  };
+
+  const handleAnswerSubmit = () => {
+    handleAnswerSelection(answers[currentQuestionIndex]);
+  };
+
+  const handleSubmit = async () => {
     let score = 0;
     questions.forEach((q, index) => {
-      if (answers[index] === q.correctAnswer) score++;
+      if (answers[index]?.trim().toLowerCase() === q.correctAnswer?.trim().toLowerCase()) {
+        score++;
+      }
     });
 
     const totalQuestions = questions.length;
@@ -89,8 +106,23 @@ const QuizPage = ({ params }: { params: Promise<{ quizCode: string }> }) => {
     setPassStatus(percentage >= passingPercentage ? 'Passed' : 'Failed');
     setShowPopup(true);
 
+    // Save score to Firestore with user's email and quiz code
+    if (userEmail) {
+      const user = auth.currentUser;
+      if (user) {
+        const scoreRef = doc(firestore, 'quizScores', `${user.uid}_${quizCode}`);
+        await setDoc(scoreRef, {
+          userId: user.uid,
+          quizCode: quizCode,
+          score: score,
+          email: userEmail,
+          createdAt: new Date(),
+        });
+      }
+    }
+
     setTimeout(() => {
-      router.push('/join'); // Navigate to the join page after 5 seconds
+      router.push('/join'); // Redirect to the join page after 5 seconds
     }, 5000);
 
     setTimeout(() => setShowPopup(false), 5000);
@@ -134,17 +166,37 @@ const QuizPage = ({ params }: { params: Promise<{ quizCode: string }> }) => {
               <p className="text-xl font-semibold mb-6 text-center">
                 {currentQuestionIndex + 1}. {currentQuestion?.question}
               </p>
-              <div className="grid grid-cols-2 gap-4">
-                {currentQuestion?.options.map((opt: string, i: number) => (
+              {currentQuestion?.type === 'multiple-choice' ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {currentQuestion?.options.map((opt: string, i: number) => (
+                    <button
+                      key={i}
+                      onClick={() => handleAnswerSelection(opt)}
+                      className="bg-[#FFC107] hover:bg-[#FFD54F] text-[#292929] font-semibold py-4 px-6 rounded-lg shadow-lg transition duration-300"
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              ) : currentQuestion?.type === 'fill-in-the-blank' ? (
+                <div>
+                  <input
+                    type="text"
+                    placeholder="Your Answer"
+                    value={answers[currentQuestionIndex] || ''}
+                    onChange={(e) => handleFillInAnswer(e.target.value)} // This still handles spaces
+                    className="border-2 border-yellow-500 p-4 w-full rounded-lg focus:ring focus:ring-yellow-300"
+                  />
                   <button
-                    key={i}
-                    onClick={() => handleAnswerSelection(opt)}
-                    className="bg-[#FFC107] hover:bg-[#FFD54F] text-[#292929] font-semibold py-4 px-6 rounded-lg shadow-lg transition duration-300"
+                    onClick={handleAnswerSubmit}
+                    className="bg-[#FFC107] hover:bg-[#FFD54F] text-[#292929] font-semibold py-2 px-4 mt-4 rounded-lg"
                   >
-                    {opt}
+                    Submit Answer
                   </button>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <p className="text-center text-red-500">Invalid question type</p>
+              )}
             </div>
           </div>
         </div>

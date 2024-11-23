@@ -47,7 +47,7 @@ html, body {
   display: none; /* Hide the scrollbar buttons */
 }
 
-/* globals.css (Quiz) */
+/* globals.css */
 .flip-container {
   perspective: 1000px;
 }

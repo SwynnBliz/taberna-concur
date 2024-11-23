@@ -24,6 +24,12 @@ const QuizHomePage = () => {
               Join Quiz
             </button>
           </Link>
+          {/* Results Button */}
+          <Link href="/results">
+            <button className="px-8 py-4 bg-blue-500 text-white text-lg font-semibold rounded-md shadow hover:bg-blue-600 transition duration-300">
+              View Results
+            </button>
+          </Link>
         </div>
       </div>
     </Layout>
