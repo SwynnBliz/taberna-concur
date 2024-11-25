@@ -1579,7 +1579,15 @@ const Forum = () => {
                                                 <p className="font-semibold text-white">
                                                   {usernames.get(reply.userId) || "Loading..."}
                                                 </p>
-                                                <p className="text-sm text-gray-400">{formatTimestamp(reply.createdAt)}</p>
+                                                <p className="text-sm text-gray-400">
+                                                  {reply.updatedAt ? (
+                                                    <>
+                                                      {formatTimestamp(reply.updatedAt)} <span className="text-sm text-gray-400">(edited)</span>
+                                                    </>
+                                                  ) : (
+                                                    formatTimestamp(reply.createdAt)
+                                                  )}
+                                                </p>
                                               </div>
 
                                               {/* Only show edit and delete buttons for the current user's replies */}
