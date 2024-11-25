@@ -6,6 +6,7 @@ import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestor
 import { getAuth } from 'firebase/auth';
 import { Cloudinary } from 'cloudinary-core';
 import { HiPaperClip } from 'react-icons/hi'; // Import the correct icon
+import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
 
 const PostForum = () => {
   const router = useRouter();
@@ -108,6 +109,11 @@ const PostForum = () => {
     }
   }, [auth.currentUser]);
 
+  const handleRemoveImage = () => {
+    setFile(null);
+    setImagePreview(null);
+  };
+
   return (
     <div className="flex justify-center items-center bg-[#484242] p-8 min-h-40">
       <div className="w-8/12 bg-[#383434] rounded-lg shadow-lg p-8 space-y-6">
@@ -153,8 +159,14 @@ const PostForum = () => {
               </button>
             </div>
             {imagePreview && (
-              <div className="mt-4 w-full max-w-xs border border-bd">
+              <div className="mt-4 w-full max-w-xs border border-bd relative">
                 <img src={imagePreview} alt="Selected" className="w-full h-auto rounded-md shadow-lg" />
+                <button
+                  onClick={handleRemoveImage}
+                  className="absolute top-1 right-1 text-white bg-[#2c2c2c] rounded-full p-1 hover:bg-yellow-500"
+                >
+                  <AiOutlineClose size={16} />
+                </button>
               </div>
             )}
           </div>

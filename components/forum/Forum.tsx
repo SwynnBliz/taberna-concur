@@ -6,9 +6,12 @@ import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEye, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 import useBannedWords from "./hooks/useBannedWords"; // Import custom hook
+import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
+import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
+import { LinkIt } from 'react-linkify-it';
 
 interface Post {
   id: string;
@@ -19,22 +22,33 @@ interface Post {
   likes: number;
   dislikes: number;
   updatedAt?: any;
-  comments: { 
+  comments: {
     comment: string;
     createdAt: any;
-    userId: string; // Add userId to the comment object
-    likes: number; // Add likes field for comments
-    dislikes: number; // Add dislikes field for comments
-    likedBy: string[]; // Track users who liked the comment
-    dislikedBy: string[]; // Track users who disliked the comment
+    userId: string;
+    likes: number;
+    dislikes: number;
+    likedBy: string[];
+    dislikedBy: string[];
     updatedAt?: any;
-  }[]; 
+    replies: {
+      reply: string;
+      createdAt: any;
+      userId: string;
+      likes: number;
+      dislikes: number;
+      likedBy: string[];
+      dislikedBy: string[];
+      updatedAt?: any;
+      repliedToUserId?: string;  // New field to store the userId of the user being replied to
+    }[];
+  }[];
   likedBy: string[];
   dislikedBy: string[];
-  bookmarks: { 
-    userId: string;  // User who bookmarked the post
-    bookmarkCreatedAt: any;  // Timestamp when the post was bookmarked
-  }[]; // Array of bookmarks
+  bookmarks: {
+    userId: string;
+    bookmarkCreatedAt: any;
+  }[];
 }
 
 const Forum = () => {
@@ -64,6 +78,12 @@ const Forum = () => {
   const [isTruncated, setIsTruncated] = useState<{ [postId: string]: boolean }>({});
   const contentRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
   const [notification, setNotification] = useState<string | null>(null);
+  const [showReplies, setShowReplies] = useState<{ [postId: string]: { [commentIndex: number]: boolean } }>({});
+  const [isEditingReply, setIsEditingReply] = useState(false);
+  const [editContentReply, setEditContentReply] = useState("");
+  const [editingReplyIndex, setEditingReplyIndex] = useState<number | null>(null);
+  const [replyText, setReplyText] = useState('');  // To track the reply text
+  const [repliedToUserId, setRepliedToUserId] = useState<string | null>(null);
 
   // Handles the like and dislike tracking
   useEffect(() => {
@@ -315,30 +335,126 @@ const Forum = () => {
       });
     }
   };
-  
 
+  const handleLikeReply = async (postId: string, commentIndex: number, replyIndex: number) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+  
+    const postRef = doc(firestore, 'posts', postId);
+    const postDoc = await getDoc(postRef);
+  
+    if (postDoc.exists()) {
+      const postData = postDoc.data() as Post;
+      const comments = postData.comments || [];
+      const comment = comments[commentIndex];
+      const reply = comment.replies?.[replyIndex];
+      if (!reply) return; // Ensure the reply exists
+  
+      const likedBy = reply.likedBy || [];
+      const dislikedBy = reply.dislikedBy || [];
+      const likes = reply.likes || 0;
+      const dislikes = reply.dislikes || 0;
+  
+      // If the user disliked, switch to like
+      if (dislikedBy.includes(userId)) {
+        const updatedDislikedBy = dislikedBy.filter((id: string) => id !== userId);
+        const updatedLikedBy = likedBy.includes(userId)
+          ? likedBy
+          : [...likedBy, userId];
+  
+        reply.likedBy = updatedLikedBy;
+        reply.dislikedBy = updatedDislikedBy;
+        reply.likes = likes + 1;
+        reply.dislikes = dislikes - 1;
+  
+      } else {
+        // Toggle like status
+        const updatedLikedBy = likedBy.includes(userId)
+          ? likedBy.filter((id: string) => id !== userId)
+          : [...likedBy, userId];
+  
+        reply.likedBy = updatedLikedBy;
+        reply.likes = likedBy.includes(userId) ? likes - 1 : likes + 1;
+      }
+  
+      comments[commentIndex] = comment;
+  
+      await updateDoc(postRef, {
+        comments: comments, // Update the entire comments array
+      });
+    }
+  };
+
+  const handleDislikeReply = async (postId: string, commentIndex: number, replyIndex: number) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+  
+    const postRef = doc(firestore, 'posts', postId);
+    const postDoc = await getDoc(postRef);
+  
+    if (postDoc.exists()) {
+      const postData = postDoc.data() as Post;
+      const comments = postData.comments || [];
+      const comment = comments[commentIndex];
+      const reply = comment.replies?.[replyIndex];
+      if (!reply) return; // Ensure the reply exists
+  
+      const likedBy = reply.likedBy || [];
+      const dislikedBy = reply.dislikedBy || [];
+      const likes = reply.likes || 0;
+      const dislikes = reply.dislikes || 0;
+  
+      // If the user liked, switch to dislike
+      if (likedBy.includes(userId)) {
+        const updatedLikedBy = likedBy.filter((id: string) => id !== userId);
+        const updatedDislikedBy = dislikedBy.includes(userId)
+          ? dislikedBy
+          : [...dislikedBy, userId];
+  
+        reply.likedBy = updatedLikedBy;
+        reply.dislikedBy = updatedDislikedBy;
+        reply.likes = likes - 1;
+        reply.dislikes = dislikes + 1;
+      } else {
+        // Toggle dislike status
+        const updatedDislikedBy = dislikedBy.includes(userId)
+          ? dislikedBy.filter((id: string) => id !== userId)
+          : [...dislikedBy, userId];
+  
+        reply.dislikedBy = updatedDislikedBy;
+        reply.dislikes = dislikedBy.includes(userId) ? dislikes - 1 : dislikes + 1;
+      }
+  
+      comments[commentIndex] = comment;
+  
+      await updateDoc(postRef, {
+        comments: comments, // Update the entire comments array
+      });
+    }
+  };  
+  
   const handleAddComment = async (postId: string, comment: string) => {
     const userId = auth.currentUser?.uid;
-    
+  
     if (!userId || !comment.trim()) return;
-    
+  
     // Get user data from Firestore
     const userRef = doc(firestore, 'users', userId);
     const userDoc = await getDoc(userRef);
-    
+  
     if (!userDoc.exists()) {
       console.error('User not found in Firestore');
       return;
     }
-    
+  
     const userData = userDoc.data();
     const username = userData?.username || 'Anonymous';
     const postRef = doc(firestore, 'posts', postId);
     const postDoc = await getDoc(postRef);
-    
+  
     if (postDoc.exists()) {
       const postData = postDoc.data() as Post; // Cast to Post type
-    
+  
       const updatedComments = [
         ...postData.comments,
         {
@@ -350,14 +466,19 @@ const Forum = () => {
           dislikedBy: [], // Initialize as empty array
           likes: 0, // Initialize liked count to 0
           dislikes: 0, // Initialize disliked count to 0
+          replies: [], // Initialize replies as an empty array
         },
       ];
-    
+  
       await updateDoc(postRef, {
         comments: updatedComments,
       });
+  
+      console.log('Comment added successfully');
+    } else {
+      console.error('Post does not exist.');
     }
-  };
+  };  
 
   const formatTimestamp = (timestamp: any) => {
     // Handle if timestamp is valid or missing
@@ -484,25 +605,36 @@ const Forum = () => {
   useEffect(() => {
     const fetchUsernames = async () => {
       const updatedUsernames = new Map(usernames);
-
-      // Fetch usernames for posts and comments
-      for (const post of posts) {
-        if (!updatedUsernames.has(post.userId)) {
-          updatedUsernames.set(post.userId, await getUsernameFromDatabase(post.userId));
-        }
-        for (const comment of post.comments) {
-          if (!updatedUsernames.has(comment.userId)) {
-            updatedUsernames.set(comment.userId, await getUsernameFromDatabase(comment.userId));
-          }
+  
+      // Collect all unique userIds from posts, comments, and replies
+      const userIds = new Set<string>();
+  
+      // Loop through posts and comments to collect userIds
+      posts.forEach(post => {
+        userIds.add(post.userId);  // Add the post creator's userId
+  
+        post.comments.forEach(comment => {
+          userIds.add(comment.userId);  // Add the comment creator's userId
+          comment.replies?.forEach(reply => {
+            userIds.add(reply.userId);  // Add the reply creator's userId
+          });
+        });
+      });
+  
+      // Now fetch usernames for all collected userIds
+      for (const userId of userIds) {
+        if (!updatedUsernames.has(userId)) {
+          const username = await getUsernameFromDatabase(userId); // Fetch the username
+          updatedUsernames.set(userId, username); // Store it in the map
         }
       }
-
+  
+      // After fetching all usernames, update the state
       setUsernames(updatedUsernames);
     };
-
+  
     fetchUsernames();
-  }, [posts]);
-
+  }, [posts]);  // Re-run the effect when the posts array changes
   const handleUpdatePost = (postId: string) => {
     const postToEdit = posts.find((post) => post.id === postId);
     if (postToEdit) {
@@ -619,6 +751,185 @@ const Forum = () => {
     }
   };
 
+  const handleUpdateReply = (postId: string, commentIndex: number, replyIndex: number) => {
+    const postToEdit = posts.find(post => post.id === postId);
+    if (postToEdit) {
+      const commentToEdit = postToEdit.comments[commentIndex];
+      const replyToEdit = commentToEdit.replies?.[replyIndex];
+      if (replyToEdit) {
+        setEditingPostId(postId); // Track the post being edited
+        setEditingCommentIndex(commentIndex); // Track the comment being edited
+        setEditingReplyIndex(replyIndex); // Track the reply being edited
+        setEditContentReply(replyToEdit.reply); // Pre-fill the content of the reply
+        setIsEditingReply(true); // Enable editing mode for replies
+      }
+    }
+  };
+  
+  const handleSaveReply = async () => {
+    if (editingPostId === null || editingCommentIndex === null || editingReplyIndex === null) return;
+  
+    setIsSaving(true); // Set loading state when saving
+  
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+  
+    const postRef = doc(firestore, 'posts', editingPostId);
+    const postToUpdate = await getDoc(postRef);
+    const postData = postToUpdate.data() as Post;
+  
+    // Get the reply to update using its index
+    const commentToUpdate = postData.comments[editingCommentIndex];
+    const replyToUpdate = commentToUpdate.replies?.[editingReplyIndex];
+  
+    if (replyToUpdate) {
+      // Update the reply content
+      postData.comments[editingCommentIndex].replies[editingReplyIndex] = {
+        ...replyToUpdate,
+        reply: editContentReply,  // Save the updated reply with @mentions
+        updatedAt: new Date(),
+      };
+  
+      // Save the updated post
+      try {
+        await updateDoc(postRef, {
+          comments: postData.comments,
+        });
+        // Reset editing states
+        setIsEditingReply(false);
+        setEditContentReply('');
+        setEditingPostId(null);
+        setEditingCommentIndex(null);
+        setEditingReplyIndex(null); // Reset the reply index after saving
+      } catch (error) {
+        console.error("Error saving reply:", error);
+      } finally {
+        setIsSaving(false); // Reset loading state after saving
+      }
+    }
+  };
+
+  const handleAddReply = async (postId: string, commentIndex: number, reply: string, repliedToUserId: string | null) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId || !reply.trim()) return;
+  
+    // Get user data from Firestore
+    const userRef = doc(firestore, 'users', userId);
+    const userDoc = await getDoc(userRef);
+  
+    if (!userDoc.exists()) {
+      console.error('User not found in Firestore');
+      return;
+    }
+  
+    const userData = userDoc.data();
+    const username = userData?.username || 'Anonymous'; // Default to 'Anonymous' if username not found
+  
+    // Reference to the post
+    const postRef = doc(firestore, 'posts', postId);
+    const postDoc = await getDoc(postRef);
+  
+    if (postDoc.exists()) {
+      const postData = postDoc.data() as Post; // Cast to Post type
+  
+      // Update the comments with the new reply
+      const updatedComments = postData.comments.map((comment, index) => {
+        if (index === commentIndex) {
+          return {
+            ...comment,
+            replies: [
+              ...comment.replies,
+              {
+                reply,
+                createdAt: new Date(),
+                userId,
+                username, // Add the username
+                likedBy: [],
+                dislikedBy: [],
+                likes: 0,
+                dislikes: 0,
+                repliedToUserId: repliedToUserId,
+              }
+            ],
+          };
+        }
+        return comment;
+      });
+  
+      // Update the post in Firestore with the new replies array
+      await updateDoc(postRef, {
+        comments: updatedComments,
+      });
+    }
+  };
+
+  const handleDeleteReply = async (postId: string, commentIndex: number, replyIndex: number) => {
+    try {
+      // Prompt the user to confirm reply deletion
+      const confirmDelete = window.confirm("Are you sure you want to delete this reply? This cannot be undone!");
+      if (!confirmDelete) return; // If user cancels, exit the function
+  
+      const userId = auth.currentUser?.uid;
+      if (!userId) {
+        console.error("You must be logged in to delete replies.");
+        return;
+      }
+  
+      const postRef = doc(firestore, 'posts', postId);
+      const postDoc = await getDoc(postRef);
+  
+      if (postDoc.exists()) {
+        const postData = postDoc.data() as Post;
+  
+        // Ensure that the reply belongs to the logged-in user
+        const replyToDelete = postData.comments[commentIndex]?.replies[replyIndex];
+        if (replyToDelete?.userId !== userId) {
+          console.error("You can only delete your own replies.");
+          return;
+        }
+  
+        // Remove the reply from the replies array
+        const updatedComments = postData.comments.map((comment, cIndex) => {
+          if (cIndex === commentIndex) {
+            return {
+              ...comment,
+              replies: comment.replies.filter((_, rIndex) => rIndex !== replyIndex),
+            };
+          }
+          return comment;
+        });
+  
+        // Update the post in Firestore
+        await updateDoc(postRef, {
+          comments: updatedComments,
+        });
+  
+        console.log("Reply deleted successfully.");
+      } else {
+        console.error("Post does not exist.");
+      }
+    } catch (error) {
+      console.error("Error deleting reply:", error);
+    }
+  };  
+
+  // Function to render the reply text with @username as a link
+  const renderReplyText = (text: string, userId: string) => {
+    const regex = /@([a-zA-Z0-9._-]+)/g; // Regex to find @mentions with dashes, underscores, and periods
+    
+    return text.split(regex).map((part, index) => {
+      if (index % 2 === 1) {
+        // If this is a username match, create a Link
+        return (
+          <Link key={index} href={`/profile-view/${userId}`} className="text-blue-500 hover:text-yellow-500">
+            @{part}
+          </Link>
+        );
+      }
+      return part; // Return regular text
+    });
+  };
+
   // Handle Bookmark Button Click
   const handleBookmarkPost = async (postId: string) => {
     const currentUserId = auth.currentUser?.uid;
@@ -722,6 +1033,30 @@ const Forum = () => {
       maximumFractionDigits: 1,
     }).format(num);
   };
+
+  const toggleRepliesVisibility = (postId: string, commentIndex: number) => {
+    setShowReplies((prevState) => ({
+      ...prevState,
+      [postId]: {
+        ...prevState[postId],
+        [commentIndex]: !prevState[postId]?.[commentIndex],
+      },
+    }));
+  };
+
+  const renderLink = (match: string, key: number) => (
+    <a
+      href={match}
+      key={key}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-500 underline hover:text-yellow-500"
+    >
+      {match}
+    </a>
+  );
+
+  const urlRegex = /(https?:\/\/[^\s]+)/g; // Regular expression to match URLs
 
   return (
     <div className="flex flex-col">
@@ -839,7 +1174,7 @@ const Forum = () => {
                         <div className="relative group inline-flex items-center">
                           <Link href={`/post-view/${post.id}`}>
                             <button className="text-white hover:text-yellow-500 mt-2">
-                              <FaEye className="w-4 h-4" />
+                              <HiDocumentMagnifyingGlass className="w-4 h-4" />
                             </button>
                           </Link>
                           {/* Tooltip for View Post */}
@@ -924,7 +1259,9 @@ const Forum = () => {
                       WebkitLineClamp: isExpanded[post.id] ? 'none' : 2,
                     }}
                   >
-                    {post.message}
+                    <LinkIt component={renderLink} regex={urlRegex}>
+                      {post.message} {/* Render the message with linkified URLs */}
+                    </LinkIt>
                   </p>
 
                   {/* Show "See more" if the message is truncated and not expanded */}
@@ -974,13 +1311,22 @@ const Forum = () => {
 
                       {/* Selected Image Preview */}
                       {editImageFile && (
-                        <div className="mt-4">
+                        <div className="mt-4 relative">
                           <p className="text-white">New Image Preview:</p>
-                          <img
-                            src={URL.createObjectURL(editImageFile)} // Preview selected image
-                            alt="Selected Image Preview"
-                            className="w-full object-cover rounded-lg mt-2"
-                          />
+                          <div className="relative">
+                            <img
+                              src={URL.createObjectURL(editImageFile)} // Preview selected image
+                              alt="Selected Image Preview"
+                              className="w-full object-cover rounded-lg mt-2"
+                            />
+                            {/* Close button overlaid on the image */}
+                            <button
+                              onClick={() => setEditImageFile(null)} // Remove selected image
+                              className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                            >
+                              <AiOutlineClose size={16} />
+                            </button>
+                          </div>
                         </div>
                       )}
 
@@ -1209,7 +1555,9 @@ const Forum = () => {
                                 </div>
                               )}
 
-                              <p>{filterBannedWords(comment.comment)}</p>
+                              <LinkIt component={renderLink} regex={urlRegex}>
+                                <p>{filterBannedWords(comment.comment)}</p>
+                              </LinkIt>
 
                               <div className="flex gap-2 mt-2">
                                 {/* Like Button (Comment) with Tooltip */}
@@ -1248,6 +1596,178 @@ const Forum = () => {
                                     Dislike Comment
                                   </div>
                                 </div>
+                              </div>
+
+                              {/* Replies Section */}
+                              <div className="flex flex-col">
+                                <button
+                                  onClick={() => toggleRepliesVisibility(post.id, index)} // Pass post.id and comment index to toggle
+                                  className="text-sm text-gray-400 hover:text-yellow-500 text-left w-fit"
+                                >
+                                  {showReplies[post.id]?.[index] ? "Hide Replies" : "Show Replies"} ({comment.replies?.length || 0})
+                                </button>
+
+                                {showReplies[post.id]?.[index] && (
+                                  <div className="ml-6 mt-4">
+                                    {comment.replies && comment.replies.length > 0 ? (
+                                      comment.replies.map((reply, replyIndex) => (
+                                        <div key={replyIndex} className="flex items-start mb-2">
+                                          <Link href={`/profile-view/${reply.userId}`}>
+                                            <img
+                                              src={userPhotos.get(reply.userId) || "https://via.placeholder.com/150"}
+                                              alt="Reply User"
+                                              className="w-6 h-6 rounded-full mr-2 cursor-pointer"
+                                              onLoad={() => fetchUserPhoto(reply.userId)}
+                                            />
+                                          </Link>
+                                          <div className="flex flex-col w-full">
+                                            <div className="flex flex-row justify-between">
+                                              <div>
+                                                <p className="font-semibold text-white">
+                                                  {usernames.get(reply.userId) || "Loading..."}
+                                                </p>
+                                                <p className="text-sm text-gray-400">{formatTimestamp(reply.createdAt)}</p>
+                                              </div>
+
+                                              {/* Only show edit and delete buttons for the current user's replies */}
+                                              {auth.currentUser?.uid === reply.userId && (
+                                                <div className="bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
+                                                  {/* Update Button for Reply */}
+                                                  <div className="relative group inline-flex items-center">
+                                                    <button
+                                                      onClick={() => handleUpdateReply(post.id, index, replyIndex)}
+                                                      className="hover:text-yellow-500"
+                                                    >
+                                                      <FaEdit className="w-3 h-3" />
+                                                    </button>
+                                                    {/* Tooltip */}
+                                                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                                      Update Reply
+                                                    </div>
+                                                  </div>
+                                                  {/* Delete Button for Reply */}
+                                                  <div className="relative group inline-flex items-center">
+                                                    <button
+                                                      onClick={() => handleDeleteReply(post.id, index, replyIndex)}
+                                                      className="hover:text-yellow-500"
+                                                    >
+                                                      <FaTrash className="w-3 h-3" />
+                                                    </button>
+                                                    {/* Tooltip */}
+                                                    <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                                      Delete Reply
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+
+                                            {isEditingReply && (
+                                              <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                                                <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                                                  <textarea
+                                                    value={editContentReply}
+                                                    onChange={(e) => setEditContentReply(e.target.value)}
+                                                    className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
+                                                    rows={5}
+                                                  />
+                                                  <div className="mt-4 flex justify-end space-x-2">
+                                                    <button
+                                                      onClick={() => setIsEditingReply(false)}
+                                                      className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
+                                                    >
+                                                      Cancel
+                                                    </button>
+                                                    <button
+                                                      onClick={handleSaveReply}
+                                                      className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+                                                      disabled={isSaving} // Disable button while saving
+                                                    >
+                                                      {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
+                                                    </button>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            )}
+
+                                            <LinkIt component={renderLink} regex={urlRegex}>
+                                              <p>{renderReplyText(filterBannedWords(reply.reply), reply.repliedToUserId ?? '')}</p>
+                                            </LinkIt>
+
+                                            <div className="flex gap-2 mt-2">
+                                              {/* Like Button (Reply) */}
+                                              <div className="relative group inline-flex items-center">
+                                                <button
+                                                  onClick={() => handleLikeReply(post.id, index, replyIndex)}
+                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                                    reply.likedBy?.includes(auth.currentUser?.uid || "")
+                                                      ? "text-yellow-500"
+                                                      : "text-gray-400"
+                                                  }`}
+                                                >
+                                                  <FaThumbsUp className="w-3 h-3" />
+                                                  <span>{formatNumberIntl(reply.likes)}</span>
+                                                </button>
+                                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                                  Like Reply
+                                                </div>
+                                              </div>
+                                              {/* Dislike Button (Reply) */}
+                                              <div className="relative group inline-flex items-center">
+                                                <button
+                                                  onClick={() => handleDislikeReply(post.id, index, replyIndex)}
+                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                                    reply.dislikedBy.includes(auth.currentUser?.uid || "")
+                                                      ? "text-yellow-500"
+                                                      : "text-gray-400"
+                                                  }`}
+                                                >
+                                                  <FaThumbsDown className="w-3 h-3" />
+                                                  <span>{formatNumberIntl(reply.dislikes)}</span>
+                                                </button>
+                                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                                                  Dislike Reply
+                                                </div>
+                                              </div>
+
+                                              {/* Add Username Reply Button */}
+                                              <div className="relative group inline-flex items-center">
+                                                <button
+                                                  onClick={() => {
+                                                    const usernameWithSpaces = usernames.get(reply.userId);
+                                                    const usernameWithDashes = usernameWithSpaces?.replace(/ /g, "-"); // Replace spaces with dashes
+                                                    setReplyText(`@${usernameWithDashes} `); // Pre-fill the reply input with @username
+                                                    setRepliedToUserId(reply.userId);
+                                                  }}
+                                                  className="hover:text-yellow-500 text-sm text-gray-400"
+                                                >
+                                                  Reply
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <p className="text-sm text-gray-400">No replies yet</p>
+                                    )}
+
+                                    {/* Input Field for Adding Reply */}
+                                    <input
+                                      type="text"
+                                      placeholder={"Add a reply..."}
+                                      className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
+                                      value={replyText} // Bind the value of the reply input
+                                      onChange={(e) => setReplyText(e.target.value)} // Update the reply text as user types
+                                      onKeyDown={(e) => {
+                                        if (e.key === "Enter" && replyText.trim()) {
+                                          handleAddReply(post.id, index, replyText, repliedToUserId || null); 
+                                          setReplyText(''); // Clear the input after submission
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>

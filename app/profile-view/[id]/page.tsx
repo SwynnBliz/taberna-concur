@@ -9,7 +9,10 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth'; // For getting the 
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEye, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
+import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
+import { LinkIt } from 'react-linkify-it';
 
 interface User {
   profilePhoto: string;
@@ -572,6 +575,20 @@ const ProfileView = () => {
     }).format(num);
   };
 
+  const renderLink = (match: string, key: number) => (
+    <a
+      href={match}
+      key={key}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-500 underline hover:text-yellow-500"
+    >
+      {match}
+    </a>
+  );
+
+  const urlRegex = /(https?:\/\/[^\s]+)/g; // Regular expression to match URLs
+
   return (
     <Layout>
       <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative flex flex-col">
@@ -618,7 +635,7 @@ const ProfileView = () => {
               <img
                 src={userData.profilePhoto || 'https://via.placeholder.com/150'}
                 alt="Profile"
-                className="w-60 h-60 rounded-full mb-4"
+                className="w-52 h-52 rounded-full mb-4"
               />
               <h1 className="text-2xl text-white font-bold">{userData.username}</h1>
             </div>
@@ -719,7 +736,7 @@ const ProfileView = () => {
                             <div className="relative group inline-flex items-center">
                               <Link href={`/post-view/${post.id}`}>
                                 <button className="text-white hover:text-yellow-500 mt-2">
-                                  <FaEye className="w-4 h-4" />
+                                  <HiDocumentMagnifyingGlass className="w-4 h-4" />
                                 </button>
                               </Link>
                               {/* Tooltip for View Post */}
@@ -804,7 +821,9 @@ const ProfileView = () => {
                             WebkitLineClamp: isExpanded[post.id] ? 'none' : 2,
                           }}
                         >
-                          {post.message}
+                          <LinkIt component={renderLink} regex={urlRegex}>
+                            {post.message} {/* Render the message with linkified URLs */}
+                          </LinkIt>
                         </p>
 
                         {/* Show "See more" if the message is truncated and not expanded */}
@@ -854,13 +873,22 @@ const ProfileView = () => {
 
                             {/* Selected Image Preview */}
                             {editImageFile && (
-                              <div className="mt-4">
+                              <div className="mt-4 relative">
                                 <p className="text-white">New Image Preview:</p>
-                                <img
-                                  src={URL.createObjectURL(editImageFile)} // Preview selected image
-                                  alt="Selected Image Preview"
-                                  className="w-full object-cover rounded-lg mt-2"
-                                />
+                                <div className="relative">
+                                  <img
+                                    src={URL.createObjectURL(editImageFile)} // Preview selected image
+                                    alt="Selected Image Preview"
+                                    className="w-full object-cover rounded-lg mt-2"
+                                  />
+                                  {/* Close button overlaid on the image */}
+                                  <button
+                                    onClick={() => setEditImageFile(null)} // Remove selected image
+                                    className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                                  >
+                                    <AiOutlineClose size={16} />
+                                  </button>
+                                </div>
                               </div>
                             )}
 
