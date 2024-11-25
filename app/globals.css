@@ -26,6 +26,7 @@ html, body {
   color: var(--foreground);
   background: var(--background);
   font-family: 'Inria Serif', serif; /* Set the body font to Inria Serif */
+  
 }
 
 /* Custom scrollbar for webkit browsers (Chrome, Safari, etc.) */
@@ -71,3 +72,4 @@ html, body {
   height: 100%;
   backface-visibility: hidden;
 }
+

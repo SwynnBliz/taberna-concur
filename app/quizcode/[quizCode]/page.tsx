@@ -76,7 +76,7 @@ const QuizPage = () => {
         handleSubmit();
       }
       setFlipped(false);
-    }, 600); // Duration of the flip animation
+    }, 1000); // Duration of the flip animation
   };
 
   const handleFillInAnswer = (answer: string) => {

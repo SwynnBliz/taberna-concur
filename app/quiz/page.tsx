@@ -1,14 +1,31 @@
+'use client';
+
 import Link from 'next/link';
 import Layout from '../../components/root/Layout';
+import { useEffect } from 'react';
 
 const QuizHomePage = () => {
+  useEffect(() => {
+    // Add the global class to the body
+    document.body.classList.add('QuizHomePage');
+    return () => {
+      // Clean up after unmounting the component
+      document.body.classList.remove('QuizHomePage');
+    };
+  }, []);
+
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2e2e2e] text-white">
+      <div
+        className="min-h-screen flex flex-col items-center justify-center text-white"
+        style={{
+          backgroundImage: "url('https://images2.alphacoders.com/132/1321858.png')",
+        }}
+      >
         <h1 className="text-4xl font-extrabold mb-8 shadow-md p-4 rounded-lg bg-[#1f1f1f] text-yellow-500">
           Welcome to the Quiz Module
         </h1>
-        <p className="text-lg mb-12 text-center text-gray-400">
+        <p className="text-lg mb-12 text-center text-white-400">
           Create quizzes or join existing ones and challenge your knowledge!
         </p>
         <div className="flex space-x-6">
