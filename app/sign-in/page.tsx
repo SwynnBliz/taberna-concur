@@ -73,6 +73,7 @@ const SignInPage = () => {
           username: defaultUsername,
           createdAt: new Date(),
           visibility: 'public',
+          role: 'user',
         });
       }
       router.push('/discussion-board');

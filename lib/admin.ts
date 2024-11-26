@@ -1,7 +1,6 @@
 // lib/admin.ts
 import admin from 'firebase-admin';
 
-// Initialize Firebase Admin SDK only if it isn't already initialized
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -12,7 +11,5 @@ if (!admin.apps.length) {
   });
 }
 
-// Export adminAuth for use in other parts of the application
 const adminAuth = admin.auth();
-
 export { adminAuth };

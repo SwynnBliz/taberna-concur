@@ -290,6 +290,37 @@ const AdminUserPage = () => {
     }
   };  
 
+  const handleToggleRole = async (userId: string, currentRole: 'admin' | 'user') => {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+  
+    if (!confirm(`Are you sure you want to ${newRole === 'admin' ? 'make this user an admin' : 'revoke admin rights from this user'}?`)) return;
+  
+    try {
+      const userRef = doc(firestore, 'users', userId);
+  
+      // Update the user's role in Firestore
+      await updateDoc(userRef, {
+        role: newRole,
+      });
+  
+      // Update the local state
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
+      setFilteredUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
+  
+    } catch (error) {
+      console.error("Error toggling user role:", error);
+      setError("Failed to update user role.");
+    }
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -342,6 +373,13 @@ const AdminUserPage = () => {
                 className="flex items-start space-x-8 space-y-4 bg-[#424242] p-8 rounded-lg mb-6 relative"
               >
                 <div className="absolute top-2 right-4 flex space-x-2">
+                  {/* Role Button */}
+                  <button
+                    onClick={() => handleToggleRole(user.id, user.role)} // Toggle role
+                    className="h-8 w-28 text-xs rounded-2xl bg-[#2c2c2c] text-white"
+                  >
+                    {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
+                  </button>
                   {/* Edit Button */}
                   <button
                     onClick={() => handleEditButtonClick(user)}

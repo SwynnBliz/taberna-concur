@@ -136,15 +136,6 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
           )
         )}
 
-        {/* Show profile button and logout button */}
-        <li>
-          <button
-            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-            onClick={() => userId && router.push(`/profile-view/${userId}`)}
-          >
-            Profile
-          </button>
-        </li>
         <li>
           <button
             className="w-full py-2 px-4 text-left text-red-600 font-semibold hover:bg-red-300 hover:rounded-lg"
