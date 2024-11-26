@@ -6,7 +6,7 @@ import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, i
 import { app } from '../firebase/config'; // Firebase config import
 import PostForum from '../../components/forum/PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
 import Link from 'next/link';
 import useBannedWords from '../../components/forum/hooks/useBannedWords';
@@ -14,8 +14,10 @@ import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
 import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
 import { LinkIt } from 'react-linkify-it';
 import React from 'react';
+import { useRouter } from 'next/navigation';
 
 interface User {
+    id: string;
     profilePhoto: string;
     username: string;
     bio: string;
@@ -65,6 +67,7 @@ interface Post {
 const AdminDiscussionBoardPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const firestore = getFirestore(app);
+  const router = useRouter();
   const auth = getAuth();
   const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); // Track user's like/dislike status
   const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
@@ -96,6 +99,49 @@ const AdminDiscussionBoardPage = () => {
   const [replyText, setReplyText] = useState('');  // To track the reply text
   const [repliedToUserId, setRepliedToUserId] = useState<string | null>(null);
   const [sortMethod, setSortMethod] = useState<'latest' | 'popular'>('latest'); // Sorting state
+
+  useEffect(() => {
+    // Function to check if the user has admin role
+    const checkAdminRole = async (authUser: FirebaseUser | null) => {
+      if (!authUser) {
+        // Redirect to login or home if no user is logged in
+        router.push('/sign-in');
+        return;
+      }
+
+      try {
+        // Fetch the user document from Firestore using the Firebase auth user id (uid)
+        const userDocRef = doc(firestore, 'users', authUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as User;
+
+          if (userData.role !== 'admin') {
+            // Redirect if user is not an admin
+            router.push('/discussion-board');
+          }
+        } else {
+          // Redirect if user data doesn't exist in Firestore
+          router.push('/sign-in');
+        }
+      } catch (error) {
+        console.error('Error checking user role: ', error);
+        router.push('/sign-in');
+      }
+    };
+
+    // Check the user's authentication status and their role
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        checkAdminRole(user); // 'user' is of type FirebaseUser here
+      } else {
+        router.push('/sign-in'); // Redirect if no user is logged in
+      }
+    });
+
+    return () => unsubscribe(); // Clean up the listener on component unmount
+  }, [auth, firestore, router]);
 
   // Handles the like and dislike tracking
   useEffect(() => {
@@ -667,7 +713,7 @@ const AdminDiscussionBoardPage = () => {
     setIsSaving(true); // Set loading state when saving
   
     try {
-      let imageUrl = null;
+      let imageUrl = editCurrentImageUrl; // Start with the current image URL
   
       // If a new image file is selected, upload it to Cloudinary
       if (editImageFile) {
@@ -688,7 +734,12 @@ const AdminDiscussionBoardPage = () => {
         }
   
         const data = await res.json();
-        imageUrl = data.secure_url; // Get the URL of the uploaded image
+        imageUrl = data.secure_url; // Update imageUrl to the new uploaded image URL
+      }
+  
+      // If the current image is explicitly removed, clear imageUrl
+      if (!editImageFile && !editCurrentImageUrl) {
+        imageUrl = null;
       }
   
       // Reference the post to update in Firestore
@@ -704,6 +755,7 @@ const AdminDiscussionBoardPage = () => {
       setEditContentPost('');
       setEditingPostId(null);
       setEditImageFile(null); // Reset the selected file
+      setEditCurrentImageUrl(null); // Clear the current image URL
     } catch (error) {
       console.error('Error updating post:', error);
     } finally {
@@ -1315,7 +1367,7 @@ const AdminDiscussionBoardPage = () => {
                                     </div>
 
                                     {showMoreOptions[post.id] && (
-                                    <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-50">
+                                    <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
                                         {/* Triangle Pointer */}
                                         <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
 
@@ -1403,10 +1455,7 @@ const AdminDiscussionBoardPage = () => {
                                     />
                                     {/* Close button to remove the image */}
                                     <button
-                                      onClick={() => {
-                                        console.log("Removing image");
-                                        setEditCurrentImageUrl(null); // Remove the current image
-                                      }} 
+                                      onClick={() => setEditCurrentImageUrl(null)} // Remove the current image
                                       className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                                     >
                                       <AiOutlineClose size={16} />

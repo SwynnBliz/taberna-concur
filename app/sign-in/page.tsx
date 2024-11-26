@@ -8,6 +8,7 @@ import { auth, googleProvider } from '../firebase/config';
 import { signInWithPopup } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { FcGoogle } from "react-icons/fc";
+import { FirebaseError } from 'firebase/app';
 
 const SignInPage = () => {
   const [email, setEmail] = useState("");
@@ -19,18 +20,46 @@ const SignInPage = () => {
   const router = useRouter();
   const firestore = getFirestore();
 
+  // Function to handle Firebase error messages and update state
+  const getErrorMessage = (error: any) => {
+    if (error) {
+      const errorMessage = error.message;
+      // Check if the error is related to a disabled user
+      if (errorMessage.includes('auth/user-disabled')) {
+        return "Your account has been disabled.";
+      }
+      // Handle other common Firebase errors
+      if (errorMessage.includes('auth/user-not-found')) {
+        return "No user found with this email address.";
+      }
+      if (errorMessage.includes('auth/wrong-password')) {
+        return "Incorrect password. Please try again.";
+      }
+      // Return the default error message for any other case
+      return "Error signing in. Please try again.";
+    }
+    return "";
+  };
+
+  useEffect(() => {
+    if (error) {
+      setErrorMessage(getErrorMessage(error));
+    }
+  }, [error]);
+
   const handleEmailPasswordSignIn = async (e: any) => {
     e.preventDefault();
-    setErrorMessage("");
+    setErrorMessage(""); // Reset error message
+
     try {
       await signInWithEmailAndPassword(email, password);
     } catch (e) {
-      setErrorMessage("Error signing in. Please try again.");
+      console.error(e); // You can log this for debugging
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setErrorMessage("");
+    setErrorMessage(""); // Reset the error message
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
@@ -48,7 +77,15 @@ const SignInPage = () => {
       }
       router.push('/discussion-board');
     } catch (e) {
-      setErrorMessage("Google sign-in failed. Please try again.");
+      if (e instanceof FirebaseError) {
+        if (e.code === 'auth/user-disabled') {
+          setErrorMessage("Your account has been disabled.");
+        } else {
+          setErrorMessage("Google sign-in failed. Please try again.");
+        }
+      } else {
+        setErrorMessage("An unexpected error occurred. Please try again.");
+      }
     }
   };
 
@@ -122,11 +159,6 @@ const SignInPage = () => {
           {errorMessage && (
             <div className="bg-red-500 text-white text-center w-10/12 rounded p-2 mt-4 ml-8">
               {errorMessage}
-            </div>
-          )}
-          {error && !errorMessage && (
-            <div className="bg-red-500 text-white text-center w-10/12 rounded p-2 mt-4 ml-8">
-              {error.message}
             </div>
           )}
           <div className="text-center mt-4">

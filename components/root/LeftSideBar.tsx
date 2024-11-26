@@ -113,13 +113,13 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                   className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
                   onClick={() => handleNavigate('/admin-discussion-board')}
                 >
-                  Manage Forum
+                  Manage Posts
                 </button>
               </li>
               <li>
                 <button
                   className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                  onClick={() => handleNavigate('/admin-discussion-board')}
+                  onClick={() => handleNavigate('/admin-user')}
                 >
                   Manage Users
                 </button>
@@ -129,7 +129,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                   className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
                   onClick={() => handleNavigate('/admin-discussion-board')}
                 >
-                  Manage Word Filter
+                  Settings
                 </button>
               </li>
             </>

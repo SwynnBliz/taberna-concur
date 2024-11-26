@@ -384,7 +384,7 @@ const ProfileViewPage = () => {
     setIsSaving(true); // Set loading state when saving
   
     try {
-      let imageUrl = null;
+      let imageUrl = editCurrentImageUrl; // Start with the current image URL
   
       // If a new image file is selected, upload it to Cloudinary
       if (editImageFile) {
@@ -405,7 +405,12 @@ const ProfileViewPage = () => {
         }
   
         const data = await res.json();
-        imageUrl = data.secure_url; // Get the URL of the uploaded image
+        imageUrl = data.secure_url; // Update imageUrl to the new uploaded image URL
+      }
+  
+      // If the current image is explicitly removed, clear imageUrl
+      if (!editImageFile && !editCurrentImageUrl) {
+        imageUrl = null;
       }
   
       // Reference the post to update in Firestore
@@ -421,6 +426,7 @@ const ProfileViewPage = () => {
       setEditContentPost('');
       setEditingPostId(null);
       setEditImageFile(null); // Reset the selected file
+      setEditCurrentImageUrl(null); // Clear the current image URL
     } catch (error) {
       console.error('Error updating post:', error);
     } finally {
@@ -635,7 +641,7 @@ const ProfileViewPage = () => {
               <img
                 src={userData.profilePhoto || 'https://via.placeholder.com/150'}
                 alt="Profile"
-                className="w-52 h-52 rounded-full mb-4"
+                className="w-48 h-48 rounded-full mb-4"
               />
               <h1 className="text-2xl text-white font-bold">{userData.username}</h1>
             </div>
@@ -781,7 +787,7 @@ const ProfileViewPage = () => {
                                 </div>
 
                                 {showMoreOptions[post.id] && (
-                                  <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-50">
+                                  <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
                                     {/* Triangle Pointer */}
                                     <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
 
@@ -870,10 +876,7 @@ const ProfileViewPage = () => {
                                   />
                                   {/* Close button to remove the image */}
                                   <button
-                                    onClick={() => {
-                                      console.log("Removing image");
-                                      setEditCurrentImageUrl(null); // Remove the current image
-                                    }} 
+                                    onClick={() => setEditCurrentImageUrl(null)} // Remove the current image
                                     className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                                   >
                                     <AiOutlineClose size={16} />

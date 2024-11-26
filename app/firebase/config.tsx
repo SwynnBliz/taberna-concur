@@ -1,4 +1,4 @@
-/** src/app/firebase/config.tsx (Firebase Config File) */
+/** /app/firebase/config.tsx (Firebase Config File) */
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth"; // Import setPersistence
 import { getFirestore } from "firebase/firestore"; // Import Firestore

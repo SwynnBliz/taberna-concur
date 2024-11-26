@@ -32,9 +32,15 @@ yarn-error.log*
 # env files (can opt-in for commiting if needed)
 .env*
 
+# Environment variable file (you may want to exclude this if you don't want it versioned)
+.env.local
+
 # vercel
 .vercel
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase Admin SDK Service Account Key
+/config/firebaseAdmin.json
