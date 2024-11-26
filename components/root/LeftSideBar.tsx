@@ -2,6 +2,8 @@
 import { useRouter } from 'next/navigation';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useState, useEffect } from 'react';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { usePathname } from 'next/navigation';
 
 interface LeftSidebarProps {
   isVisible: boolean;
@@ -12,13 +14,24 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-
+  const [isAdmin, setIsAdmin] = useState(false);  // Track if the user is an admin
+  const pathname = usePathname(); // To track the current route
+  
   // Listen for changes in authentication state
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         setUserId(user.uid); // Set the userId when the user is logged in
+
+        // Fetch user role from Firestore
+        const firestore = getFirestore();
+        const userRef = doc(firestore, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setIsAdmin(userData?.role === "admin"); // Set isAdmin based on Firestore role field
+        }
       } else {
         setUserId(null); // Clear the userId if the user is logged out
       }
@@ -42,6 +55,11 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
     }
   };
 
+  const handleNavigate = (path: string) => {
+    router.push(path);
+    onClose(); // Close the sidebar after navigation
+  };
+
   return (
     <div
       className={`fixed top-18 left-0 h-full w-64 bg-[#363232] text-white p-6 transition-all transform ${
@@ -50,40 +68,76 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
       style={{ zIndex: 1000 }}
     >
       <ul className="space-y-4">
+        {/* Show these buttons if user is not on admin page */}
+        {!pathname.includes("/admin") ? (
+          <>
+            <li>
+              <button
+                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                onClick={() => handleNavigate('/discussion-board')}
+              >
+                Home
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                onClick={() => handleNavigate('/discussion-board')}
+              >
+                Educational
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                onClick={() => handleNavigate('/quiz')}
+              >
+                Quiz
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                onClick={() => handleNavigate('/discussion-board')}
+              >
+                Collaboration
+              </button>
+            </li>
+          </>
+        ) : (
+          /* Show these buttons if user is on an admin page and is an admin */
+          isAdmin && (
+            <>
+              <li>
+                <button
+                  className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                  onClick={() => handleNavigate('/admin-discussion-board')}
+                >
+                  Manage Forum
+                </button>
+              </li>
+              <li>
+                <button
+                  className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                  onClick={() => handleNavigate('/admin-discussion-board')}
+                >
+                  Manage Users
+                </button>
+              </li>
+              <li>
+                <button
+                  className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                  onClick={() => handleNavigate('/admin-discussion-board')}
+                >
+                  Manage Word Filter
+                </button>
+              </li>
+            </>
+          )
+        )}
+
+        {/* Show profile button and logout button */}
         <li>
-          <button
-            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-            onClick={() => router.push('/discussion-board')}
-          >
-            Home
-          </button>
-        </li>
-        <li>
-          <button
-            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-            onClick={() => router.push('/discussion-board')}
-          >
-            Educational
-          </button>
-        </li>
-        <li>
-          <button
-            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-            onClick={() => router.push('/quiz')}
-          >
-            Quiz
-          </button>
-        </li>
-        <li>
-          <button
-            className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-            onClick={() => router.push('/discussion-board')}
-          >
-            Collaboration
-          </button>
-        </li>
-        <li>
-          {/* Dynamically navigate to the user's profile using their UID */}
           <button
             className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
             onClick={() => userId && router.push(`/profile-view/${userId}`)}

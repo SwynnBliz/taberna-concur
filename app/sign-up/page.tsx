@@ -1,4 +1,4 @@
-/** src/app/sign-up/page.tsx */
+// app/sign-up/page.tsx (Sign Up Page)
 'use client';
 import { useState, useEffect } from "react";
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
@@ -8,7 +8,7 @@ import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import PasswordStrengthChecker from '../../components/auth/PasswordStrengthChecker'; // Importing PasswordStrengthChecker
 import useBannedWords from '../../components/forum/hooks/useBannedWords'; // Assuming you have this hook for banned words
 
-const SignUp = () => {
+const SignUpPage = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -188,4 +188,4 @@ const SignUp = () => {
   );
 };
 
-export default SignUp;
+export default SignUpPage;

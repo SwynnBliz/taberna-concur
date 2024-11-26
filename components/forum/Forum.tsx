@@ -1,7 +1,7 @@
 // components/forum/Forum.tsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
 import { app } from '../../app/firebase/config'; // Firebase config import
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
@@ -84,6 +84,7 @@ const Forum = () => {
   const [editingReplyIndex, setEditingReplyIndex] = useState<number | null>(null);
   const [replyText, setReplyText] = useState('');  // To track the reply text
   const [repliedToUserId, setRepliedToUserId] = useState<string | null>(null);
+  const [sortMethod, setSortMethod] = useState<'latest' | 'popular'>('latest'); // Sorting state
 
   // Handles the like and dislike tracking
   useEffect(() => {
@@ -131,49 +132,50 @@ const Forum = () => {
     return filteredMessage;
   };
 
-  // Function to filter posts based on the search query
-  const filterPosts = (postsData: Post[]) => {
-    if (searchQuery.trim() === "") {
-      setFilteredPosts(postsData); // If search is empty, show all posts
-    } else {
-      const filtered = postsData.filter((post) =>
-        post.message.toLowerCase().includes(searchQuery.toLowerCase()) // Filter by message content
+  const filterPosts = (postsData: Post[], method: 'latest' | 'popular' = sortMethod) => {
+    let filtered = postsData;
+  
+    // Apply search query filtering
+    if (searchQuery.trim() !== "") {
+      filtered = filtered.filter((post) =>
+        post.message.toLowerCase().includes(searchQuery.toLowerCase())
       );
-      setFilteredPosts(filtered); // Update filtered posts
     }
+  
+    // Apply sorting based on the provided method
+    if (method === 'popular') {
+      filtered = filtered.sort((a, b) => b.likes - a.likes); // Sort by likes
+    } else {
+      filtered = filtered.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()); // Sort by latest
+    }
+  
+    setFilteredPosts(filtered); // Update filtered posts
   };
 
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
   
-    // Real-time listener to fetch posts from Firestore
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Post[];
   
-      // Apply the banned word filtering to each post
       const filteredPostsData = postsData.map((post) => ({
         ...post,
-        message: filterBannedWords(post.message) // Filter banned words in message
+        message: filterBannedWords(post.message), // Filter banned words in message
       }));
   
       setPosts(filteredPostsData); // Set all posts after filtering
-  
-      // Apply filtering logic based on search query
-      filterPosts(filteredPostsData); // Filter posts whenever data changes
+      filterPosts(filteredPostsData); // Apply filtering logic based on search query
     });
   
-    return () => {
-      // Clean up the listener when the component unmounts
-      unsubscribe();
-    };
-  }, [bannedWords]); // Runs when bannedWords changes
+    return () => unsubscribe(); // Clean up the listener on component unmount
+  }, [bannedWords]);
 
   useEffect(() => {
-    filterPosts(posts); // Filter posts whenever the searchQuery state changes
-  }, [searchQuery, posts]); // Trigger when either posts or searchQuery change
+    filterPosts(posts); // Trigger filtering when sortMethod changes
+  }, [sortMethod, searchQuery, posts]); // Dependencies ensure this updates correctly
 
   const handleLike = async (postId: string) => {
     const userId = auth.currentUser?.uid;
@@ -635,6 +637,7 @@ const Forum = () => {
   
     fetchUsernames();
   }, [posts]);  // Re-run the effect when the posts array changes
+  
   const handleUpdatePost = (postId: string) => {
     const postToEdit = posts.find((post) => post.id === postId);
     if (postToEdit) {
@@ -645,13 +648,12 @@ const Forum = () => {
     }
   };
   
-  // Handle form submission for updating the post
   const handleSavePost = async () => {
     if (!editingPostId) return; // Ensure we have a post to edit
   
     const userId = auth.currentUser?.uid;
     if (!userId) return; // Ensure the user is authenticated
-
+  
     setIsSaving(true); // Set loading state when saving
   
     try {
@@ -683,7 +685,7 @@ const Forum = () => {
       const postRef = doc(firestore, 'posts', editingPostId);
       await updateDoc(postRef, {
         message: editContentPost, // Update the content of the post
-        ...(imageUrl && { imageUrl }), // Update the imageUrl only if a new image was uploaded
+        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), // Delete imageUrl if it's null
         updatedAt: new Date(), // Set the updated timestamp
       });
   
@@ -697,7 +699,7 @@ const Forum = () => {
     } finally {
       setIsSaving(false); // Reset loading state after operation
     }
-  };  
+  };
 
   const handleUpdateComment = (postId: string, commentIndex: number) => {
     const postToEdit = posts.find(post => post.id === postId);
@@ -1062,14 +1064,26 @@ const Forum = () => {
     <div className="flex flex-col">
       {/* Conditionally show Search Input */}
       {isSearchVisible && (
-        <div className="w-8/12 mx-auto mt-4">
+        <div className="flex items-center w-8/12 mx-auto mt-4 gap-4">
           <input
             type="text"
             placeholder="Search posts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} // Update searchQuery on input change
-            className="w-full p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
+            className="flex-1 p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
           />
+          <select
+            value={sortMethod}
+            onChange={(e) => {
+              const selectedSort = e.target.value as 'latest' | 'popular';
+              setSortMethod(selectedSort); // Update the sort method
+              filterPosts(posts, selectedSort); // Immediately apply filtering with the new sort method
+            }}
+            className="p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
+          >
+            <option value="latest">Latest</option>
+            <option value="popular">Popular</option>
+          </select>
         </div>
       )}
 
@@ -1249,7 +1263,7 @@ const Forum = () => {
                 </div>
                 
                 <div className="mb-2">
-                  <p
+                  <div
                     ref={(el) => { contentRefs.current[post.id] = el; }}  // Assign ref to each paragraph element
                     className={`text-lg text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
                     style={{
@@ -1262,7 +1276,7 @@ const Forum = () => {
                     <LinkIt component={renderLink} regex={urlRegex}>
                       {post.message} {/* Render the message with linkified URLs */}
                     </LinkIt>
-                  </p>
+                  </div>
 
                   {/* Show "See more" if the message is truncated and not expanded */}
                   {isTruncated[post.id] && !isExpanded[post.id] && (
@@ -1297,15 +1311,26 @@ const Forum = () => {
                         placeholder="Edit your post..."
                       />
 
-                      {/* Current Image Display */}
                       {editCurrentImageUrl && (
-                        <div className="mt-4">
+                        <div className="mt-4 relative">
                           <p className="text-white">Current Image:</p>
-                          <img
-                            src={editCurrentImageUrl}
-                            alt="Current Post Image"
-                            className="w-full object-cover rounded-lg mt-2"
-                          />
+                          <div className="relative">
+                            <img
+                              src={editCurrentImageUrl}
+                              alt="Current Post Image"
+                              className="w-full object-cover rounded-lg mt-2"
+                            />
+                            {/* Close button to remove the image */}
+                            <button
+                              onClick={() => {
+                                console.log("Removing image");
+                                setEditCurrentImageUrl(null); // Remove the current image
+                              }} 
+                              className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                            >
+                              <AiOutlineClose size={16} />
+                            </button>
+                          </div>
                         </div>
                       )}
 

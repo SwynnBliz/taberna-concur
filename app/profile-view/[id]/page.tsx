@@ -3,7 +3,7 @@
 import Layout from '../../../components/root/Layout'; // Layout component
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation'; // For dynamic route params
-import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
 import { firestore } from '../../firebase/config'; // Import Firestore instance
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; // For getting the current logged-in user's UID
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
@@ -20,6 +20,7 @@ interface User {
   bio: string;
   contactNumber: string;
   visibility: 'public' | 'private';
+  role: 'admin' | 'user';
 }
 
 interface Post {
@@ -49,7 +50,7 @@ interface Post {
   }[]; // Array of bookmarks
 }
 
-const ProfileView = () => {
+const ProfileViewPage = () => {
   const { id } = useParams(); // Get the `id` from the dynamic route
   const auth = getAuth();
   const [userData, setUserData] = useState<User | null>(null);
@@ -374,13 +375,12 @@ const ProfileView = () => {
     }
   };
   
-  // Handle form submission for updating the post
   const handleSavePost = async () => {
     if (!editingPostId) return; // Ensure we have a post to edit
   
     const userId = auth.currentUser?.uid;
     if (!userId) return; // Ensure the user is authenticated
-
+  
     setIsSaving(true); // Set loading state when saving
   
     try {
@@ -412,7 +412,7 @@ const ProfileView = () => {
       const postRef = doc(firestore, 'posts', editingPostId);
       await updateDoc(postRef, {
         message: editContentPost, // Update the content of the post
-        ...(imageUrl && { imageUrl }), // Update the imageUrl only if a new image was uploaded
+        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), // Delete imageUrl if it's null
         updatedAt: new Date(), // Set the updated timestamp
       });
   
@@ -848,7 +848,7 @@ const ProfileView = () => {
                       </div>
 
                       {isEditingPost && (
-                        <div className="fixed inset-0 bg-[#484242] bg-opacity-30 flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-[#484242] bg-opacity-20 flex items-center justify-center z-50">
                           <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                             {/* Textarea for Editing Content */}
                             <textarea
@@ -859,15 +859,26 @@ const ProfileView = () => {
                               placeholder="Edit your post..."
                             />
 
-                            {/* Current Image Display */}
                             {editCurrentImageUrl && (
-                              <div className="mt-4">
+                              <div className="mt-4 relative">
                                 <p className="text-white">Current Image:</p>
-                                <img
-                                  src={editCurrentImageUrl}
-                                  alt="Current Post Image"
-                                  className="w-full object-cover rounded-lg mt-2"
-                                />
+                                <div className="relative">
+                                  <img
+                                    src={editCurrentImageUrl}
+                                    alt="Current Post Image"
+                                    className="w-full object-cover rounded-lg mt-2"
+                                  />
+                                  {/* Close button to remove the image */}
+                                  <button
+                                    onClick={() => {
+                                      console.log("Removing image");
+                                      setEditCurrentImageUrl(null); // Remove the current image
+                                    }} 
+                                    className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                                  >
+                                    <AiOutlineClose size={16} />
+                                  </button>
+                                </div>
                               </div>
                             )}
 
@@ -889,6 +900,13 @@ const ProfileView = () => {
                                     <AiOutlineClose size={16} />
                                   </button>
                                 </div>
+                              </div>
+                            )}
+
+                            {/* Current Image Display */}
+                            {editCurrentImageUrl && (
+                              <div className="mt-4">
+                                <p className="text-white">Select an Image to Change (Optional):</p>
                               </div>
                             )}
 
@@ -1019,4 +1037,4 @@ const ProfileView = () => {
   );
 };
 
-export default ProfileView;
+export default ProfileViewPage;

@@ -1,4 +1,4 @@
-/** src/app/sign-in/page.tsx */
+// app/sign-in/page.tsx (Sign In Page)
 'use client';
 
 import { useState, useEffect } from "react";
@@ -9,7 +9,7 @@ import { signInWithPopup } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { FcGoogle } from "react-icons/fc";
 
-const SignIn = () => {
+const SignInPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -141,4 +141,4 @@ const SignIn = () => {
   );
 };
 
-export default SignIn;
+export default SignInPage;

@@ -1,4 +1,4 @@
-/** src/app/page.tsx (Age Verification Page) */
+// app/page.tsx (Age Verification Page)
 "use client"; // This directive makes this file a Client Component
 
 import { useRouter } from "next/navigation";
