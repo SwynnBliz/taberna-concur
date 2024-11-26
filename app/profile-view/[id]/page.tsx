@@ -74,6 +74,8 @@ const ProfileViewPage = () => {
   const contentRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
   const [notification, setNotification] = useState<string | null>(null);
   const [isProfilePublic, setIsProfilePublic] = useState(true); // Default to public until we fetch the correct data
+  const [deletePostPrompt, setDeletePostPrompt] = useState(false);
+  const [postIdToDelete, setPostIdToDelete] = useState<string | null>(null);
 
   // Function to toggle the message display
   const toggleMessage = (postId: string) => {
@@ -434,44 +436,22 @@ const ProfileViewPage = () => {
     }
   };
 
+  // Handle delete post
   const handleDeletePost = async (postId: string) => {
+    setPostIdToDelete(postId);
+    setDeletePostPrompt(true); // Open the confirmation modal
+  };
+
+  // Delete post from Firestore
+  const deletePost = async (postId: string) => {
     try {
-      // Prompt the user to confirm post deletion
-      const confirmDelete = window.confirm("Are you sure you want to delete this post? This cannot be undone!");
-      if (!confirmDelete) return; // If user cancels, exit the function
-  
-      console.log("Attempting to delete post with ID:", postId);
-      const userId = auth.currentUser?.uid;
-  
-      if (!userId) {
-        console.error("You must be logged in to delete posts.");
-        return;
-      }
-  
       const postRef = doc(firestore, 'posts', postId);
-      const postDoc = await getDoc(postRef);
-  
-      if (postDoc.exists()) {
-        const postData = postDoc.data() as Post;
-  
-        if (postData.userId !== userId) {
-          console.error("You can only delete your own posts.");
-          return;
-        }
-  
-        // Uncomment for soft delete:
-        // await updateDoc(postRef, { deleted: true });
-  
-        // For hard delete:
-        await deleteDoc(postRef);
-        console.log("Post deleted successfully.");
-      } else {
-        console.error("Post does not exist.");
-      }
+      await deleteDoc(postRef);
+      console.log("Post deleted successfully.");
     } catch (error) {
       console.error("Error deleting post:", error);
     }
-  };  
+  };
 
   const handleLike = async (postId: string) => {
     const userId = auth.currentUser?.uid;
@@ -793,7 +773,10 @@ const ProfileViewPage = () => {
 
                                     {/* Edit Button */}
                                     <button
-                                      onClick={() => handleUpdatePost(post.id)}
+                                      onClick={() => { 
+                                        handleUpdatePost(post.id); 
+                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Edit
+                                      }}
                                       className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                     >
                                       <FaEdit className="w-4 h-4 mr-2" />
@@ -802,7 +785,10 @@ const ProfileViewPage = () => {
 
                                     {/* Delete Button */}
                                     <button
-                                      onClick={() => handleDeletePost(post.id)}
+                                      onClick={() => { 
+                                        handleDeletePost(post.id);
+                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Delete
+                                      }}
                                       className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                     >
                                       <FaTrash className="w-4 h-4 mr-2" />
@@ -815,6 +801,33 @@ const ProfileViewPage = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Delete Confirmation Modal */}
+                      {deletePostPrompt && (
+                        <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                          <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                            <p>Are you sure you want to delete this post? This cannot be undone!</p>
+                            <div className="mt-4 flex justify-center gap-4">
+                              <button
+                                onClick={async () => {
+                                  if (!postIdToDelete) return;
+                                  await deletePost(postIdToDelete);
+                                  setDeletePostPrompt(false); // Close the modal
+                                }}
+                                className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+                              >
+                                Confirm
+                              </button>
+                              <button
+                                onClick={() => setDeletePostPrompt(false)}
+                                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       
                       <div className="mb-2">
                         <p
