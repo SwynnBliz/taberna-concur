@@ -73,3 +73,8 @@ html, body {
   backface-visibility: hidden;
 }
 
+.QuizHomePage {
+  overflow: hidden; /* Hide overflowing content */
+  height: 100vh; 
+  margin-top: -70px;
+}

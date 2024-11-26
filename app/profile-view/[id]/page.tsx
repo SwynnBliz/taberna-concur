@@ -3,13 +3,16 @@
 import Layout from '../../../components/root/Layout'; // Layout component
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation'; // For dynamic route params
-import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
 import { firestore } from '../../firebase/config'; // Import Firestore instance
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; // For getting the current logged-in user's UID
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEye, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
+import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
+import { LinkIt } from 'react-linkify-it';
 
 interface User {
   profilePhoto: string;
@@ -17,6 +20,7 @@ interface User {
   bio: string;
   contactNumber: string;
   visibility: 'public' | 'private';
+  role: 'admin' | 'user';
 }
 
 interface Post {
@@ -46,7 +50,7 @@ interface Post {
   }[]; // Array of bookmarks
 }
 
-const ProfileView = () => {
+const ProfileViewPage = () => {
   const { id } = useParams(); // Get the `id` from the dynamic route
   const auth = getAuth();
   const [userData, setUserData] = useState<User | null>(null);
@@ -371,17 +375,16 @@ const ProfileView = () => {
     }
   };
   
-  // Handle form submission for updating the post
   const handleSavePost = async () => {
     if (!editingPostId) return; // Ensure we have a post to edit
   
     const userId = auth.currentUser?.uid;
     if (!userId) return; // Ensure the user is authenticated
-
+  
     setIsSaving(true); // Set loading state when saving
   
     try {
-      let imageUrl = null;
+      let imageUrl = editCurrentImageUrl; // Start with the current image URL
   
       // If a new image file is selected, upload it to Cloudinary
       if (editImageFile) {
@@ -402,14 +405,19 @@ const ProfileView = () => {
         }
   
         const data = await res.json();
-        imageUrl = data.secure_url; // Get the URL of the uploaded image
+        imageUrl = data.secure_url; // Update imageUrl to the new uploaded image URL
+      }
+  
+      // If the current image is explicitly removed, clear imageUrl
+      if (!editImageFile && !editCurrentImageUrl) {
+        imageUrl = null;
       }
   
       // Reference the post to update in Firestore
       const postRef = doc(firestore, 'posts', editingPostId);
       await updateDoc(postRef, {
         message: editContentPost, // Update the content of the post
-        ...(imageUrl && { imageUrl }), // Update the imageUrl only if a new image was uploaded
+        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), // Delete imageUrl if it's null
         updatedAt: new Date(), // Set the updated timestamp
       });
   
@@ -418,6 +426,7 @@ const ProfileView = () => {
       setEditContentPost('');
       setEditingPostId(null);
       setEditImageFile(null); // Reset the selected file
+      setEditCurrentImageUrl(null); // Clear the current image URL
     } catch (error) {
       console.error('Error updating post:', error);
     } finally {
@@ -572,6 +581,20 @@ const ProfileView = () => {
     }).format(num);
   };
 
+  const renderLink = (match: string, key: number) => (
+    <a
+      href={match}
+      key={key}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-500 underline hover:text-yellow-500"
+    >
+      {match}
+    </a>
+  );
+
+  const urlRegex = /(https?:\/\/[^\s]+)/g; // Regular expression to match URLs
+
   return (
     <Layout>
       <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative flex flex-col">
@@ -618,7 +641,7 @@ const ProfileView = () => {
               <img
                 src={userData.profilePhoto || 'https://via.placeholder.com/150'}
                 alt="Profile"
-                className="w-60 h-60 rounded-full mb-4"
+                className="w-48 h-48 rounded-full mb-4"
               />
               <h1 className="text-2xl text-white font-bold">{userData.username}</h1>
             </div>
@@ -719,7 +742,7 @@ const ProfileView = () => {
                             <div className="relative group inline-flex items-center">
                               <Link href={`/post-view/${post.id}`}>
                                 <button className="text-white hover:text-yellow-500 mt-2">
-                                  <FaEye className="w-4 h-4" />
+                                  <HiDocumentMagnifyingGlass className="w-4 h-4" />
                                 </button>
                               </Link>
                               {/* Tooltip for View Post */}
@@ -764,7 +787,7 @@ const ProfileView = () => {
                                 </div>
 
                                 {showMoreOptions[post.id] && (
-                                  <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-50">
+                                  <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
                                     {/* Triangle Pointer */}
                                     <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
 
@@ -804,7 +827,9 @@ const ProfileView = () => {
                             WebkitLineClamp: isExpanded[post.id] ? 'none' : 2,
                           }}
                         >
-                          {post.message}
+                          <LinkIt component={renderLink} regex={urlRegex}>
+                            {post.message} {/* Render the message with linkified URLs */}
+                          </LinkIt>
                         </p>
 
                         {/* Show "See more" if the message is truncated and not expanded */}
@@ -829,7 +854,7 @@ const ProfileView = () => {
                       </div>
 
                       {isEditingPost && (
-                        <div className="fixed inset-0 bg-[#484242] bg-opacity-30 flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-[#484242] bg-opacity-20 flex items-center justify-center z-50">
                           <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                             {/* Textarea for Editing Content */}
                             <textarea
@@ -840,27 +865,51 @@ const ProfileView = () => {
                               placeholder="Edit your post..."
                             />
 
-                            {/* Current Image Display */}
                             {editCurrentImageUrl && (
-                              <div className="mt-4">
+                              <div className="mt-4 relative">
                                 <p className="text-white">Current Image:</p>
-                                <img
-                                  src={editCurrentImageUrl}
-                                  alt="Current Post Image"
-                                  className="w-full object-cover rounded-lg mt-2"
-                                />
+                                <div className="relative">
+                                  <img
+                                    src={editCurrentImageUrl}
+                                    alt="Current Post Image"
+                                    className="w-full object-cover rounded-lg mt-2"
+                                  />
+                                  {/* Close button to remove the image */}
+                                  <button
+                                    onClick={() => setEditCurrentImageUrl(null)} // Remove the current image
+                                    className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                                  >
+                                    <AiOutlineClose size={16} />
+                                  </button>
+                                </div>
                               </div>
                             )}
 
                             {/* Selected Image Preview */}
                             {editImageFile && (
-                              <div className="mt-4">
+                              <div className="mt-4 relative">
                                 <p className="text-white">New Image Preview:</p>
-                                <img
-                                  src={URL.createObjectURL(editImageFile)} // Preview selected image
-                                  alt="Selected Image Preview"
-                                  className="w-full object-cover rounded-lg mt-2"
-                                />
+                                <div className="relative">
+                                  <img
+                                    src={URL.createObjectURL(editImageFile)} // Preview selected image
+                                    alt="Selected Image Preview"
+                                    className="w-full object-cover rounded-lg mt-2"
+                                  />
+                                  {/* Close button overlaid on the image */}
+                                  <button
+                                    onClick={() => setEditImageFile(null)} // Remove selected image
+                                    className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                                  >
+                                    <AiOutlineClose size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Current Image Display */}
+                            {editCurrentImageUrl && (
+                              <div className="mt-4">
+                                <p className="text-white">Select an Image to Change (Optional):</p>
                               </div>
                             )}
 
@@ -991,4 +1040,4 @@ const ProfileView = () => {
   );
 };
 
-export default ProfileView;
+export default ProfileViewPage;

@@ -1,3 +1,4 @@
+// app/profile-manage/page.tsx (Profile Manage Page)
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,7 +10,7 @@ import PasswordStrengthChecker from '../../components/auth/PasswordStrengthCheck
 import useBannedWords from '../../components/forum/hooks/useBannedWords'; // Import useBannedWords hook
 import { FaSpinner } from "react-icons/fa";
 
-const ProfilePage = () => {
+const ProfileManagePage = () => {
   const router = useRouter();
   const [userData, setUserData] = useState({
     username: '',
@@ -385,4 +386,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage;
+export default ProfileManagePage;

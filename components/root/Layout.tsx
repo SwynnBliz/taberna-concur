@@ -28,6 +28,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   // Check if the current route is the post-view route
   const isPostView = pathname.startsWith('/post-view/');
 
+  // Check if the current route is the discussion-board route
+  const isAdmin = pathname.includes("/admin");
+
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (!user) {
@@ -50,13 +53,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Main Content */}
         <main 
-          className={`flex-1 bg-[#484242] overflow-auto ${isDiscussionBoard || isProfileView || isPostView ? "mr-60" : ""}`}
+          className={`flex-1 bg-[#484242] overflow-auto ${isDiscussionBoard || isProfileView || isPostView || isAdmin ? "mr-60" : ""}`}
         >
           {children}
         </main>
 
         {/* Conditionally Render Right Sidebar */}
-        {(isDiscussionBoard || isProfileView || isPostView) && <RightSidebar />}
+        {(isDiscussionBoard || isProfileView || isPostView || isAdmin) && <RightSidebar />}
       </div>
     </div>
   );

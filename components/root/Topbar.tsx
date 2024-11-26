@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { usePathname } from 'next/navigation';  // Import usePathname hook
 import { getAuth, signOut } from "firebase/auth"; // Import signOut
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { FaSpinner } from "react-icons/fa";
@@ -12,9 +13,11 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null); // Allow null
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Local state for sidebar open status
   const [loading, setLoading] = useState(true); // Loading state for the profile image
+  const [isAdmin, setIsAdmin] = useState(false); // State to track if the user is an admin
   const router = useRouter();
-  const authInstance = getAuth();
+  const pathname = usePathname();  // Using usePathname to get the current route
   const firestore = getFirestore();
+  const isOnAdminPage = pathname.includes("/admin");
 
   const handleProfileClick = () => {
     setIsProfileMenuOpen(!isProfileMenuOpen);
@@ -22,7 +25,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
 
   const handleLogout = async () => {
     try {
-      await signOut(authInstance); // Sign out from Firebase
+      await signOut(getAuth()); // Sign out from Firebase
       router.push("/sign-in"); // Redirect to sign-in page after logout
     } catch (error) {
       console.error("Error during logout: ", error);
@@ -30,7 +33,21 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   };
 
   const handleNavigateHome = () => {
-    router.push("/discussion-board");
+    if (isAdmin) {
+      // If currently on an admin page, go to user page
+      if (isOnAdminPage) {
+        router.push("/admin-discussion-board"); // Navigate to user page
+      } else {
+        router.push("/discussion-board"); // Navigate to admin page
+      }
+    } else {
+      // If not an admin, go to the admin page
+      if (isOnAdminPage) {
+        router.push("/admin-discussion-board"); // Navigate to user page
+      } else {
+        router.push("/discussion-board"); // Navigate to admin page
+      }
+    }
   };
 
   // Toggle Sidebar open/close
@@ -39,15 +56,17 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     onLeftSidebarToggle(); // Call the passed prop function to handle external state changes
   };
 
-  // Fetch user data (including profile photo) from Firestore
+  // Fetch user data (including profile photo and role) from Firestore
   useEffect(() => {
     const fetchUserData = async () => {
-      const user = authInstance.currentUser;
+      const user = getAuth().currentUser;
       if (user) {
         const userRef = doc(firestore, "users", user.uid);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
-          setProfilePhoto(userDoc.data()?.profilePhoto || "https://via.placeholder.com/150"); // Default image if no profile photo
+          const userData = userDoc.data();
+          setProfilePhoto(userData?.profilePhoto || "https://via.placeholder.com/150"); // Default image if no profile photo
+          setIsAdmin(userData?.role === "admin"); // Set isAdmin based on Firestore role field
         }
       } else {
         setProfilePhoto("https://via.placeholder.com/150"); // Handle case where no user is logged in
@@ -56,12 +75,12 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     };
 
     // Ensure the effect runs only after authentication is initialized
-    if (authInstance.currentUser) {
+    if (getAuth().currentUser) {
       fetchUserData();
     }
 
     // Listen for authentication changes (if user logs in after page load)
-    const unsubscribe = authInstance.onAuthStateChanged(user => {
+    const unsubscribe = getAuth().onAuthStateChanged(user => {
       if (user) {
         fetchUserData();
       }
@@ -69,7 +88,25 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
 
     // Cleanup listener on unmount
     return () => unsubscribe();
-  }, [authInstance, firestore]); // Ensure it re-runs if auth or firestore instance changes
+  }, [firestore]);
+
+  const handleModeToggle = () => {
+    if (isAdmin) {
+      // If currently on an admin page, go to user page
+      if (isOnAdminPage) {
+        router.push("/discussion-board"); // Navigate to user page
+      } else {
+        router.push("/admin-discussion-board"); // Navigate to admin page
+      }
+    } else {
+      // If not an admin, go to the admin page
+      if (isOnAdminPage) {
+        router.push("/discussion-board"); // Navigate to user page
+      } else {
+        router.push("/admin-discussion-board"); // Navigate to admin page
+      }
+    }
+  };
 
   return (
     <div className="sticky top-0 z-50 flex justify-between items-center bg-[#302C2C] text-white p-4 shadow-md">
@@ -127,6 +164,15 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
 
         {isProfileMenuOpen && (
           <div className="absolute right-0 mt-2 bg-[#363232] text-black p-4 rounded-md shadow-lg w-48">
+            {/* Mode toggle button */}
+            {isAdmin && (
+              <button
+                onClick={handleModeToggle}
+                className="w-full text-left px-4 py-2 mb-2 rounded-md hover:bg-yellow-500 transition duration-200 text-white"
+              >
+                {isOnAdminPage ? "User Mode" : "Admin Mode"}
+              </button>
+            )}
             <button
               onClick={() => router.push("/profile-manage")}
               className="w-full text-left px-4 py-2 mb-2 rounded-md hover:bg-yellow-500 transition duration-200 text-white"
