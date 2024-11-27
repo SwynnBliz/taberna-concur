@@ -1,4 +1,4 @@
-// components/forum/Forum.tsx
+// app/admin-discssion-board/page.tsx (Admin Discussion Board Page)
 'use client';
 import Layout from '../../components/root/Layout'; // Layout component
 import { useState, useEffect, useRef } from 'react';
@@ -99,6 +99,12 @@ const AdminDiscussionBoardPage = () => {
   const [replyText, setReplyText] = useState('');  // To track the reply text
   const [repliedToUserId, setRepliedToUserId] = useState<string | null>(null);
   const [sortMethod, setSortMethod] = useState<'latest' | 'popular'>('latest'); // Sorting state
+  const [deletePostPrompt, setDeletePostPrompt] = useState(false);
+  const [postIdToDelete, setPostIdToDelete] = useState<string | null>(null);
+  const [deleteCommentPrompt, setDeleteCommentPrompt] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState<{ postId: string; commentIndex: number } | null>(null);
+  const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
+  const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
 
   useEffect(() => {
     // Function to check if the user has admin role
@@ -175,19 +181,15 @@ const AdminDiscussionBoardPage = () => {
     };
   }, []);
 
-  const filterBannedWords = (message: string): string => {
-    if (!bannedWords || bannedWords.length === 0) return message; // No banned words to filter
-  
-    let filteredMessage = message;
-  
-    bannedWords.forEach((word) => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Case-insensitive word match
-      const replacement = `${word}`; // Wrap banned words in a red span
-      filteredMessage = filteredMessage.replace(regex, replacement); // Replace with red-colored word
-    });
-  
-    return filteredMessage;
-  };
+const filterBannedWords = (message: string): string => {
+  if (!bannedWords || bannedWords.length === 0) return message; // No banned words to highlight
+
+  return bannedWords.reduce((acc, word) => {
+    const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Case-insensitive word match
+    // Use a callback to retain the original case
+    return acc.replace(regex, (match) => `(**${match}**)`);
+  }, message);
+};
 
   const filterPosts = (postsData: Post[], method: 'latest' | 'popular' = sortMethod) => {
     let filtered = postsData;
@@ -571,65 +573,45 @@ const AdminDiscussionBoardPage = () => {
     return 'https://via.placeholder.com/150'; // Default placeholder image
   };
 
+  // Handle delete post
   const handleDeletePost = async (postId: string) => {
+    setPostIdToDelete(postId);
+    setDeletePostPrompt(true); // Open the confirmation modal
+  };
+
+  // Delete post from Firestore
+  const deletePost = async (postId: string) => {
     try {
-      // Prompt the user to confirm post deletion
-      const confirmDelete = window.confirm("Are you sure you want to delete this post? This cannot be undone!");
-      if (!confirmDelete) return; // If user cancels, exit the function
-  
-      console.log("Attempting to delete post with ID:", postId);
-      const userId = auth.currentUser?.uid;
-  
-      if (!userId) {
-        console.error("You must be logged in to delete posts.");
-        return;
-      }
-  
       const postRef = doc(firestore, 'posts', postId);
-      const postDoc = await getDoc(postRef);
-  
-      if (postDoc.exists()) {
-        const postData = postDoc.data() as Post;
-  
-        // For soft delete:
-        // await updateDoc(postRef, { deleted: true });
-  
-        // For hard delete:
-        await deleteDoc(postRef);
-        console.log("Post deleted successfully.");
-      } else {
-        console.error("Post does not exist.");
-      }
+      await deleteDoc(postRef);
+      console.log("Post deleted successfully.");
     } catch (error) {
       console.error("Error deleting post:", error);
     }
-  };  
+  };
 
-  const handleDeleteComment = async (postId: string, commentIndex: number) => {
+  // Handle delete comment
+  const handleDeleteComment = (postId: string, commentIndex: number) => {
+    setCommentToDelete({ postId, commentIndex });
+    setDeleteCommentPrompt(true); // Open the confirmation modal
+  };
+
+  // Delete comment from Firestore
+  const deleteComment = async (postId: string, commentIndex: number) => {
     try {
-      // Prompt the user to confirm comment deletion
-      const confirmDelete = window.confirm("Are you sure you want to delete this comment? This cannot be undone!");
-      if (!confirmDelete) return; // If user cancels, exit the function
-  
-      const userId = auth.currentUser?.uid;
-      if (!userId) {
-        console.error("You must be logged in to delete comments.");
-        return;
-      }
-  
       const postRef = doc(firestore, 'posts', postId);
       const postDoc = await getDoc(postRef);
-  
+
       if (postDoc.exists()) {
         const postData = postDoc.data() as Post;
-  
+        
         // Remove the comment from the comments array
         const updatedComments = postData.comments.filter((_, index) => index !== commentIndex);
-  
+        
         await updateDoc(postRef, {
           comments: updatedComments,
         });
-  
+
         console.log("Comment deleted successfully.");
       } else {
         console.error("Post does not exist.");
@@ -637,7 +619,7 @@ const AdminDiscussionBoardPage = () => {
     } catch (error) {
       console.error("Error deleting comment:", error);
     }
-  };  
+  };
 
   const getUsernameFromDatabase = async (userId: string): Promise<string> => {
     try {
@@ -944,24 +926,21 @@ const AdminDiscussionBoardPage = () => {
     }
   };
 
-  const handleDeleteReply = async (postId: string, commentIndex: number, replyIndex: number) => {
+  // Handle reply delete modal trigger
+  const handleDeleteReply = (postId: string, commentIndex: number, replyIndex: number) => {
+    setReplyToDelete({ postId, commentIndex, replyIndex });
+    setDeleteReplyPrompt(true); // Open the confirmation modal
+  };
+
+  // Delete reply from Firestore
+  const deleteReply = async (postId: string, commentIndex: number, replyIndex: number) => {
     try {
-      // Prompt the user to confirm reply deletion
-      const confirmDelete = window.confirm("Are you sure you want to delete this reply? This cannot be undone!");
-      if (!confirmDelete) return; // If user cancels, exit the function
-  
-      const userId = auth.currentUser?.uid;
-      if (!userId) {
-        console.error("You must be logged in to delete replies.");
-        return;
-      }
-  
       const postRef = doc(firestore, 'posts', postId);
       const postDoc = await getDoc(postRef);
-  
+
       if (postDoc.exists()) {
         const postData = postDoc.data() as Post;
-  
+
         // Remove the reply from the replies array
         const updatedComments = postData.comments.map((comment, cIndex) => {
           if (cIndex === commentIndex) {
@@ -972,12 +951,12 @@ const AdminDiscussionBoardPage = () => {
           }
           return comment;
         });
-  
+
         // Update the post in Firestore
         await updateDoc(postRef, {
           comments: updatedComments,
         });
-  
+
         console.log("Reply deleted successfully.");
       } else {
         console.error("Post does not exist.");
@@ -985,7 +964,7 @@ const AdminDiscussionBoardPage = () => {
     } catch (error) {
       console.error("Error deleting reply:", error);
     }
-  };  
+  };
 
   // Function to render the reply text with @username as a link
   const renderReplyText = (text: string, userId: string) => {
@@ -1132,68 +1111,6 @@ const AdminDiscussionBoardPage = () => {
 
   const urlRegex = /(https?:\/\/[^\s]+)/g; // Regular expression to match URLs
 
-  // Function to process the message and return an array of React elements
-  const processMessage = (message: string): JSX.Element[] => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g; // Regular expression to match URLs
-    const bannedWordsRegex = bannedWords.map(word => new RegExp(`\\b${word}\\b`, 'gi')); // Array of regexes for banned words
-
-    let parts: JSX.Element[] = [];
-    let lastIndex = 0;
-
-    // Process the message to find links first and split around them
-    let match;
-    while ((match = urlRegex.exec(message)) !== null) {
-      const segmentBeforeLink = message.slice(lastIndex, match.index); // Text before the link
-      parts.push(...highlightBannedWords(segmentBeforeLink)); // Add the highlighted text before link
-
-      // Render the link
-      parts.push(
-        <a
-          href={match[0]}
-          key={match.index}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500 underline hover:text-yellow-500"
-        >
-          {match[0]} {/* Render the link */}
-        </a>
-      );
-      lastIndex = urlRegex.lastIndex; // Update last index to the end of the current match
-    }
-
-    // Add the remaining message after the last link
-    parts.push(...highlightBannedWords(message.slice(lastIndex)));
-
-    return parts;
-  };
-
-  // Function to handle highlighting banned words in a message
-  const highlightBannedWords = (text: string): JSX.Element[] => {
-    let parts: JSX.Element[] = [];
-    let lastIndex = 0;
-
-    bannedWords.forEach((word) => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi');
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        if (match.index > lastIndex) {
-          // Wrap text before the match in a React Fragment to keep it as a valid JSX element
-          parts.push(<React.Fragment key={lastIndex}>{text.slice(lastIndex, match.index)}</React.Fragment>);
-        }
-        // Add the red-colored banned word
-        parts.push(<span className="text-red-500" key={match.index}>{match[0]}</span>);
-        lastIndex = regex.lastIndex;
-      }
-    });
-
-    if (lastIndex < text.length) {
-      // Add remaining part of the message (if any)
-      parts.push(<React.Fragment key={lastIndex}>{text.slice(lastIndex)}</React.Fragment>);
-    }
-
-    return parts;
-  };
-
   return (
     <Layout>
         <div className="flex flex-col">
@@ -1225,8 +1142,8 @@ const AdminDiscussionBoardPage = () => {
             {/* Posts Section with Title and Divider */}
             <div className="mt-6 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
                 <div>
-                {/* Posts Text with Border */}
-                <p className="text-white text-xl">Posts</p>
+                  {/* Posts Text with Border */}
+                  <p className="text-white text-xl">Posts (Admin Mode)</p>
                 </div>
                 
                 {/* Buttons aligned to the right */}
@@ -1367,33 +1284,66 @@ const AdminDiscussionBoardPage = () => {
                                     </div>
 
                                     {showMoreOptions[post.id] && (
-                                    <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
+                                      <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
                                         {/* Triangle Pointer */}
                                         <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
 
                                         {/* Edit Button */}
                                         <button
-                                        onClick={() => handleUpdatePost(post.id)}
-                                        className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
+                                          onClick={() => { 
+                                            handleUpdatePost(post.id); 
+                                            setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Edit
+                                          }}
+                                          className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                         >
-                                        <FaEdit className="w-4 h-4 mr-2" />
-                                        <span className="whitespace-nowrap">Edit Post</span>
+                                          <FaEdit className="w-4 h-4 mr-2" />
+                                          <span className="whitespace-nowrap">Edit Post</span>
                                         </button>
 
                                         {/* Delete Button */}
                                         <button
-                                        onClick={() => handleDeletePost(post.id)}
-                                        className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
+                                          onClick={() => { 
+                                            handleDeletePost(post.id);
+                                            setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Delete
+                                          }}
+                                          className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                         >
-                                        <FaTrash className="w-4 h-4 mr-2" />
-                                        <span className="whitespace-nowrap">Delete Post</span>
+                                          <FaTrash className="w-4 h-4 mr-2" />
+                                          <span className="whitespace-nowrap">Delete Post</span>
                                         </button>
-                                    </div>
+                                      </div>
                                     )}
                                 </div>
                             </div>
                             </div>
                         </div>
+
+                        {/* Delete Confirmation Modal */}
+                        {deletePostPrompt && (
+                          <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                            <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                              <p>Are you sure you want to delete this post? This cannot be undone!</p>
+                              <div className="mt-4 flex justify-center gap-4">
+                                <button
+                                  onClick={async () => {
+                                    if (!postIdToDelete) return;
+                                    await deletePost(postIdToDelete);
+                                    setDeletePostPrompt(false); // Close the modal
+                                  }}
+                                  className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+                                >
+                                  Confirm
+                                </button>
+                                <button
+                                  onClick={() => setDeletePostPrompt(false)}
+                                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                         
                         <div className="mb-2">
                         <div
@@ -1407,7 +1357,7 @@ const AdminDiscussionBoardPage = () => {
                             }}
                         >
                             <LinkIt component={renderLink} regex={urlRegex}>
-                              <div>{processMessage(post.message)}</div>
+                              {post.message} {/* Render the message with linkified URLs */}
                             </LinkIt>
                         </div>
 
@@ -1681,6 +1631,34 @@ const AdminDiscussionBoardPage = () => {
                                         </div>
                                     </div>
 
+                                    {/* Delete Comment Confirmation Modal */}
+                                    {deleteCommentPrompt && (
+                                      <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                                        <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                                          <p>Are you sure you want to delete this comment? This cannot be undone!</p>
+                                          <div className="mt-4 flex justify-center gap-4">
+                                            <button
+                                              onClick={async () => {
+                                                if (!commentToDelete) return;
+                                                const { postId, commentIndex } = commentToDelete;
+                                                await deleteComment(postId, commentIndex); // Delete the comment
+                                                setDeleteCommentPrompt(false); // Close the modal
+                                              }}
+                                              className="bg-yellow-500 text-black px-4 py-2 rounded"
+                                            >
+                                              Confirm
+                                            </button>
+                                            <button
+                                              onClick={() => setDeleteCommentPrompt(false)}
+                                              className="bg-gray-500 text-white px-4 py-2 rounded"
+                                            >
+                                              Cancel
+                                            </button>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
+
                                     {isEditingComment && (
                                         <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
                                         <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
@@ -1709,9 +1687,9 @@ const AdminDiscussionBoardPage = () => {
                                         </div>
                                     )}
 
-                                    <LinkIt component={renderLink} regex={urlRegex}>
-                                      <div>{processMessage(comment.comment)}</div>
-                                    </LinkIt>
+                                  <LinkIt component={renderLink} regex={urlRegex}>
+                                    <p>{filterBannedWords(comment.comment)}</p>
+                                  </LinkIt>
 
                                     <div className="flex gap-2 mt-2">
                                         {/* Like Button (Comment) with Tooltip */}
@@ -1821,6 +1799,34 @@ const AdminDiscussionBoardPage = () => {
                                                         </div>
                                                     </div>
 
+                                                    {/* Delete Reply Confirmation Modal */}
+                                                    {deleteReplyPrompt && (
+                                                      <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                                                        <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                                                          <p>Are you sure you want to delete this reply? This cannot be undone!</p>
+                                                          <div className="mt-4 flex justify-center gap-4">
+                                                            <button
+                                                              onClick={async () => {
+                                                                if (!replyToDelete) return;
+                                                                const { postId, commentIndex, replyIndex } = replyToDelete;
+                                                                await deleteReply(postId, commentIndex, replyIndex); // Delete the reply
+                                                                setDeleteReplyPrompt(false); // Close the modal
+                                                              }}
+                                                              className="bg-yellow-500 text-black px-4 py-2 rounded"
+                                                            >
+                                                              Confirm
+                                                            </button>
+                                                            <button
+                                                              onClick={() => setDeleteReplyPrompt(false)}
+                                                              className="bg-gray-500 text-white px-4 py-2 rounded"
+                                                            >
+                                                              Cancel
+                                                            </button>
+                                                          </div>
+                                                        </div>
+                                                      </div>
+                                                    )}
+
                                                     {isEditingReply && (
                                                     <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
                                                         <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
@@ -1850,7 +1856,7 @@ const AdminDiscussionBoardPage = () => {
                                                     )}
 
                                                     <LinkIt component={renderLink} regex={urlRegex}>
-                                                      <div>{processMessage(post.message)}</div>
+                                                      <p>{renderReplyText(filterBannedWords(reply.reply), reply.repliedToUserId ?? '')}</p>
                                                     </LinkIt>
 
                                                     <div className="flex gap-2 mt-2">

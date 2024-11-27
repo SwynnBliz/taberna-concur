@@ -9,6 +9,7 @@ import { FaEdit } from 'react-icons/fa'; // Importing React Icons
 import { AiOutlineClose } from 'react-icons/ai';  // Import close icon
 import { useRouter } from 'next/navigation';
 import useBannedWords from '../../components/forum/hooks/useBannedWords';
+import Link from 'next/link';
 
 interface User {
   id: string;
@@ -116,7 +117,7 @@ const AdminUserPage = () => {
             if (!text) return "";
             return bannedWords.reduce((acc, word) => {
               const regex = new RegExp(`\\b(${word})\\b`, "gi");
-              return acc.replace(regex, "*".repeat(word.length));
+              return acc.replace(regex, (match) => `(**${match}**)`);
             }, text);
           };
   
@@ -339,7 +340,7 @@ const AdminUserPage = () => {
     <Layout>
       <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative flex flex-col">
         <section>
-          <h1 className="text-3xl font-bold text-white mb-8">Users</h1>
+          <h1 className="text-xl text-white mb-8 border-b-2 border-white pb-2">Users (Admin Mode)</h1>
           <div className="space-y-8">
              {/* Status Filter Dropdown */}
             <div className="mb-4">
@@ -399,11 +400,13 @@ const AdminUserPage = () => {
 
                 {/* Left Section: Profile Image and Username */}
                 <div className="flex flex-col items-center w-1/3">
-                  <img
-                    src={user.profilePhoto || 'https://via.placeholder.com/150'}
-                    alt="Profile"
-                    className="w-32 h-32 rounded-full mb-4"
-                  />
+                  <Link href={`/profile-view/${user.id}`}>
+                    <img
+                      src={user.profilePhoto || 'https://via.placeholder.com/150'}
+                      alt="Profile"
+                      className="w-32 h-32 rounded-full mb-4"
+                    />
+                  </Link>
                   <h2 className="text-xl text-white font-bold">{user.username}</h2>
                 </div>
         
