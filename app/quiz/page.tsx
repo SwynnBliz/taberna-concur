@@ -22,7 +22,7 @@ const QuizHomePage = () => {
           backgroundImage: "url('https://images2.alphacoders.com/132/1321858.png')",
         }}
       >
-        <h1 className="text-4xl font-extrabold mb-8 shadow-md p-4 rounded-lg bg-[#1f1f1f] text-yellow-500">
+        <h1 className="text-4xl font-extrabold mb-8 shadow-md p-4 rounded-lg bg-[#1f1f1f] text-#df8e24-500">
           Welcome to the Quiz Module
         </h1>
         <p className="text-lg mb-12 text-center text-white-400">
