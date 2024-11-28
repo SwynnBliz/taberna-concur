@@ -21,33 +21,33 @@
 }
 
 html, body {
-  height: 100%; /* Ensure the body takes full height */
-  margin: 0;    /* Remove any default margin */
+  height: 100%; 
+  margin: 0;    
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inria Serif', serif; /* Set the body font to Inria Serif */
+  font-family: 'Inria Serif', serif; 
 }
 
-/* Custom scrollbar for webkit browsers (Chrome, Safari, etc.) */
+
 ::-webkit-scrollbar {
-  width: 12px; /* Width of the scrollbar */
+  width: 12px; 
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #333; /* Dark thumb color */
-  border-radius: 6px; /* Rounded corners for the thumb */
-  border: 3px solid #484242; /* Border around the thumb */
+  background-color: #333; 
+  border-radius: 6px; 
+  border: 3px solid #484242; 
 }
 
 ::-webkit-scrollbar-track {
-  background: #222; /* Dark track color */
+  background: #222; 
 }
 
 ::-webkit-scrollbar-button {
-  display: none; /* Hide the scrollbar buttons */
+  display: none; 
 }
 
-/* globals.css */
+
 .flip-container {
   perspective: 1000px;
 }
@@ -56,12 +56,12 @@ html, body {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.6s ease-in-out; /* Smooth flip transition */
+  transition: transform 0.6s ease-in-out; 
   transform-style: preserve-3d;
 }
 
 .flipped .flipper {
-  transform: rotateY(120deg); /* 120-degree flip */
+  transform: rotateY(120deg); 
 }
 
 .front,

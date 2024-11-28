@@ -11,13 +11,13 @@ const PasswordStrengthChecker = ({ password }: PasswordStrengthCheckerProps) => 
     const checkPasswordStrength = (password: string) => {
       let strengthLevel = 0;
 
-      // Criteria
+      
       if (password.length >= 8) strengthLevel++;
       if (/[A-Z]/.test(password)) strengthLevel++;
       if (/[0-9]/.test(password)) strengthLevel++;
       if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strengthLevel++;
 
-      // Determine strength level
+      
       switch (strengthLevel) {
         case 0:
         case 1:

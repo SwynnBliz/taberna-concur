@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { firestore, auth } from './../../app/firebase/config'; // Import auth
+import { firestore, auth } from './../../app/firebase/config'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import Layout from '../../components/root/Layout';
 
@@ -13,14 +13,14 @@ const ResultsPage = () => {
   useEffect(() => {
     const fetchResults = async () => {
       try {
-        const user = auth.currentUser; // Get the current user
+        const user = auth.currentUser; 
         if (user) {
-          // Only fetch results for the current user's email
+          
           const userEmail = user.email;
 
           const resultsQuery = query(
             collection(firestore, 'quizScores'),
-            where('email', '==', userEmail) // Filter by email
+            where('email', '==', userEmail) 
           );
           const querySnapshot = await getDocs(resultsQuery);
 

@@ -1,9 +1,9 @@
-/** /app/firebase/config.tsx (Firebase Config File) */
+// app/firebase/config.tsx (Firebase Config File)
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth"; // Import setPersistence
-import { getFirestore } from "firebase/firestore"; // Import Firestore
+import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth"; 
+import { getFirestore } from "firebase/firestore"; 
 
-// Firebase configuration using environment variables
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -13,13 +13,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if there are no existing apps
+
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Get the authentication instance
+
 const auth = getAuth(app);
 
-// Set session persistence to local for the authentication session
+
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
     console.log('Session persistence set to local');
@@ -28,10 +28,10 @@ setPersistence(auth, browserLocalPersistence)
     console.error('Failed to set persistence:', error);
   });
 
-const googleProvider = new GoogleAuthProvider(); // Initialize Google provider
+const googleProvider = new GoogleAuthProvider(); 
 
-// Initialize Firestore
-const firestore = getFirestore(app); // Initialize Firestore
 
-// Export the app, auth, firestore, and provider for use in other parts of the application
+const firestore = getFirestore(app); 
+
+
 export { app, auth, googleProvider, firestore };

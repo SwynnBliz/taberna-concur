@@ -14,30 +14,30 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);  // Track if the user is an admin
-  const pathname = usePathname(); // To track the current route
+  const [isAdmin, setIsAdmin] = useState(false);  
+  const pathname = usePathname(); 
   
-  // Listen for changes in authentication state
+  
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        setUserId(user.uid); // Set the userId when the user is logged in
+        setUserId(user.uid); 
 
-        // Fetch user role from Firestore
+        
         const firestore = getFirestore();
         const userRef = doc(firestore, "users", user.uid);
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setIsAdmin(userData?.role === "admin"); // Set isAdmin based on Firestore role field
+          setIsAdmin(userData?.role === "admin"); 
         }
       } else {
-        setUserId(null); // Clear the userId if the user is logged out
+        setUserId(null); 
       }
     });
 
-    // Cleanup listener on unmount
+    
     return () => unsubscribe();
   }, []);
 
@@ -46,8 +46,8 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
     const auth = getAuth();
 
     try {
-      await signOut(auth);  // Sign out the user from Firebase Authentication
-      router.push('/sign-in');  // Redirect to the sign-in page
+      await signOut(auth);  
+      router.push('/sign-in');  
     } catch (error) {
       console.error('Error during logout: ', error);
     } finally {
@@ -57,7 +57,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
 
   const handleNavigate = (path: string) => {
     router.push(path);
-    onClose(); // Close the sidebar after navigation
+    onClose(); 
   };
 
   return (

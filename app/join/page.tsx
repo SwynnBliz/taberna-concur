@@ -6,7 +6,7 @@ import Layout from '../../components/root/Layout';
 
 const JoinQuizPage = () => {
   const [quizCode, setQuizCode] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false); // Add loading state
+  const [loading, setLoading] = useState<boolean>(false); 
   const router = useRouter();
 
   const handleJoinQuiz = () => {
@@ -15,13 +15,13 @@ const JoinQuizPage = () => {
       return;
     }
 
-    setLoading(true); // Set loading to true when joining quiz
+    setLoading(true); 
 
-    // Simulate delay for animation
+    
     setTimeout(() => {
-      // Redirect to the quiz page with the quiz code
+      
       router.push(`/quizcode/${quizCode}`);
-    }, 1000); // 1-second delay for the animation to show
+    }, 1000); 
   };
 
   return (
@@ -39,7 +39,7 @@ const JoinQuizPage = () => {
           <button
             onClick={handleJoinQuiz}
             className="bg-yellow-500 hover:bg-yellow-600 text-black font-medium py-2 px-4 rounded-md w-full transition duration-300 flex items-center justify-center"
-            disabled={loading} // Disable the button while loading
+            disabled={loading} 
           >
             {loading ? (
               <div className="animate-spin border-4 border-t-4 border-yellow-600 border-opacity-50 border-t-[#1f1f1f] rounded-full h-6 w-6"></div>

@@ -3,19 +3,19 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { usePathname } from 'next/navigation';  // Import usePathname hook
-import { getAuth, signOut } from "firebase/auth"; // Import signOut
+import { usePathname } from 'next/navigation';  
+import { getAuth, signOut } from "firebase/auth"; 
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import { FaSpinner } from "react-icons/fa";
 
 const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState<string | null>(null); // Allow null
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Local state for sidebar open status
-  const [loading, setLoading] = useState(true); // Loading state for the profile image
-  const [isAdmin, setIsAdmin] = useState(false); // State to track if the user is an admin
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null); 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  const [loading, setLoading] = useState(true); 
+  const [isAdmin, setIsAdmin] = useState(false); 
   const router = useRouter();
-  const pathname = usePathname();  // Using usePathname to get the current route
+  const pathname = usePathname();  
   const firestore = getFirestore();
   const isOnAdminPage = pathname.includes("/admin");
 
@@ -25,8 +25,8 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
 
   const handleLogout = async () => {
     try {
-      await signOut(getAuth()); // Sign out from Firebase
-      router.push("/sign-in"); // Redirect to sign-in page after logout
+      await signOut(getAuth()); 
+      router.push("/sign-in"); 
     } catch (error) {
       console.error("Error during logout: ", error);
     }
@@ -34,29 +34,29 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
 
   const handleNavigateHome = () => {
     if (isAdmin) {
-      // If currently on an admin page, go to user page
+      
       if (isOnAdminPage) {
-        router.push("/admin-discussion-board"); // Navigate to user page
+        router.push("/admin-discussion-board"); 
       } else {
-        router.push("/discussion-board"); // Navigate to admin page
+        router.push("/discussion-board"); 
       }
     } else {
-      // If not an admin, go to the admin page
+      
       if (isOnAdminPage) {
-        router.push("/admin-discussion-board"); // Navigate to user page
+        router.push("/admin-discussion-board"); 
       } else {
-        router.push("/discussion-board"); // Navigate to admin page
+        router.push("/discussion-board"); 
       }
     }
   };
 
-  // Toggle Sidebar open/close
+  
   const handleSidebarToggle = () => {
     setIsSidebarOpen((prev) => !prev);
-    onLeftSidebarToggle(); // Call the passed prop function to handle external state changes
+    onLeftSidebarToggle(); 
   };
 
-  // Fetch user data (including profile photo and role) from Firestore
+  
   useEffect(() => {
     const fetchUserData = async () => {
       const user = getAuth().currentUser;
@@ -65,45 +65,45 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setProfilePhoto(userData?.profilePhoto || "https://via.placeholder.com/150"); // Default image if no profile photo
-          setIsAdmin(userData?.role === "admin"); // Set isAdmin based on Firestore role field
+          setProfilePhoto(userData?.profilePhoto || "https://via.placeholder.com/150");
+          setIsAdmin(userData?.role === "admin");
         }
       } else {
-        setProfilePhoto("https://via.placeholder.com/150"); // Handle case where no user is logged in
+        setProfilePhoto("https://via.placeholder.com/150");
       }
-      setLoading(false); // Stop loading once data is fetched
+      setLoading(false); 
     };
 
-    // Ensure the effect runs only after authentication is initialized
+    
     if (getAuth().currentUser) {
       fetchUserData();
     }
 
-    // Listen for authentication changes (if user logs in after page load)
+    
     const unsubscribe = getAuth().onAuthStateChanged(user => {
       if (user) {
         fetchUserData();
       }
     });
 
-    // Cleanup listener on unmount
+    
     return () => unsubscribe();
   }, [firestore]);
 
   const handleModeToggle = () => {
     if (isAdmin) {
-      // If currently on an admin page, go to user page
+      
       if (isOnAdminPage) {
-        router.push("/discussion-board"); // Navigate to user page
+        router.push("/discussion-board"); 
       } else {
-        router.push("/admin-discussion-board"); // Navigate to admin page
+        router.push("/admin-discussion-board"); 
       }
     } else {
-      // If not an admin, go to the admin page
+      
       if (isOnAdminPage) {
-        router.push("/discussion-board"); // Navigate to user page
+        router.push("/discussion-board"); 
       } else {
-        router.push("/admin-discussion-board"); // Navigate to admin page
+        router.push("/admin-discussion-board"); 
       }
     }
   };
@@ -112,7 +112,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     <div className="sticky top-0 z-50 flex justify-between items-center bg-[#302C2C] text-white p-4 shadow-md">
       <div className="relative group">
         <button
-          onClick={handleSidebarToggle} // Using the local toggle function to manage state
+          onClick={handleSidebarToggle} 
           className="hover:bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center transition-all"
         >
           <span className="text-white text-2xl">☰</span>
@@ -148,7 +148,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
             </div>
           ) : (
             <Image
-              src={profilePhoto || "https://via.placeholder.com/150"} // Fallback to default image if profilePhoto is null
+              src={profilePhoto || "https://via.placeholder.com/150"}
               alt="Profile"
               width={40}
               height={40}

@@ -29,12 +29,12 @@ const QuizCreatorPage = () => {
   });
   const [quizCode, setQuizCode] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [createdExams, setCreatedExams] = useState<Quiz[]>([]); // List of created exams
-  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null); // The selected quiz
+  const [createdExams, setCreatedExams] = useState<Quiz[]>([]); 
+  const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null); 
   const [showQuestions, setShowQuestions] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Fetch all quizzes on component mount
+  
   useEffect(() => {
     const fetchQuizzes = async () => {
       const quizSnapshot = await getDocs(collection(firestore, 'quizzes'));
@@ -74,7 +74,7 @@ const QuizCreatorPage = () => {
     }
 
     try {
-      // Check if quiz name or code already exists
+      
       const quizSnapshot = await getDocs(collection(firestore, 'quizzes'));
       const existingQuiz = quizSnapshot.docs.find(
         (doc) => doc.data().name.toLowerCase() === quizName.toLowerCase() || doc.data().code === quizName.toLowerCase().replace(/ /g, '_')
@@ -87,26 +87,26 @@ const QuizCreatorPage = () => {
 
       const code = quizName.toLowerCase().replace(/ /g, '_');
 
-      // Save quiz
+      
       const quizRef = await addDoc(collection(firestore, 'quizzes'), {
         name: quizName,
         code,
         createdAt: new Date(),
       });
 
-      // Save questions
+      
       await Promise.all(
         questions.map(question =>
           addDoc(collection(firestore, 'questions'), { quizId: quizRef.id, ...question })
         )
       );
 
-      setQuizCode(code); // Display the code to the user
-      setQuizName(''); // Clear quiz name
-      setQuestions([]); // Clear questions
-      setErrorMessage(null); // Clear any previous error message
+      setQuizCode(code); 
+      setQuizName(''); 
+      setQuestions([]); 
+      setErrorMessage(null); 
       alert('Quiz created successfully!');
-      setShowModal(true); // Show the modal with the questions
+      setShowModal(true); 
     } catch (error) {
       console.error('Error creating quiz:', error);
       alert('An error occurred while creating the quiz.');
@@ -117,21 +117,21 @@ const QuizCreatorPage = () => {
     setSelectedQuiz(quiz);
     setShowQuestions(true);
 
-    // Fetch questions for the selected quiz
+    
     const questionsSnapshot = await getDocs(collection(firestore, 'questions'));
     const quizQuestions = questionsSnapshot.docs
       .map(doc => doc.data())
       .filter((question: any) => question.quizId === quiz.id) as Question[];
 
-    setQuestions(quizQuestions); // Display questions for the selected quiz
+    setQuestions(quizQuestions); 
   };
 
   const handleDeleteQuiz = async (quizId: string) => {
     try {
-      // Delete quiz
+      
       await deleteDoc(doc(firestore, 'quizzes', quizId));
 
-      // Delete associated questions
+      
       const questionsSnapshot = await getDocs(collection(firestore, 'questions'));
       const questionsToDelete = questionsSnapshot.docs.filter(
         (doc) => doc.data().quizId === quizId
@@ -144,7 +144,7 @@ const QuizCreatorPage = () => {
       );
 
       alert('Quiz deleted successfully!');
-      setCreatedExams(createdExams.filter(quiz => quiz.id !== quizId)); // Remove from the local state
+      setCreatedExams(createdExams.filter(quiz => quiz.id !== quizId)); 
     } catch (error) {
       console.error('Error deleting quiz:', error);
       alert('An error occurred while deleting the quiz.');
@@ -159,7 +159,7 @@ const QuizCreatorPage = () => {
       await updateDoc(doc(firestore, 'quizzes', quizId), { name: updatedQuizName });
       alert('Quiz updated successfully!');
 
-      // Update in the local state
+      
       setCreatedExams(
         createdExams.map(quiz => (quiz.id === quizId ? { ...quiz, name: updatedQuizName } : quiz))
       );

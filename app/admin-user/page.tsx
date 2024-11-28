@@ -2,11 +2,11 @@
 'use client';
 import Layout from '../../components/root/Layout';
 import { useEffect, useState } from 'react';
-import { app } from '../firebase/config'; // Firebase config import
+import { app } from '../firebase/config'; 
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, collection, getDoc, getDocs, doc, updateDoc, deleteField, Timestamp } from 'firebase/firestore'; // Import Firestore methods
-import { FaEdit } from 'react-icons/fa'; // Importing React Icons
-import { AiOutlineClose } from 'react-icons/ai';  // Import close icon
+import { getFirestore, collection, getDoc, getDocs, doc, updateDoc, deleteField, Timestamp } from 'firebase/firestore'; 
+import { FaEdit } from 'react-icons/fa'; 
+import { AiOutlineClose } from 'react-icons/ai';  
 import { useRouter } from 'next/navigation';
 import useBannedWords from '../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
@@ -19,38 +19,38 @@ interface User {
   contactNumber: string;
   visibility: 'public' | 'private';
   role: 'admin' | 'user';
-  disabled: boolean; // Indicates if the user is banned
-  disabledBy: string | null; // The ID of the admin who banned the user, or null if not banned
-  disabledAt: Timestamp | null; // Timestamp when the user was banned
+  disabled: boolean; 
+  disabledBy: string | null; 
+  disabledAt: Timestamp | null; 
 }
 
 const AdminUserPage = () => {
-  const [users, setUsers] = useState<User[]>([]); // State to store users
-  const [error, setError] = useState<string | null>(null); // State to store error message
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Loading state
-  const [isSaving, setIsSaving] = useState<boolean>(false); // Saving state to show loading spinner
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false); // State to control the modal visibility
-  const [selectedUser, setSelectedUser] = useState<User | null>(null); // State for selected user to edit
-  const [editImageFile, setEditImageFile] = useState<File | null>(null); // State for the new image file
+  const [users, setUsers] = useState<User[]>([]); 
+  const [error, setError] = useState<string | null>(null); 
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isSaving, setIsSaving] = useState<boolean>(false); 
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false); 
+  const [selectedUser, setSelectedUser] = useState<User | null>(null); 
+  const [editImageFile, setEditImageFile] = useState<File | null>(null); 
   const firestore = getFirestore(app);
   const router = useRouter();
   const auth = getAuth();
   const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
-  const [searchQuery, setSearchQuery] = useState<string>(""); // State for search bar
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]); // For search results
+  const [searchQuery, setSearchQuery] = useState<string>(""); 
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]); 
   const [statusFilter, setStatusFilter] = useState<'all' | 'disabled' | 'notDisabled'>('all');
 
   useEffect(() => {
-    // Function to check if the user has admin role
+    
     const checkAdminRole = async (authUser: FirebaseUser | null) => {
       if (!authUser) {
-        // Redirect to login or home if no user is logged in
+        
         router.push('/sign-in');
         return;
       }
 
       try {
-        // Fetch the user document from Firestore using the Firebase auth user id (uid)
+        
         const userDocRef = doc(firestore, 'users', authUser.uid);
         const userDoc = await getDoc(userDocRef);
         
@@ -58,11 +58,11 @@ const AdminUserPage = () => {
           const userData = userDoc.data() as User;
 
           if (userData.role !== 'admin') {
-            // Redirect if user is not an admin
+            
             router.push('/discussion-board');
           }
         } else {
-          // Redirect if user data doesn't exist in Firestore
+          
           router.push('/sign-in');
         }
       } catch (error) {
@@ -71,36 +71,36 @@ const AdminUserPage = () => {
       }
     };
 
-    // Check the user's authentication status and their role
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        checkAdminRole(user); // 'user' is of type FirebaseUser here
+        checkAdminRole(user); 
       } else {
-        router.push('/sign-in'); // Redirect if no user is logged in
+        router.push('/sign-in'); 
       }
     });
 
-    return () => unsubscribe(); // Clean up the listener on component unmount
+    return () => unsubscribe(); 
   }, [auth, firestore, router]);
 
   useEffect(() => {
     let filtered = [...users];
   
-    // Apply the status filter
+    
     if (statusFilter === 'disabled') {
       filtered = filtered.filter((user) => user.disabled === true);
     } else if (statusFilter === 'notDisabled') {
       filtered = filtered.filter((user) => user.disabled === false);
     }
   
-    // Apply search query filter
+    
     if (searchQuery.trim() !== "") {
       filtered = filtered.filter((user) =>
         user.username.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
   
-    setFilteredUsers(filtered); // Set the filtered users
+    setFilteredUsers(filtered); 
   }, [statusFilter, searchQuery, users]);
 
   useEffect(() => {
@@ -126,12 +126,12 @@ const AdminUserPage = () => {
             id: doc.id,
             bio: highlightBannedWords(data.bio || ""),
             contactNumber: highlightBannedWords(data.contactNumber || ""),
-            disabled: data.disabled || false, // Ensure that we are tracking disabled state
+            disabled: data.disabled || false, 
           });
         });
   
         setUsers(usersList);
-        setFilteredUsers(usersList); // Set initial filtered users
+        setFilteredUsers(usersList); 
       } catch (err) {
         setError("Failed to load users.");
       } finally {
@@ -143,12 +143,12 @@ const AdminUserPage = () => {
   }, [bannedWords, firestore]);
 
   const handleEditButtonClick = (user: User) => {
-    setSelectedUser(user); // Set the selected user to be edited
-    setIsModalOpen(true); // Open the modal
+    setSelectedUser(user); 
+    setIsModalOpen(true); 
   };
 
   const handleModalClose = () => {
-    setIsModalOpen(false); // Close the modal
+    setIsModalOpen(false); 
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -162,7 +162,7 @@ const AdminUserPage = () => {
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setEditImageFile(e.target.files[0]); // Save the selected image file
+      setEditImageFile(e.target.files[0]); 
     }
   };
 
@@ -174,12 +174,18 @@ const AdminUserPage = () => {
       return;
     }
   
+    
+    if (!selectedUser.username || selectedUser.username.trim() === '') {
+      alert('Username cannot be empty. Please provide a valid username.');
+      return;
+    }
+  
     setIsSaving(true);
   
     try {
-      let imageUrl = selectedUser.profilePhoto; // Default to current profile photo
+      let imageUrl = selectedUser.profilePhoto; 
   
-      // If a new image file is selected, upload it to Cloudinary
+      
       if (editImageFile) {
         const formData = new FormData();
         formData.append('file', editImageFile);
@@ -195,19 +201,19 @@ const AdminUserPage = () => {
         }
   
         const data = await res.json();
-        imageUrl = data.secure_url; // Update the profile photo URL
+        imageUrl = data.secure_url; 
       }
   
-      // Update the user in Firestore
+      
       const userRef = doc(firestore, 'users', selectedUser.id);
       await updateDoc(userRef, {
-        profilePhoto: imageUrl, // Retain current photo if no new image is uploaded
+        profilePhoto: imageUrl, 
         username: selectedUser.username,
         bio: selectedUser.bio,
         contactNumber: selectedUser.contactNumber,
       });
   
-      // Update local state
+      
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === selectedUser.id
@@ -222,10 +228,10 @@ const AdminUserPage = () => {
         )
       );
   
-      // Reset modal and state
+      
       setIsModalOpen(false);
       setSelectedUser(null);
-      setEditImageFile(null); // Reset the selected file
+      setEditImageFile(null); 
     } catch (error) {
       console.error('Error updating user profile:', error);
     } finally {
@@ -244,7 +250,7 @@ const AdminUserPage = () => {
         const userData = userDoc.data();
         const currentTimestamp = new Date().toISOString();
   
-        // Make an API call to disable/enable the user in Firebase Auth
+        
         const response = await fetch('/api/admin/disableUser', {
           method: 'POST',
           headers: {
@@ -252,20 +258,20 @@ const AdminUserPage = () => {
           },
           body: JSON.stringify({
             uid: userId,
-            isDisabled: !isCurrentlyDisabled, // Send the opposite of the current status
+            isDisabled: !isCurrentlyDisabled, 
           }),
         });
   
         const data = await response.json();
         if (response.ok) {
-          // Only update Firestore if the API call is successful
+          
           await updateDoc(userRef, {
-            disabled: !isCurrentlyDisabled, // Toggle disable status
-            disabledBy: !isCurrentlyDisabled ? auth.currentUser?.uid : null, // Set the admin who disabled the account
-            disabledAt: !isCurrentlyDisabled ? currentTimestamp : null, // Timestamp of when the user was banned
+            disabled: !isCurrentlyDisabled, 
+            disabledBy: !isCurrentlyDisabled ? auth.currentUser?.uid : null, 
+            disabledAt: !isCurrentlyDisabled ? currentTimestamp : null, 
           });
   
-          // Update local state
+          
           setUsers((prevUsers) =>
             prevUsers.map((user) =>
               user.id === userId
@@ -299,12 +305,12 @@ const AdminUserPage = () => {
     try {
       const userRef = doc(firestore, 'users', userId);
   
-      // Update the user's role in Firestore
+      
       await updateDoc(userRef, {
         role: newRole,
       });
   
-      // Update the local state
+      
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === userId ? { ...user, role: newRole } : user
@@ -376,7 +382,7 @@ const AdminUserPage = () => {
                 <div className="absolute top-2 right-4 flex space-x-2">
                   {/* Role Button */}
                   <button
-                    onClick={() => handleToggleRole(user.id, user.role)} // Toggle role
+                    onClick={() => handleToggleRole(user.id, user.role)} 
                     className="h-8 w-28 text-xs rounded-2xl bg-[#2c2c2c] text-white"
                   >
                     {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
@@ -391,7 +397,7 @@ const AdminUserPage = () => {
 
                   {/* Ban Button */}
                   <button
-                    onClick={() => handleBanUser(user.id, user.disabled)} // Toggle ban/unban
+                    onClick={() => handleBanUser(user.id, user.disabled)} 
                     className={`h-8 w-12 text-xs rounded-2xl ${user.disabled ? 'bg-green-500' : 'bg-red-500'} text-white`}
                   >
                     {user.disabled ? 'Unban' : 'Ban'}
@@ -457,7 +463,7 @@ const AdminUserPage = () => {
                         {/* Close button for the new image */}
                         <button
                           type="button"
-                          onClick={() => setEditImageFile(null)} // Reset the new image selection
+                          onClick={() => setEditImageFile(null)} 
                           className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                         >
                           <AiOutlineClose size={20} />
@@ -480,7 +486,7 @@ const AdminUserPage = () => {
                 <input
                     type="text"
                     name="username"
-                    value={selectedUser?.username || "Anonymous"}
+                    value={selectedUser?.username || ""}
                     onChange={handleInputChange}
                     className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323]"
                 />

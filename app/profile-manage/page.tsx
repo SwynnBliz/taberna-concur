@@ -5,9 +5,9 @@ import { useRouter } from 'next/navigation';
 import { getAuth, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 import { getFirestore, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { Cloudinary } from 'cloudinary-core';
-import Layout from '../../components/root/Layout'; // Layout component import
-import PasswordStrengthChecker from '../../components/auth/PasswordStrengthChecker'; // Import the strength checker
-import useBannedWords from '../../components/forum/hooks/useBannedWords'; // Import useBannedWords hook
+import Layout from '../../components/root/Layout'; 
+import PasswordStrengthChecker from '../../components/auth/PasswordStrengthChecker'; 
+import useBannedWords from '../../components/forum/hooks/useBannedWords'; 
 import { FaSpinner } from "react-icons/fa";
 
 const ProfileManagePage = () => {
@@ -25,19 +25,19 @@ const ProfileManagePage = () => {
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [isGoogleUser, setIsGoogleUser] = useState(false); // To track if the user logged in with Google
-  const [showOldPassword, setShowOldPassword] = useState(false); // Separate state for old password visibility
-  const [showNewPassword, setShowNewPassword] = useState(false); // Separate state for new password visibility
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Separate state for confirm password visibility
+  const [isGoogleUser, setIsGoogleUser] = useState(false); 
+  const [showOldPassword, setShowOldPassword] = useState(false); 
+  const [showNewPassword, setShowNewPassword] = useState(false); 
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); 
   const firestore = getFirestore();
   const authInstance = getAuth();
   const [dataLoaded, setDataLoaded] = useState(false);
-  const { bannedWords, loading: bannedWordsLoading } = useBannedWords(); // Use bannedWords hook
+  const { bannedWords, loading: bannedWordsLoading } = useBannedWords(); 
 
-  // Initialize Cloudinary with environment variables
+  
   const cloudinary = new Cloudinary({ cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME });
 
-  // Fetch user data from Firestore and check login method
+  
   useEffect(() => {
     const fetchUserData = async () => {
       const user = authInstance.currentUser;
@@ -54,7 +54,7 @@ const ProfileManagePage = () => {
           });
 
           setDataLoaded(true);
-          // Check if the user logged in with Google
+          
           if (user.providerData.some((provider) => provider.providerId === 'google.com')) {
             setIsGoogleUser(true);
           }
@@ -64,14 +64,14 @@ const ProfileManagePage = () => {
     fetchUserData();
   }, [authInstance.currentUser, firestore]);
 
-  // Handle profile photo upload
+  
   const handleProfilePhotoChange = async (e: any) => {
     const file = e.target.files[0];
     if (file) {
       setIsLoading(true);
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('upload_preset', 'profile-photo-upload');  // Use the preset you created
+      formData.append('upload_preset', 'profile-photo-upload');  
 
       try {
         const res = await fetch(
@@ -82,7 +82,7 @@ const ProfileManagePage = () => {
           }
         );
         const data = await res.json();
-        setNewPhotoUrl(data.secure_url);  // Set the returned URL
+        setNewPhotoUrl(data.secure_url);  
       } catch (error) {
         setErrorMessage('Failed to upload photo');
       } finally {
@@ -91,31 +91,31 @@ const ProfileManagePage = () => {
     }
   };
 
-  // Check if username contains banned words
+  
   const containsBannedWords = (username: string) => {
     return bannedWords.some((word) => username.toLowerCase().includes(word.toLowerCase()));
   };
 
-  // Update the user info in Firestore and Firebase Authentication
+  
   const handleUpdateProfile = async () => {
     if (!userData.username) {
       setErrorMessage('Username is required.');
       return;
     }
 
-    // Check if username contains banned words
+    
     if (containsBannedWords(userData.username)) {
       setErrorMessage('Username contains a banned word, please change.');
       return;
     }
   
-    // Check if password fields are provided, only validate if they are being used
+    
     if ((oldPassword || newPassword || confirmPassword) && (oldPassword === '' || newPassword === '' || confirmPassword === '')) {
       setErrorMessage('Please fill in all the password fields if you want to change your password.');
       return;
     }
   
-    // Check if the new password and confirm password match (only if both are provided)
+    
     if (newPassword && confirmPassword && newPassword !== confirmPassword) {
       setErrorMessage('Passwords do not match.');
       return;
@@ -125,41 +125,41 @@ const ProfileManagePage = () => {
       const user = authInstance.currentUser;
       if (!user) return;
   
-      // Update user data in Firestore
+      
       const userRef = doc(firestore, 'users', user.uid);
       await updateDoc(userRef, {
         username: userData.username,
         bio: userData.bio,
         contactNumber: userData.contactNumber,
-        profilePhoto: newPhotoUrl || userData.profilePhoto, // Use the uploaded photo or keep the current one
+        profilePhoto: newPhotoUrl || userData.profilePhoto, 
       });
   
-      // Reauthenticate and update password if provided (only for email/password users)
+      
       if (oldPassword && newPassword && !isGoogleUser) {
         const credential = EmailAuthProvider.credential(user.email!, oldPassword);
   
         try {
-          // Reauthenticate the user with the old password
+          
           await reauthenticateWithCredential(user, credential);
   
-          // If reauthentication succeeds, update the password
+          
           await updatePassword(user, newPassword);
   
-          // Clear password fields
+          
           setNewPassword('');
           setConfirmPassword('');
           setOldPassword('');
   
           alert('Password updated successfully');
         } catch (err) {
-          // If reauthentication fails, show an error
+          
           setErrorMessage('Old password is incorrect.');
           return;
         }
       }
   
       alert('Profile updated successfully');
-      router.push(`/profile-view/${user.uid}`); // Redirect to the discussion board
+      router.push(`/profile-view/${user.uid}`); 
     } catch (error: any) {
       setErrorMessage(error.message);
     }
@@ -280,7 +280,7 @@ const ProfileManagePage = () => {
 
                 <label htmlFor="changePassword" className="text-white mb-2">Change Password</label>
                 {!dataLoaded ? (
-                  // Skeleton loader for the entire password section
+                  
                   <div className="w-full">
                     <div className="h-40 bg-gray-300 animate-pulse rounded-lg"></div>
                   </div>
@@ -375,7 +375,7 @@ const ProfileManagePage = () => {
           <button
             onClick={handleUpdateProfile}
             className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-md"
-            disabled={isLoading} // Disable button while loading
+            disabled={isLoading} 
           >
             {isLoading ? 'Updating...' : 'Update Profile'}
           </button>

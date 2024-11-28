@@ -1,26 +1,26 @@
 // app/discussion-board/page.tsx (Discussion Board Page)
 'use client';
-import Layout from '../../components/root/Layout'; // Layout component
-import Forum from '../../components/forum/Forum'; // Import the Forum component
+import Layout from '../../components/root/Layout'; 
+import Forum from '../../components/forum/Forum'; 
 import { useState, useEffect } from 'react';
-import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
+import { AiOutlineClose } from 'react-icons/ai'; 
 
 const DiscussionBoardPage = () => {
-  // State to control the visibility of the welcome popup
+  
   const [showPopup, setShowPopup] = useState(false);
 
-  // Check if the popup has been shown before
+  
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem('hasSeenPopup');
     if (!hasSeenPopup) {
-      // If not, show the popup
+      
       setShowPopup(true);
     }
   }, []);
 
-  // Handle closing the popup
+  
   const handleClosePopup = () => {
-    // Set the flag in localStorage to avoid showing the popup again
+    
     localStorage.setItem('hasSeenPopup', 'true');
     setShowPopup(false);
   };

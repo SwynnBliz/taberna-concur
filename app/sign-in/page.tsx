@@ -20,22 +20,22 @@ const SignInPage = () => {
   const router = useRouter();
   const firestore = getFirestore();
 
-  // Function to handle Firebase error messages and update state
+  
   const getErrorMessage = (error: any) => {
     if (error) {
       const errorMessage = error.message;
-      // Check if the error is related to a disabled user
+      
       if (errorMessage.includes('auth/user-disabled')) {
         return "Your account has been disabled.";
       }
-      // Handle other common Firebase errors
+      
       if (errorMessage.includes('auth/user-not-found')) {
         return "No user found with this email address.";
       }
       if (errorMessage.includes('auth/wrong-password')) {
         return "Incorrect password. Please try again.";
       }
-      // Return the default error message for any other case
+      
       return "Error signing in. Please try again.";
     }
     return "";
@@ -49,17 +49,17 @@ const SignInPage = () => {
 
   const handleEmailPasswordSignIn = async (e: any) => {
     e.preventDefault();
-    setErrorMessage(""); // Reset error message
+    setErrorMessage(""); 
 
     try {
       await signInWithEmailAndPassword(email, password);
     } catch (e) {
-      console.error(e); // You can log this for debugging
+      console.error(e); 
     }
   };
 
   const handleGoogleSignIn = async () => {
-    setErrorMessage(""); // Reset the error message
+    setErrorMessage(""); 
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
@@ -96,7 +96,7 @@ const SignInPage = () => {
         router.push('/discussion-board');
       }
     });
-    return () => unsubscribe(); // Cleanup the listener on component unmount
+    return () => unsubscribe(); 
   }, [router]);
 
   return (

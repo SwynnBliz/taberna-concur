@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { firestore } from '../firebase/config';
-import Layout from '../../components/root/Layout'; // Layout component
+import Layout from '../../components/root/Layout'; 
 import { BsDatabaseAdd, BsDatabaseX } from "react-icons/bs";
 
 const AdminFilterPage: React.FC = () => {
@@ -11,12 +11,12 @@ const AdminFilterPage: React.FC = () => {
   const [bannedWords, setBannedWords] = useState<string[]>([]);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [duplicateError, setDuplicateError] = useState(false); // State for duplicate error
+  const [duplicateError, setDuplicateError] = useState(false); 
   const [successMessage, setSuccessMessage] = useState('');
-  const [deletePrompt, setDeletePrompt] = useState(false); // State for delete confirmation
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [deletePrompt, setDeletePrompt] = useState(false); 
+  const [searchQuery, setSearchQuery] = useState(''); 
 
-  // Fetch banned words from Firestore
+  
   const fetchBannedWords = async () => {
     try {
       const bannedWordsDocRef = doc(firestore, 'settings', 'bannedWords');
@@ -35,11 +35,11 @@ const AdminFilterPage: React.FC = () => {
     fetchBannedWords();
   }, []);
 
-  // Handle adding a new banned word
+  
   const handleAddWord = async () => {
-    if (!newWord.trim()) return; // Avoid adding empty words
+    if (!newWord.trim()) return; 
 
-    // Check if the word already exists in the banned words list
+    
     if (bannedWords.includes(newWord.trim().toLowerCase())) {
       setDuplicateError(true);
       return;
@@ -51,15 +51,15 @@ const AdminFilterPage: React.FC = () => {
         words: arrayUnion(newWord.trim())
       });
       setNewWord('');
-      setDuplicateError(false); // Reset error after successful addition
+      setDuplicateError(false); 
       setSuccessMessage('Word added successfully!');
-      fetchBannedWords(); // Refresh list after adding
+      fetchBannedWords(); 
     } catch (error) {
       console.error("Error adding word:", error);
     }
   };
 
-  // Handle removing selected words with confirmation
+  
   const handleDeleteSelectedWords = async () => {
     if (!deletePrompt) return;
 
@@ -71,13 +71,13 @@ const AdminFilterPage: React.FC = () => {
       setSelectedWords([]);
       setDeletePrompt(false);
       setSuccessMessage('Words deleted successfully!');
-      fetchBannedWords(); // Refresh list after deleting
+      fetchBannedWords(); 
     } catch (error) {
       console.error("Error deleting words:", error);
     }
   };
 
-  // Handle toggling a word selection
+  
   const toggleSelectWord = (word: string) => {
     setSelectedWords((prevSelected) =>
       prevSelected.includes(word)
@@ -86,7 +86,7 @@ const AdminFilterPage: React.FC = () => {
     );
   };
 
-  // Handle search query change
+  
   const filteredWords = bannedWords.filter(word =>
     word.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -135,7 +135,7 @@ const AdminFilterPage: React.FC = () => {
           {selectedWords.length > 0 && (
             <div className="relative group inline-flex items-center">
               <button
-                onClick={() => setDeletePrompt(true)} // Prompt for confirmation
+                onClick={() => setDeletePrompt(true)} 
                 className="bg-[#2c2c2c] text-white p-2 rounded hover:bg-yellow-500"
               >
                 <BsDatabaseX className="h-6 w-6"/>

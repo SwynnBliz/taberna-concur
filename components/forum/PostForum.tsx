@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation';
 import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { Cloudinary } from 'cloudinary-core';
-import { HiPaperClip } from 'react-icons/hi'; // Import the correct icon
-import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
+import { HiPaperClip } from 'react-icons/hi'; 
+import { AiOutlineClose } from 'react-icons/ai'; 
 
 const PostForum = () => {
   const router = useRouter();
@@ -20,10 +20,10 @@ const PostForum = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
 
-  // Initialize Cloudinary
+  
   const cloudinary = new Cloudinary({ cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME });
 
-  // Handle file change for image upload
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -32,7 +32,7 @@ const PostForum = () => {
     }
   };
 
-  // Upload image to Cloudinary
+  
   const handleImageUpload = async (file: File) => {
     const formData = new FormData();
     formData.append('file', file);
@@ -54,7 +54,7 @@ const PostForum = () => {
     }
   };
 
-  // Fetch user profile data from Firestore
+  
   const fetchUserProfile = async (userId: string) => {
     const userDoc = doc(firestore, 'users', userId);
     const docSnap = await getDoc(userDoc);
@@ -64,7 +64,7 @@ const PostForum = () => {
     }
   };
 
-  // Handle post creation
+  
   const handlePostCreation = async () => {
     if (!message.trim()) {
       setErrorMessage('Message cannot be empty.');

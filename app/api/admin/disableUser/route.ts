@@ -1,10 +1,10 @@
-// app/admin/disableUser/route.ts (Disable User Server Side API Route Call)
+// app/admin/disableUser/route.ts (Disable User, Server Side API Route Call)
 import { NextResponse } from 'next/server';
-import { adminAuth } from '../../../../lib/admin'; // Import the adminAuth instance
+import { adminAuth } from '../../../../lib/admin'; 
 
 export async function POST(req: Request) {
   try {
-    const { uid, isDisabled } = await req.json(); // Get user ID and current disabled status
+    const { uid, isDisabled } = await req.json(); 
 
     const user = await adminAuth.getUser(uid);
     if (!user) {

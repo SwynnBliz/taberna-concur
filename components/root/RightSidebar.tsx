@@ -6,7 +6,7 @@ import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import Link from "next/link";
 import useBannedWords from "../forum/hooks/useBannedWords";
-import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
+import { formatDistanceToNow } from 'date-fns'; 
 
 const RightSidebar = () => {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<any[]>([]);
@@ -14,7 +14,7 @@ const RightSidebar = () => {
   const { currentUser } = getAuth();
   const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
 
-  // Memoize bannedWords for stable reference
+  
   const bannedWordsMemo = useMemo(() => bannedWords, [bannedWords]);
 
   useEffect(() => {
@@ -85,7 +85,7 @@ const RightSidebar = () => {
   };
 
   const formatTimestamp = (timestamp: any) => {
-    // Handle if timestamp is valid or missing
+    
     return timestamp && timestamp.seconds
       ? formatDistanceToNow(new Date(timestamp.seconds * 1000), { addSuffix: true })
       : 'Invalid date';

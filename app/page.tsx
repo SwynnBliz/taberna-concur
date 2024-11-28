@@ -1,5 +1,5 @@
 // app/page.tsx (Age Verification Page)
-"use client"; // This directive makes this file a Client Component
+"use client"; 
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -9,24 +9,24 @@ export default function AgeVerification() {
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    // Check if the user has already verified their age
+    
     const hasVerifiedAge = localStorage.getItem("ageVerified");
     if (hasVerifiedAge === "true") {
-      router.push("/sign-in"); // Redirect to sign-in if age verification is complete
+      router.push("/sign-in"); 
     }
   }, [router]);
 
   const handleYesClick = () => {
-    localStorage.setItem("ageVerified", "true"); // Save user's verification in localStorage
-    router.push("/sign-in"); // Redirect to sign-in page
+    localStorage.setItem("ageVerified", "true"); 
+    router.push("/sign-in"); 
   };
 
   const handleNoClick = () => {
-    setShowModal(true); // Show the modal for underage users
+    setShowModal(true); 
   };
 
   const closeModal = () => {
-    setShowModal(false); // Close the modal
+    setShowModal(false); 
   };
 
   return (

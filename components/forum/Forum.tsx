@@ -2,15 +2,15 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
-import { app } from '../../app/firebase/config'; // Firebase config import
+import { app } from '../../app/firebase/config'; 
 import PostForum from './PostForum';
-import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
+import { formatDistanceToNow } from 'date-fns'; 
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; 
 import Link from 'next/link';
-import useBannedWords from "./hooks/useBannedWords"; // Import custom hook
+import useBannedWords from "./hooks/useBannedWords"; 
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
-import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
+import { AiOutlineClose } from 'react-icons/ai'; 
 import { LinkIt } from 'react-linkify-it';
 
 interface Post {
@@ -40,7 +40,7 @@ interface Post {
       likedBy: string[];
       dislikedBy: string[];
       updatedAt?: any;
-      repliedToUserId?: string;  // New field to store the userId of the user being replied to
+      repliedToUserId?: string;  
     }[];
   }[];
   likedBy: string[];
@@ -55,24 +55,24 @@ const Forum = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const firestore = getFirestore(app);
   const auth = getAuth();
-  const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); // Track user's like/dislike status
+  const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); 
   const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
   const [usernames, setUsernames] = useState<Map<string, string>>(new Map());
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [isEditingPost, setIsEditingPost] = useState(false); // State to toggle editing mode
-  const [editContentPost, setEditContentPost] = useState(''); // Store the new post content
-  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null); // Define state for comment index
-  const [isEditingComment, setIsEditingComment] = useState(false); // State to toggle editing mode
-  const [editContentComment, setEditContentComment] = useState(''); // Store the new comment content
+  const [isEditingPost, setIsEditingPost] = useState(false); 
+  const [editContentPost, setEditContentPost] = useState(''); 
+  const [editingCommentIndex, setEditingCommentIndex] = useState<number | null>(null); 
+  const [isEditingComment, setIsEditingComment] = useState(false); 
+  const [editContentComment, setEditContentComment] = useState(''); 
   const [showComments, setShowComments] = useState<{ [key: string]: boolean }>({});
-  const [searchQuery, setSearchQuery] = useState(''); // State for search query
+  const [searchQuery, setSearchQuery] = useState(''); 
   const [isPostForumVisible, setIsPostForumVisible] = useState(false);
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [editImageFile, setEditImageFile] = useState<File | null>(null); // Store selected image file
-  const [editCurrentImageUrl, setEditCurrentImageUrl] = useState<string | null>(null); // Store the current image URL
-  const { bannedWords } = useBannedWords(); // Get banned words from Firestore
-  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); // Store posts after filtering
-  const [isSaving, setIsSaving] = useState<boolean>(false); // Loading state for saving post
+  const [editImageFile, setEditImageFile] = useState<File | null>(null); 
+  const [editCurrentImageUrl, setEditCurrentImageUrl] = useState<string | null>(null); 
+  const { bannedWords } = useBannedWords(); 
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]); 
+  const [isSaving, setIsSaving] = useState<boolean>(false); 
   const [showMoreOptions, setShowMoreOptions] = useState<{ [postId: string]: boolean }>({});
   const [isExpanded, setIsExpanded] = useState<{ [postId: string]: boolean }>({});
   const [isTruncated, setIsTruncated] = useState<{ [postId: string]: boolean }>({});
@@ -82,9 +82,9 @@ const Forum = () => {
   const [isEditingReply, setIsEditingReply] = useState(false);
   const [editContentReply, setEditContentReply] = useState("");
   const [editingReplyIndex, setEditingReplyIndex] = useState<number | null>(null);
-  const [replyText, setReplyText] = useState('');  // To track the reply text
+  const [replyText, setReplyText] = useState('');  
   const [repliedToUserId, setRepliedToUserId] = useState<string | null>(null);
-  const [sortMethod, setSortMethod] = useState<'latest' | 'popular'>('latest'); // Sorting state
+  const [sortMethod, setSortMethod] = useState<'latest' | 'popular'>('latest'); 
   const [deletePostPrompt, setDeletePostPrompt] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState<string | null>(null);
   const [deleteCommentPrompt, setDeleteCommentPrompt] = useState(false);
@@ -92,18 +92,18 @@ const Forum = () => {
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
 
-  // Handles the like and dislike tracking
+  
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
 
-    // Real-time listener
+    
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as Post[]; // Cast to Post[] for correct typing
-      setPosts(postsData); // Update posts when there's a change
-      // Track likes/dislikes of current user
+      })) as Post[]; 
+      setPosts(postsData); 
+      
       const userId = auth.currentUser?.uid;
       if (userId) {
         const userLikesMap = new Map();
@@ -114,25 +114,25 @@ const Forum = () => {
             userLikesMap.set(post.id, 'dislike');
           }
         });
-        setUserLikes(userLikesMap); // Store in state
+        setUserLikes(userLikesMap); 
       }
     });
 
     return () => {
-      // Clean up the listener when the component unmounts
+      
       unsubscribe();
     };
   }, []);
 
   const filterBannedWords = (message: string): string => {
-    if (!bannedWords || bannedWords.length === 0) return message; // No banned words to filter
+    if (!bannedWords || bannedWords.length === 0) return message; 
   
     let filteredMessage = message;
     
     bannedWords.forEach((word) => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Case-insensitive word match
-      const replacement = '*'.repeat(word.length); // Generate a string of asterisks matching the length of the word
-      filteredMessage = filteredMessage.replace(regex, replacement); // Replace with asterisks
+      const regex = new RegExp(`\\b${word}\\b`, 'gi'); 
+      const replacement = '*'.repeat(word.length); 
+      filteredMessage = filteredMessage.replace(regex, replacement); 
     });
     
     return filteredMessage;
@@ -141,21 +141,21 @@ const Forum = () => {
   const filterPosts = (postsData: Post[], method: 'latest' | 'popular' = sortMethod) => {
     let filtered = postsData;
   
-    // Apply search query filtering
+    
     if (searchQuery.trim() !== "") {
       filtered = filtered.filter((post) =>
         post.message.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
   
-    // Apply sorting based on the provided method
+    
     if (method === 'popular') {
-      filtered = filtered.sort((a, b) => b.likes - a.likes); // Sort by likes
+      filtered = filtered.sort((a, b) => b.likes - a.likes); 
     } else {
-      filtered = filtered.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()); // Sort by latest
+      filtered = filtered.sort((a, b) => b.createdAt.toMillis() - a.createdAt.toMillis()); 
     }
   
-    setFilteredPosts(filtered); // Update filtered posts
+    setFilteredPosts(filtered); 
   };
 
   useEffect(() => {
@@ -169,19 +169,19 @@ const Forum = () => {
   
       const filteredPostsData = postsData.map((post) => ({
         ...post,
-        message: filterBannedWords(post.message), // Filter banned words in message
+        message: filterBannedWords(post.message), 
       }));
   
-      setPosts(filteredPostsData); // Set all posts after filtering
-      filterPosts(filteredPostsData); // Apply filtering logic based on search query
+      setPosts(filteredPostsData); 
+      filterPosts(filteredPostsData); 
     });
   
-    return () => unsubscribe(); // Clean up the listener on component unmount
+    return () => unsubscribe(); 
   }, [bannedWords]);
 
   useEffect(() => {
-    filterPosts(posts); // Trigger filtering when sortMethod changes
-  }, [sortMethod, searchQuery, posts]); // Dependencies ensure this updates correctly
+    filterPosts(posts); 
+  }, [sortMethod, searchQuery, posts]); 
 
   const handleLike = async (postId: string) => {
     const userId = auth.currentUser?.uid;
@@ -191,11 +191,11 @@ const Forum = () => {
     const postDoc = await getDoc(postRef);
 
     if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; // Cast to Post type
+      const postData = postDoc.data() as Post; 
       const likedBy = postData.likedBy || [];
       const dislikedBy = postData.dislikedBy || [];
 
-      // If the user disliked, switch to like
+      
       if (dislikedBy.includes(userId)) {
         const updatedDislikedBy = dislikedBy.filter((id: string) => id !== userId);
         const updatedLikedBy = [...likedBy, userId];
@@ -207,12 +207,12 @@ const Forum = () => {
         });
       } else {
         const updatedLikedBy = likedBy.includes(userId)
-          ? likedBy.filter((id: string) => id !== userId) // Unlike if already liked
+          ? likedBy.filter((id: string) => id !== userId) 
           : [...likedBy, userId];
 
         await updateDoc(postRef, {
           likedBy: updatedLikedBy,
-          likes: increment(likedBy.includes(userId) ? -1 : 1), // Increment or decrement the likes count
+          likes: increment(likedBy.includes(userId) ? -1 : 1), 
         });
       }
     }
@@ -226,11 +226,11 @@ const Forum = () => {
     const postDoc = await getDoc(postRef);
 
     if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; // Cast to Post type
+      const postData = postDoc.data() as Post; 
       const likedBy = postData.likedBy || [];
       const dislikedBy = postData.dislikedBy || [];
 
-      // If the user liked, switch to dislike
+      
       if (likedBy.includes(userId)) {
         const updatedLikedBy = likedBy.filter((id: string) => id !== userId);
         const updatedDislikedBy = [...dislikedBy, userId];
@@ -242,12 +242,12 @@ const Forum = () => {
         });
       } else {
         const updatedDislikedBy = dislikedBy.includes(userId)
-          ? dislikedBy.filter((id: string) => id !== userId) // Undislike if already disliked
+          ? dislikedBy.filter((id: string) => id !== userId) 
           : [...dislikedBy, userId];
 
         await updateDoc(postRef, {
           dislikedBy: updatedDislikedBy,
-          dislikes: increment(dislikedBy.includes(userId) ? -1 : 1), // Increment or decrement the dislikes count
+          dislikes: increment(dislikedBy.includes(userId) ? -1 : 1), 
         });
       }
     }
@@ -266,10 +266,10 @@ const Forum = () => {
       const comment = comments[commentIndex];
       const likedBy = comment.likedBy || [];
       const dislikedBy = comment.dislikedBy || [];
-      const likes = comment.likes || 0; // Initialize likes to 0 if not present
-      const dislikes = comment.dislikes || 0; // Initialize dislikes to 0 if not present
+      const likes = comment.likes || 0; 
+      const dislikes = comment.dislikes || 0; 
   
-      // If the user disliked, switch to like
+      
       if (dislikedBy.includes(userId)) {
         const updatedDislikedBy = dislikedBy.filter((id: string) => id !== userId);
         const updatedLikedBy = likedBy.includes(userId)
@@ -282,7 +282,7 @@ const Forum = () => {
         comment.dislikes = dislikes - 1;
   
       } else {
-        // Toggle like status
+        
         const updatedLikedBy = likedBy.includes(userId)
           ? likedBy.filter((id: string) => id !== userId)
           : [...likedBy, userId];
@@ -294,7 +294,7 @@ const Forum = () => {
       comments[commentIndex] = comment;
   
       await updateDoc(postRef, {
-        comments: comments, // Update the entire comments array
+        comments: comments, 
       });
     }
   };
@@ -312,10 +312,10 @@ const Forum = () => {
       const comment = comments[commentIndex];
       const likedBy = comment.likedBy || [];
       const dislikedBy = comment.dislikedBy || [];
-      const likes = comment.likes || 0; // Initialize likes to 0 if not present
-      const dislikes = comment.dislikes || 0; // Initialize dislikes to 0 if not present
+      const likes = comment.likes || 0; 
+      const dislikes = comment.dislikes || 0; 
   
-      // If the user liked, switch to dislike
+      
       if (likedBy.includes(userId)) {
         const updatedLikedBy = likedBy.filter((id: string) => id !== userId);
         const updatedDislikedBy = dislikedBy.includes(userId)
@@ -327,7 +327,7 @@ const Forum = () => {
         comment.likes = likes - 1;
         comment.dislikes = dislikes + 1;
       } else {
-        // Toggle dislike status
+        
         const updatedDislikedBy = dislikedBy.includes(userId)
           ? dislikedBy.filter((id: string) => id !== userId)
           : [...dislikedBy, userId];
@@ -339,7 +339,7 @@ const Forum = () => {
       comments[commentIndex] = comment;
   
       await updateDoc(postRef, {
-        comments: comments, // Update the entire comments array
+        comments: comments, 
       });
     }
   };
@@ -356,14 +356,14 @@ const Forum = () => {
       const comments = postData.comments || [];
       const comment = comments[commentIndex];
       const reply = comment.replies?.[replyIndex];
-      if (!reply) return; // Ensure the reply exists
+      if (!reply) return; 
   
       const likedBy = reply.likedBy || [];
       const dislikedBy = reply.dislikedBy || [];
       const likes = reply.likes || 0;
       const dislikes = reply.dislikes || 0;
   
-      // If the user disliked, switch to like
+      
       if (dislikedBy.includes(userId)) {
         const updatedDislikedBy = dislikedBy.filter((id: string) => id !== userId);
         const updatedLikedBy = likedBy.includes(userId)
@@ -376,7 +376,7 @@ const Forum = () => {
         reply.dislikes = dislikes - 1;
   
       } else {
-        // Toggle like status
+        
         const updatedLikedBy = likedBy.includes(userId)
           ? likedBy.filter((id: string) => id !== userId)
           : [...likedBy, userId];
@@ -388,7 +388,7 @@ const Forum = () => {
       comments[commentIndex] = comment;
   
       await updateDoc(postRef, {
-        comments: comments, // Update the entire comments array
+        comments: comments, 
       });
     }
   };
@@ -405,14 +405,14 @@ const Forum = () => {
       const comments = postData.comments || [];
       const comment = comments[commentIndex];
       const reply = comment.replies?.[replyIndex];
-      if (!reply) return; // Ensure the reply exists
+      if (!reply) return; 
   
       const likedBy = reply.likedBy || [];
       const dislikedBy = reply.dislikedBy || [];
       const likes = reply.likes || 0;
       const dislikes = reply.dislikes || 0;
   
-      // If the user liked, switch to dislike
+      
       if (likedBy.includes(userId)) {
         const updatedLikedBy = likedBy.filter((id: string) => id !== userId);
         const updatedDislikedBy = dislikedBy.includes(userId)
@@ -424,7 +424,7 @@ const Forum = () => {
         reply.likes = likes - 1;
         reply.dislikes = dislikes + 1;
       } else {
-        // Toggle dislike status
+        
         const updatedDislikedBy = dislikedBy.includes(userId)
           ? dislikedBy.filter((id: string) => id !== userId)
           : [...dislikedBy, userId];
@@ -436,7 +436,7 @@ const Forum = () => {
       comments[commentIndex] = comment;
   
       await updateDoc(postRef, {
-        comments: comments, // Update the entire comments array
+        comments: comments, 
       });
     }
   };  
@@ -446,7 +446,7 @@ const Forum = () => {
   
     if (!userId || !comment.trim()) return;
   
-    // Get user data from Firestore
+    
     const userRef = doc(firestore, 'users', userId);
     const userDoc = await getDoc(userRef);
   
@@ -461,7 +461,7 @@ const Forum = () => {
     const postDoc = await getDoc(postRef);
   
     if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; // Cast to Post type
+      const postData = postDoc.data() as Post; 
   
       const updatedComments = [
         ...postData.comments,
@@ -469,12 +469,12 @@ const Forum = () => {
           username, 
           comment, 
           createdAt: new Date(), 
-          userId, // Add the userId to the comment
-          likedBy: [], // Initialize as empty array
-          dislikedBy: [], // Initialize as empty array
-          likes: 0, // Initialize liked count to 0
-          dislikes: 0, // Initialize disliked count to 0
-          replies: [], // Initialize replies as an empty array
+          userId, 
+          likedBy: [], 
+          dislikedBy: [], 
+          likes: 0, 
+          dislikes: 0, 
+          replies: [], 
         },
       ];
   
@@ -489,7 +489,7 @@ const Forum = () => {
   };  
 
   const formatTimestamp = (timestamp: any) => {
-    // Handle if timestamp is valid or missing
+    
     return timestamp && timestamp.seconds
       ? formatDistanceToNow(new Date(timestamp.seconds * 1000), { addSuffix: true })
       : 'Invalid date';
@@ -509,7 +509,7 @@ const Forum = () => {
         const userData = userDoc.data();
         const profilePhoto = userData?.profilePhoto || 'https://via.placeholder.com/150';
         
-        // Cache the photo for future use
+        
         setUserPhotos((prev) => new Map(prev).set(userId, profilePhoto));
         return profilePhoto;
       }
@@ -520,13 +520,13 @@ const Forum = () => {
     return 'https://via.placeholder.com/150'; // Default placeholder image
   };
 
-  // Handle delete post
+  
   const handleDeletePost = async (postId: string) => {
     setPostIdToDelete(postId);
-    setDeletePostPrompt(true); // Open the confirmation modal
+    setDeletePostPrompt(true); 
   };
 
-  // Delete post from Firestore
+  
   const deletePost = async (postId: string) => {
     try {
       const postRef = doc(firestore, 'posts', postId);
@@ -537,13 +537,13 @@ const Forum = () => {
     }
   };
 
-  // Handle delete comment
+  
   const handleDeleteComment = (postId: string, commentIndex: number) => {
     setCommentToDelete({ postId, commentIndex });
-    setDeleteCommentPrompt(true); // Open the confirmation modal
+    setDeleteCommentPrompt(true); 
   };
 
-  // Delete comment from Firestore
+  
   const deleteComment = async (postId: string, commentIndex: number) => {
     try {
       const postRef = doc(firestore, 'posts', postId);
@@ -552,7 +552,7 @@ const Forum = () => {
       if (postDoc.exists()) {
         const postData = postDoc.data() as Post;
         
-        // Remove the comment from the comments array
+        
         const updatedComments = postData.comments.filter((_, index) => index !== commentIndex);
         
         await updateDoc(postRef, {
@@ -570,8 +570,8 @@ const Forum = () => {
 
   const getUsernameFromDatabase = async (userId: string): Promise<string> => {
     try {
-      const userRef = doc(firestore, "users", userId); // Reference to the user's document
-      const userDoc = await getDoc(userRef);   // Fetch the document
+      const userRef = doc(firestore, "users", userId); 
+      const userDoc = await getDoc(userRef);   
       return userDoc.exists() ? (userDoc.data()?.username as string) : "Unknown User";
     } catch (error) {
       console.error("Error fetching username:", error);
@@ -583,62 +583,62 @@ const Forum = () => {
     const fetchUsernames = async () => {
       const updatedUsernames = new Map(usernames);
   
-      // Collect all unique userIds from posts, comments, and replies
+      
       const userIds = new Set<string>();
   
-      // Loop through posts and comments to collect userIds
+      
       posts.forEach(post => {
-        userIds.add(post.userId);  // Add the post creator's userId
+        userIds.add(post.userId);  
   
         post.comments.forEach(comment => {
-          userIds.add(comment.userId);  // Add the comment creator's userId
+          userIds.add(comment.userId);  
           comment.replies?.forEach(reply => {
-            userIds.add(reply.userId);  // Add the reply creator's userId
+            userIds.add(reply.userId);  
           });
         });
       });
   
-      // Now fetch usernames for all collected userIds
+      
       for (const userId of userIds) {
         if (!updatedUsernames.has(userId)) {
-          const username = await getUsernameFromDatabase(userId); // Fetch the username
-          updatedUsernames.set(userId, username); // Store it in the map
+          const username = await getUsernameFromDatabase(userId); 
+          updatedUsernames.set(userId, username); 
         }
       }
   
-      // After fetching all usernames, update the state
+      
       setUsernames(updatedUsernames);
     };
   
     fetchUsernames();
-  }, [posts]);  // Re-run the effect when the posts array changes
+  }, [posts]);  
   
   const handleUpdatePost = (postId: string) => {
     const postToEdit = posts.find((post) => post.id === postId);
     if (postToEdit) {
-      setEditingPostId(postId); // Track the post being edited
-      setEditContentPost(postToEdit.message); // Pre-fill the content
-      setEditCurrentImageUrl(postToEdit.imageUrl); // Pre-fill the current image URL
-      setIsEditingPost(true); // Enable editing mode
+      setEditingPostId(postId); 
+      setEditContentPost(postToEdit.message); 
+      setEditCurrentImageUrl(postToEdit.imageUrl); 
+      setIsEditingPost(true); 
     }
   };
   
   const handleSavePost = async () => {
-    if (!editingPostId) return; // Ensure we have a post to edit
+    if (!editingPostId) return; 
   
     const userId = auth.currentUser?.uid;
-    if (!userId) return; // Ensure the user is authenticated
+    if (!userId) return; 
   
-    setIsSaving(true); // Set loading state when saving
+    setIsSaving(true); 
   
     try {
-      let imageUrl = editCurrentImageUrl; // Start with the current image URL
+      let imageUrl = editCurrentImageUrl; 
   
-      // If a new image file is selected, upload it to Cloudinary
+      
       if (editImageFile) {
         const formData = new FormData();
         formData.append('file', editImageFile);
-        formData.append('upload_preset', 'post-image-upload'); // Your Cloudinary upload preset
+        formData.append('upload_preset', 'post-image-upload'); 
   
         const res = await fetch(
           `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -653,32 +653,32 @@ const Forum = () => {
         }
   
         const data = await res.json();
-        imageUrl = data.secure_url; // Update imageUrl to the new uploaded image URL
+        imageUrl = data.secure_url; 
       }
   
-      // If the current image is explicitly removed, clear imageUrl
+      
       if (!editImageFile && !editCurrentImageUrl) {
         imageUrl = null;
       }
   
-      // Reference the post to update in Firestore
+      
       const postRef = doc(firestore, 'posts', editingPostId);
       await updateDoc(postRef, {
-        message: editContentPost, // Update the content of the post
-        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), // Delete imageUrl if it's null
-        updatedAt: new Date(), // Set the updated timestamp
+        message: editContentPost, 
+        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), 
+        updatedAt: new Date(), 
       });
   
-      // Reset editing states
+      
       setIsEditingPost(false);
       setEditContentPost('');
       setEditingPostId(null);
-      setEditImageFile(null); // Reset the selected file
-      setEditCurrentImageUrl(null); // Clear the current image URL
+      setEditImageFile(null); 
+      setEditCurrentImageUrl(null); 
     } catch (error) {
       console.error('Error updating post:', error);
     } finally {
-      setIsSaving(false); // Reset loading state after operation
+      setIsSaving(false); 
     }
   };
 
@@ -687,10 +687,10 @@ const Forum = () => {
     if (postToEdit) {
       const commentToEdit = postToEdit.comments[commentIndex];
       if (commentToEdit) {
-        setEditingPostId(postId);  // Track the post being edited
-        setEditingCommentIndex(commentIndex); // Track the comment being edited by its index
-        setEditContentComment(commentToEdit.comment); // Pre-fill the content of the comment
-        setIsEditingComment(true); // Enable editing mode for comments
+        setEditingPostId(postId);  
+        setEditingCommentIndex(commentIndex); 
+        setEditContentComment(commentToEdit.comment); 
+        setIsEditingComment(true); 
       }
     }
   };
@@ -698,7 +698,7 @@ const Forum = () => {
   const handleSaveComment = async () => {
     if (editingPostId === null || editingCommentIndex === null) return;
 
-    setIsSaving(true); // Set loading state when saving
+    setIsSaving(true); 
 
     const userId = auth.currentUser?.uid;
     if (!userId) return;
@@ -707,30 +707,30 @@ const Forum = () => {
     const postToUpdate = await getDoc(postRef);
     const postData = postToUpdate.data() as Post;
 
-    // Get the comment to update using its index
+    
     const commentToUpdate = postData.comments[editingCommentIndex];
 
-    // Update the comment's content
+    
     postData.comments[editingCommentIndex] = {
       ...commentToUpdate,
       comment: editContentComment,
       updatedAt: new Date(),
     };
 
-    // Save the updated post
+    
     try {
       await updateDoc(postRef, {
         comments: postData.comments,
       });
-      // Reset editing states
+      
       setIsEditingComment(false);
       setEditContentComment('');
       setEditingPostId(null);
-      setEditingCommentIndex(null); // Reset the index after saving
+      setEditingCommentIndex(null); 
     } catch (error) {
       console.error("Error saving comment:", error);
     } finally {
-      setIsSaving(false); // Reset loading state after saving
+      setIsSaving(false); 
     }
   };
 
@@ -740,11 +740,11 @@ const Forum = () => {
       const commentToEdit = postToEdit.comments[commentIndex];
       const replyToEdit = commentToEdit.replies?.[replyIndex];
       if (replyToEdit) {
-        setEditingPostId(postId); // Track the post being edited
-        setEditingCommentIndex(commentIndex); // Track the comment being edited
-        setEditingReplyIndex(replyIndex); // Track the reply being edited
-        setEditContentReply(replyToEdit.reply); // Pre-fill the content of the reply
-        setIsEditingReply(true); // Enable editing mode for replies
+        setEditingPostId(postId); 
+        setEditingCommentIndex(commentIndex); 
+        setEditingReplyIndex(replyIndex); 
+        setEditContentReply(replyToEdit.reply); 
+        setIsEditingReply(true); 
       }
     }
   };
@@ -752,7 +752,7 @@ const Forum = () => {
   const handleSaveReply = async () => {
     if (editingPostId === null || editingCommentIndex === null || editingReplyIndex === null) return;
   
-    setIsSaving(true); // Set loading state when saving
+    setIsSaving(true); 
   
     const userId = auth.currentUser?.uid;
     if (!userId) return;
@@ -761,33 +761,33 @@ const Forum = () => {
     const postToUpdate = await getDoc(postRef);
     const postData = postToUpdate.data() as Post;
   
-    // Get the reply to update using its index
+    
     const commentToUpdate = postData.comments[editingCommentIndex];
     const replyToUpdate = commentToUpdate.replies?.[editingReplyIndex];
   
     if (replyToUpdate) {
-      // Update the reply content
+      
       postData.comments[editingCommentIndex].replies[editingReplyIndex] = {
         ...replyToUpdate,
-        reply: editContentReply,  // Save the updated reply with @mentions
+        reply: editContentReply,  
         updatedAt: new Date(),
       };
   
-      // Save the updated post
+      
       try {
         await updateDoc(postRef, {
           comments: postData.comments,
         });
-        // Reset editing states
+        
         setIsEditingReply(false);
         setEditContentReply('');
         setEditingPostId(null);
         setEditingCommentIndex(null);
-        setEditingReplyIndex(null); // Reset the reply index after saving
+        setEditingReplyIndex(null); 
       } catch (error) {
         console.error("Error saving reply:", error);
       } finally {
-        setIsSaving(false); // Reset loading state after saving
+        setIsSaving(false); 
       }
     }
   };
@@ -796,7 +796,7 @@ const Forum = () => {
     const userId = auth.currentUser?.uid;
     if (!userId || !reply.trim()) return;
   
-    // Get user data from Firestore
+    
     const userRef = doc(firestore, 'users', userId);
     const userDoc = await getDoc(userRef);
   
@@ -806,16 +806,16 @@ const Forum = () => {
     }
   
     const userData = userDoc.data();
-    const username = userData?.username || 'Anonymous'; // Default to 'Anonymous' if username not found
+    const username = userData?.username || 'Anonymous'; 
   
-    // Reference to the post
+    
     const postRef = doc(firestore, 'posts', postId);
     const postDoc = await getDoc(postRef);
   
     if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; // Cast to Post type
+      const postData = postDoc.data() as Post; 
   
-      // Update the comments with the new reply
+      
       const updatedComments = postData.comments.map((comment, index) => {
         if (index === commentIndex) {
           return {
@@ -826,7 +826,7 @@ const Forum = () => {
                 reply,
                 createdAt: new Date(),
                 userId,
-                username, // Add the username
+                username, 
                 likedBy: [],
                 dislikedBy: [],
                 likes: 0,
@@ -839,20 +839,20 @@ const Forum = () => {
         return comment;
       });
   
-      // Update the post in Firestore with the new replies array
+      
       await updateDoc(postRef, {
         comments: updatedComments,
       });
     }
   };
 
-  // Handle reply delete modal trigger
+  
   const handleDeleteReply = (postId: string, commentIndex: number, replyIndex: number) => {
     setReplyToDelete({ postId, commentIndex, replyIndex });
-    setDeleteReplyPrompt(true); // Open the confirmation modal
+    setDeleteReplyPrompt(true); 
   };
 
-  // Delete reply from Firestore
+  
   const deleteReply = async (postId: string, commentIndex: number, replyIndex: number) => {
     try {
       const postRef = doc(firestore, 'posts', postId);
@@ -861,7 +861,7 @@ const Forum = () => {
       if (postDoc.exists()) {
         const postData = postDoc.data() as Post;
 
-        // Remove the reply from the replies array
+        
         const updatedComments = postData.comments.map((comment, cIndex) => {
           if (cIndex === commentIndex) {
             return {
@@ -872,7 +872,7 @@ const Forum = () => {
           return comment;
         });
 
-        // Update the post in Firestore
+        
         await updateDoc(postRef, {
           comments: updatedComments,
         });
@@ -886,76 +886,76 @@ const Forum = () => {
     }
   };
 
-  // Function to render the reply text with @username as a link
+  
   const renderReplyText = (text: string, userId: string) => {
-    const regex = /@([a-zA-Z0-9._-]+)/g; // Regex to find @mentions with dashes, underscores, and periods
+    const regex = /@([a-zA-Z0-9._-]+)/g; 
     
     return text.split(regex).map((part, index) => {
       if (index % 2 === 1) {
-        // If this is a username match, create a Link
+        
         return (
           <Link key={index} href={`/profile-view/${userId}`} className="text-blue-500 hover:text-yellow-500">
             @{part}
           </Link>
         );
       }
-      return part; // Return regular text
+      return part; 
     });
   };
 
-  // Handle Bookmark Button Click
+  
   const handleBookmarkPost = async (postId: string) => {
     const currentUserId = auth.currentUser?.uid;
-    if (!currentUserId) return; // Make sure user is authenticated
+    if (!currentUserId) return; 
 
-    const postRef = doc(firestore, 'posts', postId); // Reference to the post document
+    const postRef = doc(firestore, 'posts', postId); 
     const postDoc = await getDoc(postRef);
 
     if (postDoc.exists()) {
       const postData = postDoc.data();
-      const bookmarks = postData.bookmarks || []; // Default to an empty array if undefined
+      const bookmarks = postData.bookmarks || []; 
 
-      // Check if the current user has already bookmarked the post
+      
       const existingBookmarkIndex = bookmarks.findIndex((bookmark: { userId: string }) => bookmark.userId === currentUserId);
 
       if (existingBookmarkIndex !== -1) {
-        // Remove bookmark (user is unbookmarking the post)
-        bookmarks.splice(existingBookmarkIndex, 1); // Remove the bookmark for that user
-        // Set notification message for removed bookmark
+        
+        bookmarks.splice(existingBookmarkIndex, 1); 
+        
         setNotification("Removed Post Bookmark");
       } else {
-        // Add bookmark (user is bookmarking the post)
+        
         bookmarks.push({
           userId: currentUserId,
-          bookmarkCreatedAt: new Date(), // Using Firestore Timestamp is preferable
+          bookmarkCreatedAt: new Date(), 
         });
-        // Set notification message for added bookmark
+        
         setNotification("Post bookmarked");
       }
 
-      // Update the post document with the modified bookmarks array
+      
       await updateDoc(postRef, {
         bookmarks: bookmarks,
       });
 
-      // Remove notification after 3 seconds
+      
       setTimeout(() => {
         setNotification(null);
-      }, 2000); // Adjust the time (in ms) as needed
+      }, 2000); 
     }
   };
 
-  // Function to toggle PostForum visibility
+  
   const togglePostForum = () => {
     setIsPostForumVisible((prevState) => !prevState);
   };
 
-  // Function to toggle Search input visibility
+  
   const toggleSearch = () => {
     setIsSearchVisible((prevState) => !prevState);
   };
 
-  // Function to toggle the message display
+  
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
       ...prev,
@@ -963,11 +963,11 @@ const Forum = () => {
     }));
   };
 
-  // Check if the content is truncated
+  
   const checkTruncation = (postId: string) => {
     const element = contentRefs.current[postId];
     if (element) {
-      // Compare scrollHeight and clientHeight to detect truncation
+      
       setIsTruncated((prev) => ({
         ...prev,
         [postId]: element.scrollHeight > element.clientHeight,
@@ -975,26 +975,26 @@ const Forum = () => {
     }
   };
 
-  // Run the truncation check after the component is rendered and the content is available
+  
   useEffect(() => {
     posts.forEach((post) => checkTruncation(post.id));
   }, [posts]);
 
   const handleShare = (postId: string) => {
-    // Copy the URL of the post to the clipboard
+    
     const url = `${window.location.origin}/post-view/${postId}`;
     navigator.clipboard.writeText(url)
       .then(() => {
         setNotification('Link copied!');
         setTimeout(() => {
-          setNotification(null); // Hide notification after 3 seconds
+          setNotification(null); 
         }, 2000);
       })
       .catch((err) => {
         console.error('Failed to copy the URL', err);
         setNotification('Failed to copy the link!');
         setTimeout(() => {
-          setNotification(null); // Hide notification after 3 seconds
+          setNotification(null); 
         }, 2000);
       });
   };
@@ -1029,7 +1029,7 @@ const Forum = () => {
     </a>
   );
 
-  const urlRegex = /(https?:\/\/[^\s]+)/g; // Regular expression to match URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g; 
 
   return (
     <div className="flex flex-col">
@@ -1040,15 +1040,15 @@ const Forum = () => {
             type="text"
             placeholder="Search posts..."
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)} // Update searchQuery on input change
+            onChange={(e) => setSearchQuery(e.target.value)} 
             className="flex-1 p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
           />
           <select
             value={sortMethod}
             onChange={(e) => {
               const selectedSort = e.target.value as 'latest' | 'popular';
-              setSortMethod(selectedSort); // Update the sort method
-              filterPosts(posts, selectedSort); // Immediately apply filtering with the new sort method
+              setSortMethod(selectedSort); 
+              filterPosts(posts, selectedSort); 
             }}
             className="p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
           >
@@ -1212,7 +1212,7 @@ const Forum = () => {
                                 <button
                                   onClick={() => { 
                                     handleUpdatePost(post.id); 
-                                    setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Edit
+                                    setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
                                   }}
                                   className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                 >
@@ -1224,7 +1224,7 @@ const Forum = () => {
                                 <button
                                   onClick={() => { 
                                     handleDeletePost(post.id);
-                                    setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Delete
+                                    setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
                                   }}
                                   className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                 >
@@ -1249,7 +1249,7 @@ const Forum = () => {
                           onClick={async () => {
                             if (!postIdToDelete) return;
                             await deletePost(postIdToDelete);
-                            setDeletePostPrompt(false); // Close the modal
+                            setDeletePostPrompt(false); 
                           }}
                           className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
                         >
@@ -1268,7 +1268,7 @@ const Forum = () => {
                 
                 <div className="mb-2">
                   <div
-                    ref={(el) => { contentRefs.current[post.id] = el; }}  // Assign ref to each paragraph element
+                    ref={(el) => { contentRefs.current[post.id] = el; }}  
                     className={`text-lg text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
                     style={{
                       whiteSpace: 'pre-wrap',
@@ -1326,7 +1326,7 @@ const Forum = () => {
                             />
                             {/* Close button to remove the image */}
                             <button
-                              onClick={() => setEditCurrentImageUrl(null)} // Remove the current image
+                              onClick={() => setEditCurrentImageUrl(null)} 
                               className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                             >
                               <AiOutlineClose size={16} />
@@ -1341,13 +1341,13 @@ const Forum = () => {
                           <p className="text-white">New Image Preview:</p>
                           <div className="relative">
                             <img
-                              src={URL.createObjectURL(editImageFile)} // Preview selected image
+                              src={URL.createObjectURL(editImageFile)} 
                               alt="Selected Image Preview"
                               className="w-full object-cover rounded-lg mt-2"
                             />
                             {/* Close button overlaid on the image */}
                             <button
-                              onClick={() => setEditImageFile(null)} // Remove selected image
+                              onClick={() => setEditImageFile(null)} 
                               className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                             >
                               <AiOutlineClose size={16} />
@@ -1369,7 +1369,7 @@ const Forum = () => {
                         accept="image/*"
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
-                            setEditImageFile(e.target.files[0]); // Capture the selected image
+                            setEditImageFile(e.target.files[0]); 
                           }
                         }}
                         className="mt-4 text-white"
@@ -1380,7 +1380,7 @@ const Forum = () => {
                         <button
                           onClick={() => {
                             setIsEditingPost(false);
-                            setEditImageFile(null); // Clear selected image when canceling
+                            setEditImageFile(null); 
                           }}
                           className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
                         >
@@ -1389,7 +1389,7 @@ const Forum = () => {
                         <button
                           onClick={handleSavePost}
                           className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
-                          disabled={isSaving} // Disable button while saving
+                          disabled={isSaving} 
                         >
                           {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
                         </button>
@@ -1442,7 +1442,7 @@ const Forum = () => {
                     onClick={() =>
                       setShowComments((prevState) => ({
                         ...prevState,
-                        [post.id]: !prevState[post.id], // Toggle visibility for the current post
+                        [post.id]: !prevState[post.id], 
                       }))
                     }
                     className={`relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto ${showComments[post.id] ? 'text-yellow-500' : 'text-gray-400'}`}
@@ -1563,8 +1563,8 @@ const Forum = () => {
                                         onClick={async () => {
                                           if (!commentToDelete) return;
                                           const { postId, commentIndex } = commentToDelete;
-                                          await deleteComment(postId, commentIndex); // Delete the comment
-                                          setDeleteCommentPrompt(false); // Close the modal
+                                          await deleteComment(postId, commentIndex); 
+                                          setDeleteCommentPrompt(false); 
                                         }}
                                         className="bg-yellow-500 text-black px-4 py-2 rounded"
                                       >
@@ -1600,7 +1600,7 @@ const Forum = () => {
                                       <button
                                         onClick={handleSaveComment}
                                         className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
-                                        disabled={isSaving} // Disable button while saving
+                                        disabled={isSaving} 
                                       >
                                         {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
                                       </button>
@@ -1655,7 +1655,7 @@ const Forum = () => {
                               {/* Replies Section */}
                               <div className="flex flex-col">
                                 <button
-                                  onClick={() => toggleRepliesVisibility(post.id, index)} // Pass post.id and comment index to toggle
+                                  onClick={() => toggleRepliesVisibility(post.id, index)} 
                                   className="text-sm text-gray-400 hover:text-yellow-500 text-left w-fit"
                                 >
                                   {showReplies[post.id]?.[index] ? "Hide Replies" : "Show Replies"} ({comment.replies?.length || 0})
@@ -1734,8 +1734,8 @@ const Forum = () => {
                                                       onClick={async () => {
                                                         if (!replyToDelete) return;
                                                         const { postId, commentIndex, replyIndex } = replyToDelete;
-                                                        await deleteReply(postId, commentIndex, replyIndex); // Delete the reply
-                                                        setDeleteReplyPrompt(false); // Close the modal
+                                                        await deleteReply(postId, commentIndex, replyIndex); 
+                                                        setDeleteReplyPrompt(false); 
                                                       }}
                                                       className="bg-yellow-500 text-black px-4 py-2 rounded"
                                                     >
@@ -1771,7 +1771,7 @@ const Forum = () => {
                                                     <button
                                                       onClick={handleSaveReply}
                                                       className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
-                                                      disabled={isSaving} // Disable button while saving
+                                                      disabled={isSaving} 
                                                     >
                                                       {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
                                                     </button>
@@ -1825,8 +1825,8 @@ const Forum = () => {
                                                 <button
                                                   onClick={() => {
                                                     const usernameWithSpaces = usernames.get(reply.userId);
-                                                    const usernameWithDashes = usernameWithSpaces?.replace(/ /g, "-"); // Replace spaces with dashes
-                                                    setReplyText(`@${usernameWithDashes} `); // Pre-fill the reply input with @username
+                                                    const usernameWithDashes = usernameWithSpaces?.replace(/ /g, "-"); 
+                                                    setReplyText(`@${usernameWithDashes} `); 
                                                     setRepliedToUserId(reply.userId);
                                                   }}
                                                   className="hover:text-yellow-500 text-sm text-gray-400"
@@ -1847,12 +1847,12 @@ const Forum = () => {
                                       type="text"
                                       placeholder={"Add a reply..."}
                                       className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
-                                      value={replyText} // Bind the value of the reply input
-                                      onChange={(e) => setReplyText(e.target.value)} // Update the reply text as user types
+                                      value={replyText} 
+                                      onChange={(e) => setReplyText(e.target.value)} 
                                       onKeyDown={(e) => {
                                         if (e.key === "Enter" && replyText.trim()) {
                                           handleAddReply(post.id, index, replyText, repliedToUserId || null); 
-                                          setReplyText(''); // Clear the input after submission
+                                          setReplyText(''); 
                                         }
                                       }}
                                     />

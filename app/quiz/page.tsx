@@ -4,7 +4,7 @@ import Layout from '../../components/root/Layout';
 const QuizHomePage = () => {
   return (
     <Layout>
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#2e2e2e] text-white">
+      <div className="h-full overflow-hidden flex flex-col items-center justify-center bg-[#2e2e2e] text-white">
         <h1 className="text-4xl font-extrabold mb-8 shadow-md p-4 rounded-lg bg-[#1f1f1f] text-yellow-500">
           Welcome to the Quiz Module
         </h1>

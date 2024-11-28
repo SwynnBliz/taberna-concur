@@ -1,7 +1,7 @@
 // components/root/Layout.tsx
 'use client';
 import { useState, useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation"; // Import usePathname here
+import { usePathname, useRouter } from "next/navigation"; 
 import TopBar from "./Topbar";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSideBar";
@@ -10,7 +10,7 @@ import { app } from "../../app/firebase/config";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const pathname = usePathname(); // Use usePathname to get the current path
+  const pathname = usePathname(); 
   const auth = getAuth(app);
 
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false);
@@ -19,16 +19,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     setIsLeftSidebarVisible(!isLeftSidebarVisible);
   };
 
-  // Check if the current route is the discussion-board route
+  
   const isDiscussionBoard = pathname === '/discussion-board';
 
-  // Check if the current route is the profile-view route
+  
   const isProfileView = pathname.startsWith('/profile-view/');
 
-  // Check if the current route is the post-view route
+  
   const isPostView = pathname.startsWith('/post-view/');
 
-  // Check if the current route is the discussion-board route
+  
   const isAdmin = pathname.includes("/admin");
 
   useEffect(() => {

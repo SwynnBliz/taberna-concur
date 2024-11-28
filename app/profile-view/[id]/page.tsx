@@ -1,17 +1,17 @@
 // app/profile-view/[id]/page.tsx (Profile View Page)
 'use client';
-import Layout from '../../../components/root/Layout'; // Layout component
+import Layout from '../../../components/root/Layout'; 
 import { useEffect, useState, useRef } from 'react';
-import { useParams, useRouter } from 'next/navigation'; // For dynamic route params
+import { useParams, useRouter } from 'next/navigation'; 
 import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
-import { firestore } from '../../firebase/config'; // Import Firestore instance
-import { getAuth, onAuthStateChanged } from 'firebase/auth'; // For getting the current logged-in user's UID
+import { firestore } from '../../firebase/config'; 
+import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
-import { formatDistanceToNow } from 'date-fns'; // Import the function from date-fns
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; // Importing React Icons
+import { formatDistanceToNow } from 'date-fns'; 
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; 
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
-import { AiOutlineClose } from 'react-icons/ai'; // Import the close icon
+import { AiOutlineClose } from 'react-icons/ai'; 
 import { LinkIt } from 'react-linkify-it';
 
 interface User {
@@ -35,49 +35,49 @@ interface Post {
   comments: { 
     comment: string;
     createdAt: any;
-    userId: string; // Add userId to the comment object
-    likes: number; // Add likes field for comments
-    dislikes: number; // Add dislikes field for comments
-    likedBy: string[]; // Track users who liked the comment
-    dislikedBy: string[]; // Track users who disliked the comment
+    userId: string; 
+    likes: number; 
+    dislikes: number; 
+    likedBy: string[]; 
+    dislikedBy: string[]; 
     updatedAt?: any;
   }[]; 
   likedBy: string[];
   dislikedBy: string[];
   bookmarks: { 
-    userId: string;  // User who bookmarked the post
-    bookmarkCreatedAt: any;  // Timestamp when the post was bookmarked
-  }[]; // Array of bookmarks
+    userId: string;  
+    bookmarkCreatedAt: any;  
+  }[]; 
 }
 
 const ProfileViewPage = () => {
-  const { id } = useParams(); // Get the `id` from the dynamic route
+  const { id } = useParams(); 
   const auth = getAuth();
   const [userData, setUserData] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null); // To store current logged-in user's UID
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null); 
   const router = useRouter();
   const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [userPhotos, setUserPhotos] = useState<Map<string, string>>(new Map());
   const [posts, setPosts] = useState<Post[]>([]);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
-  const [isEditingPost, setIsEditingPost] = useState(false); // State to toggle editing mode
-  const [editContentPost, setEditContentPost] = useState(''); // Store the new post content
-  const [editCurrentImageUrl, setEditCurrentImageUrl] = useState<string | null>(null); // Store the current image URL
-  const [isSaving, setIsSaving] = useState<boolean>(false); // Loading state for saving post
-  const [editImageFile, setEditImageFile] = useState<File | null>(null); // Store selected image file
-  const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); // Track user's like/dislike status
+  const [isEditingPost, setIsEditingPost] = useState(false); 
+  const [editContentPost, setEditContentPost] = useState(''); 
+  const [editCurrentImageUrl, setEditCurrentImageUrl] = useState<string | null>(null); 
+  const [isSaving, setIsSaving] = useState<boolean>(false); 
+  const [editImageFile, setEditImageFile] = useState<File | null>(null); 
+  const [userLikes, setUserLikes] = useState<Map<string, string>>(new Map()); 
   const [showMoreOptions, setShowMoreOptions] = useState<{ [postId: string]: boolean }>({});
   const [isExpanded, setIsExpanded] = useState<{ [postId: string]: boolean }>({});
   const [isTruncated, setIsTruncated] = useState<{ [postId: string]: boolean }>({});
   const contentRefs = useRef<{ [key: string]: HTMLParagraphElement | null }>({});
   const [notification, setNotification] = useState<string | null>(null);
-  const [isProfilePublic, setIsProfilePublic] = useState(true); // Default to public until we fetch the correct data
+  const [isProfilePublic, setIsProfilePublic] = useState(true); 
   const [deletePostPrompt, setDeletePostPrompt] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState<string | null>(null);
 
-  // Function to toggle the message display
+  
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
       ...prev,
@@ -85,11 +85,11 @@ const ProfileViewPage = () => {
     }));
   };
 
-  // Check if the content is truncated
+  
   const checkTruncation = (postId: string) => {
     const element = contentRefs.current[postId];
     if (element) {
-      // Compare scrollHeight and clientHeight to detect truncation
+      
       setIsTruncated((prev) => ({
         ...prev,
         [postId]: element.scrollHeight > element.clientHeight,
@@ -97,49 +97,49 @@ const ProfileViewPage = () => {
     }
   };
 
-  // Run the truncation check after the component is rendered and the content is available
+  
   useEffect(() => {
     posts.forEach((post) => checkTruncation(post.id));
   }, [posts]);
 
   const handleShare = (postId: string) => {
-    // Copy the URL of the post to the clipboard
+    
     const url = `${window.location.origin}/post-view/${postId}`;
     navigator.clipboard.writeText(url)
       .then(() => {
         setNotification('Link copied!');
         setTimeout(() => {
-          setNotification(null); // Hide notification after 3 seconds
+          setNotification(null); 
         }, 2000);
       })
       .catch((err) => {
         console.error('Failed to copy the URL', err);
         setNotification('Failed to copy the link!');
         setTimeout(() => {
-          setNotification(null); // Hide notification after 3 seconds
+          setNotification(null); 
         }, 2000);
       });
   };
 
-  // Handles the like and dislike tracking
+  
   useEffect(() => {
 
-    if (!id || Array.isArray(id)) return; // Ensure `id` is valid before proceeding
+    if (!id || Array.isArray(id)) return; 
   
     const postsQuery = query(
       collection(firestore, 'posts'),
-      where("userId", "==", id), // Filter posts by the userId of the user whose profile is being viewed
-      orderBy("createdAt", "desc") // Order posts by creation date (descending)
+      where("userId", "==", id), 
+      orderBy("createdAt", "desc") 
     );
 
-    // Real-time listener
+    
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      })) as Post[]; // Cast to Post[] for correct typing
-      setPosts(postsData); // Update posts when there's a change
-      // Track likes/dislikes of current user
+      })) as Post[]; 
+      setPosts(postsData); 
+      
       const userId = auth.currentUser?.uid;
       if (userId) {
         const userLikesMap = new Map();
@@ -150,66 +150,66 @@ const ProfileViewPage = () => {
             userLikesMap.set(post.id, 'dislike');
           }
         });
-        setUserLikes(userLikesMap); // Store in state
+        setUserLikes(userLikesMap); 
       }
     });
 
     return () => {
-      // Clean up the listener when the component unmounts
+      
       unsubscribe();
     };
   }, []);
 
   useEffect(() => {
-    if (!id || Array.isArray(id)) return; // Ensure `id` is valid before proceeding
+    if (!id || Array.isArray(id)) return; 
   
     const postsQuery = query(
       collection(firestore, 'posts'),
-      where("userId", "==", id), // Filter posts by the userId of the user whose profile is being viewed
-      orderBy("createdAt", "desc") // Order posts by creation date (descending)
+      where("userId", "==", id), 
+      orderBy("createdAt", "desc") 
     );
   
-    // Real-time listener to fetch posts from Firestore
+    
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Post[];
   
-      // Apply the banned word filtering to each post
+      
       const filteredPostsData = postsData.map((post) => ({
         ...post,
-        message: filterBannedWords(post.message) // Filter banned words in message
+        message: filterBannedWords(post.message) 
       }));
   
-      setPosts(filteredPostsData); // Set all posts after filtering
+      setPosts(filteredPostsData); 
   
-      // Apply filtering logic based on search query
-      filterPosts(filteredPostsData); // Filter posts whenever data changes
+      
+      filterPosts(filteredPostsData); 
     });
   
     return () => {
-      // Clean up the listener when the component unmounts
+      
       unsubscribe();
     };
-  }, [bannedWords]); // Runs when bannedWords changes
+  }, [bannedWords]); 
 
   
   const filterBannedWords = (message: string): string => {
-    if (!bannedWords || bannedWords.length === 0) return message; // No banned words to filter
+    if (!bannedWords || bannedWords.length === 0) return message; 
   
     let filteredMessage = message;
     
     bannedWords.forEach((word) => {
-      const regex = new RegExp(`\\b${word}\\b`, 'gi'); // Case-insensitive word match
-      const replacement = '*'.repeat(word.length); // Generate a string of asterisks matching the length of the word
-      filteredMessage = filteredMessage.replace(regex, replacement); // Replace with asterisks
+      const regex = new RegExp(`\\b${word}\\b`, 'gi'); 
+      const replacement = '*'.repeat(word.length); 
+      filteredMessage = filteredMessage.replace(regex, replacement); 
     });
     
     return filteredMessage;
   };
 
-  // Function to filter posts
+  
   const filterPosts = (postsData: Post[]) => {
       setFilteredPosts(postsData);
   };
@@ -217,37 +217,37 @@ const ProfileViewPage = () => {
   useEffect(() => {
     const auth = getAuth();
 
-    // Set up the listener to track authentication state changes
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setCurrentUserId(user.uid); // Store the current user's ID
+        setCurrentUserId(user.uid); 
       } else {
-        setCurrentUserId(null); // No user logged in
+        setCurrentUserId(null); 
       }
     });
 
-    // Clean up the listener when the component unmounts
+    
     return () => unsubscribe();
   }, []);
 
   useEffect(() => {
-    if (!id || Array.isArray(id)) return; // Ensure `id` is a single string before proceeding
+    if (!id || Array.isArray(id)) return; 
   
     const fetchUserData = async () => {
       try {
-        const userDoc = await getDoc(doc(firestore, 'users', id)); // Fetch the data for the user whose profile is being viewed
+        const userDoc = await getDoc(doc(firestore, 'users', id)); 
         if (userDoc.exists()) {
           const data = userDoc.data() as User;
   
-          // Set the profile's visibility status here
-          setIsProfilePublic(data.visibility === 'public'); // Set the profile visibility for the viewed profile
+          
+          setIsProfilePublic(data.visibility === 'public'); 
   
-          // Filter banned words from bio and contactNumber
+          
           let filteredBio = data.bio || "";
           let filteredContact = data.contactNumber || "";
   
           bannedWords.forEach((word) => {
-            const regex = new RegExp(`\\b${word}\\b`, "gi"); // Match full words, case insensitive
+            const regex = new RegExp(`\\b${word}\\b`, "gi"); 
             filteredBio = filteredBio.replace(regex, "*".repeat(word.length));
             filteredContact = filteredContact.replace(regex, "*".repeat(word.length));
           });
@@ -283,13 +283,13 @@ const ProfileViewPage = () => {
   }
 
   if (!userData) {
-    return null; // Safety check for null user data
+    return null; 
   }
 
   const handleEditProfile = () => {
-    // Redirect to the profile-manage page only if the logged-in user's UID matches the profile ID
+    
     if (currentUserId === id) {
-      router.push('/profile-manage'); // Navigate to the profile manage page
+      router.push('/profile-manage'); 
     }
   };
 
@@ -307,7 +307,7 @@ const ProfileViewPage = () => {
         const userData = userDoc.data();
         const profilePhoto = userData?.profilePhoto || 'https://via.placeholder.com/150';
         
-        // Cache the photo for future use
+        
         setUserPhotos((prev) => new Map(prev).set(userId, profilePhoto));
         return profilePhoto;
       }
@@ -315,84 +315,84 @@ const ProfileViewPage = () => {
       console.error(`Failed to fetch user photo for userId: ${userId}`, error);
     }
   
-    return 'https://via.placeholder.com/150'; // Default placeholder image
+    return 'https://via.placeholder.com/150';
   };
 
   const formatTimestamp = (timestamp: any) => {
-    // Handle if timestamp is valid or missing
+    
     return timestamp && timestamp.seconds
       ? formatDistanceToNow(new Date(timestamp.seconds * 1000), { addSuffix: true })
       : 'Invalid date';
   };
 
-  // Handle Bookmark Button Click
+  
   const handleBookmarkPost = async (postId: string) => {
     const currentUserId = auth.currentUser?.uid;
-    if (!currentUserId) return; // Make sure user is authenticated
+    if (!currentUserId) return; 
 
-    const postRef = doc(firestore, 'posts', postId); // Reference to the post document
+    const postRef = doc(firestore, 'posts', postId); 
     const postDoc = await getDoc(postRef);
 
     if (postDoc.exists()) {
       const postData = postDoc.data();
-      const bookmarks = postData.bookmarks || []; // Default to an empty array if undefined
+      const bookmarks = postData.bookmarks || []; 
 
-      // Check if the current user has already bookmarked the post
+      
       const existingBookmarkIndex = bookmarks.findIndex((bookmark: { userId: string }) => bookmark.userId === currentUserId);
 
       if (existingBookmarkIndex !== -1) {
-        // Remove bookmark (user is unbookmarking the post)
-        bookmarks.splice(existingBookmarkIndex, 1); // Remove the bookmark for that user
-        // Set notification message for removed bookmark
+        
+        bookmarks.splice(existingBookmarkIndex, 1); 
+        
         setNotification("Removed Post Bookmark");
       } else {
-        // Add bookmark (user is bookmarking the post)
+        
         bookmarks.push({
           userId: currentUserId,
-          bookmarkCreatedAt: new Date(), // Using Firestore Timestamp is preferable
+          bookmarkCreatedAt: new Date(), 
         });
-        // Set notification message for added bookmark
+        
         setNotification("Post bookmarked");
       }
 
-      // Update the post document with the modified bookmarks array
+      
       await updateDoc(postRef, {
         bookmarks: bookmarks,
       });
 
-      // Remove notification after 3 seconds
+      
       setTimeout(() => {
         setNotification(null);
-      }, 2000); // Adjust the time (in ms) as needed
+      }, 2000); 
     }
   };
 
   const handleUpdatePost = (postId: string) => {
     const postToEdit = posts.find((post) => post.id === postId);
     if (postToEdit) {
-      setEditingPostId(postId); // Track the post being edited
-      setEditContentPost(postToEdit.message); // Pre-fill the content
-      setEditCurrentImageUrl(postToEdit.imageUrl); // Pre-fill the current image URL
-      setIsEditingPost(true); // Enable editing mode
+      setEditingPostId(postId); 
+      setEditContentPost(postToEdit.message); 
+      setEditCurrentImageUrl(postToEdit.imageUrl); 
+      setIsEditingPost(true); 
     }
   };
   
   const handleSavePost = async () => {
-    if (!editingPostId) return; // Ensure we have a post to edit
+    if (!editingPostId) return; 
   
     const userId = auth.currentUser?.uid;
-    if (!userId) return; // Ensure the user is authenticated
+    if (!userId) return; 
   
-    setIsSaving(true); // Set loading state when saving
+    setIsSaving(true); 
   
     try {
-      let imageUrl = editCurrentImageUrl; // Start with the current image URL
+      let imageUrl = editCurrentImageUrl; 
   
-      // If a new image file is selected, upload it to Cloudinary
+      
       if (editImageFile) {
         const formData = new FormData();
         formData.append('file', editImageFile);
-        formData.append('upload_preset', 'post-image-upload'); // Your Cloudinary upload preset
+        formData.append('upload_preset', 'post-image-upload'); 
   
         const res = await fetch(
           `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
@@ -407,42 +407,42 @@ const ProfileViewPage = () => {
         }
   
         const data = await res.json();
-        imageUrl = data.secure_url; // Update imageUrl to the new uploaded image URL
+        imageUrl = data.secure_url; 
       }
   
-      // If the current image is explicitly removed, clear imageUrl
+      
       if (!editImageFile && !editCurrentImageUrl) {
         imageUrl = null;
       }
   
-      // Reference the post to update in Firestore
+      
       const postRef = doc(firestore, 'posts', editingPostId);
       await updateDoc(postRef, {
-        message: editContentPost, // Update the content of the post
-        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), // Delete imageUrl if it's null
-        updatedAt: new Date(), // Set the updated timestamp
+        message: editContentPost, 
+        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), 
+        updatedAt: new Date(), 
       });
   
-      // Reset editing states
+      
       setIsEditingPost(false);
       setEditContentPost('');
       setEditingPostId(null);
-      setEditImageFile(null); // Reset the selected file
-      setEditCurrentImageUrl(null); // Clear the current image URL
+      setEditImageFile(null); 
+      setEditCurrentImageUrl(null); 
     } catch (error) {
       console.error('Error updating post:', error);
     } finally {
-      setIsSaving(false); // Reset loading state after operation
+      setIsSaving(false); 
     }
   };
 
-  // Handle delete post
+  
   const handleDeletePost = async (postId: string) => {
     setPostIdToDelete(postId);
-    setDeletePostPrompt(true); // Open the confirmation modal
+    setDeletePostPrompt(true); 
   };
 
-  // Delete post from Firestore
+  
   const deletePost = async (postId: string) => {
     try {
       const postRef = doc(firestore, 'posts', postId);
@@ -461,11 +461,11 @@ const ProfileViewPage = () => {
     const postDoc = await getDoc(postRef);
 
     if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; // Cast to Post type
+      const postData = postDoc.data() as Post; 
       const likedBy = postData.likedBy || [];
       const dislikedBy = postData.dislikedBy || [];
 
-      // If the user disliked, switch to like
+      
       if (dislikedBy.includes(userId)) {
         const updatedDislikedBy = dislikedBy.filter((id: string) => id !== userId);
         const updatedLikedBy = [...likedBy, userId];
@@ -477,12 +477,12 @@ const ProfileViewPage = () => {
         });
       } else {
         const updatedLikedBy = likedBy.includes(userId)
-          ? likedBy.filter((id: string) => id !== userId) // Unlike if already liked
+          ? likedBy.filter((id: string) => id !== userId) 
           : [...likedBy, userId];
 
         await updateDoc(postRef, {
           likedBy: updatedLikedBy,
-          likes: increment(likedBy.includes(userId) ? -1 : 1), // Increment or decrement the likes count
+          likes: increment(likedBy.includes(userId) ? -1 : 1), 
         });
       }
     }
@@ -496,11 +496,11 @@ const ProfileViewPage = () => {
     const postDoc = await getDoc(postRef);
 
     if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; // Cast to Post type
+      const postData = postDoc.data() as Post; 
       const likedBy = postData.likedBy || [];
       const dislikedBy = postData.dislikedBy || [];
 
-      // If the user liked, switch to dislike
+      
       if (likedBy.includes(userId)) {
         const updatedLikedBy = likedBy.filter((id: string) => id !== userId);
         const updatedDislikedBy = [...dislikedBy, userId];
@@ -512,12 +512,12 @@ const ProfileViewPage = () => {
         });
       } else {
         const updatedDislikedBy = dislikedBy.includes(userId)
-          ? dislikedBy.filter((id: string) => id !== userId) // Undislike if already disliked
+          ? dislikedBy.filter((id: string) => id !== userId) 
           : [...dislikedBy, userId];
 
         await updateDoc(postRef, {
           dislikedBy: updatedDislikedBy,
-          dislikes: increment(dislikedBy.includes(userId) ? -1 : 1), // Increment or decrement the dislikes count
+          dislikes: increment(dislikedBy.includes(userId) ? -1 : 1), 
         });
       }
     }
@@ -525,10 +525,10 @@ const ProfileViewPage = () => {
 
   const toggleProfileVisibility = async () => {
     try {
-      // Toggle the visibility in local state
+      
       setIsProfilePublic((prevState) => {
-        const newState = !prevState; // This will toggle between true and false
-        updateProfileVisibilityInDatabase(newState); // Update Firestore
+        const newState = !prevState; 
+        updateProfileVisibilityInDatabase(newState); 
         return newState;
       });
     } catch (error) {
@@ -538,15 +538,15 @@ const ProfileViewPage = () => {
 
   const updateProfileVisibilityInDatabase = async (newState: boolean) => {
     try {
-      // Ensure `id` is a valid string before proceeding
+      
       if (typeof id !== 'string') {
         console.error("Invalid user ID");
         return;
       }
   
-      const userRef = doc(firestore, 'users', id); // Create reference to the user document
+      const userRef = doc(firestore, 'users', id); 
       await updateDoc(userRef, {
-        visibility: newState ? 'public' : 'private', // Update visibility
+        visibility: newState ? 'public' : 'private', 
       });
     } catch (error) {
       console.error("Error updating profile visibility in Firestore: ", error);
@@ -573,7 +573,7 @@ const ProfileViewPage = () => {
     </a>
   );
 
-  const urlRegex = /(https?:\/\/[^\s]+)/g; // Regular expression to match URLs
+  const urlRegex = /(https?:\/\/[^\s]+)/g; 
 
   return (
     <Layout>
@@ -668,10 +668,10 @@ const ProfileViewPage = () => {
             <div>
               <div className="p-3 w-full bg-[#383434] mx-auto">
                 {!isProfilePublic && currentUserId !== id ? (
-                  // If the profile is private and the current user is not the owner, show a private post message
+                  
                   <p className="text-center text-yellow-500 w-full">This post is set to private.</p>
                 ) : filteredPosts.length === 0 ? (
-                  // If no posts match the search query, show this message
+                  
                   <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                 ) : (
                   filteredPosts.map((post) => (
@@ -775,7 +775,7 @@ const ProfileViewPage = () => {
                                     <button
                                       onClick={() => { 
                                         handleUpdatePost(post.id); 
-                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Edit
+                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
                                       }}
                                       className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                     >
@@ -787,7 +787,7 @@ const ProfileViewPage = () => {
                                     <button
                                       onClick={() => { 
                                         handleDeletePost(post.id);
-                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); // Close dropdown after Delete
+                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
                                       }}
                                       className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                                     >
@@ -812,7 +812,7 @@ const ProfileViewPage = () => {
                                 onClick={async () => {
                                   if (!postIdToDelete) return;
                                   await deletePost(postIdToDelete);
-                                  setDeletePostPrompt(false); // Close the modal
+                                  setDeletePostPrompt(false); 
                                 }}
                                 className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
                               >
@@ -831,7 +831,7 @@ const ProfileViewPage = () => {
                       
                       <div className="mb-2">
                         <p
-                          ref={(el) => { contentRefs.current[post.id] = el; }}  // Assign ref to each paragraph element
+                          ref={(el) => { contentRefs.current[post.id] = el; }}  
                           className={`text-lg text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
                           style={{
                             whiteSpace: 'pre-wrap',
@@ -889,7 +889,7 @@ const ProfileViewPage = () => {
                                   />
                                   {/* Close button to remove the image */}
                                   <button
-                                    onClick={() => setEditCurrentImageUrl(null)} // Remove the current image
+                                    onClick={() => setEditCurrentImageUrl(null)} 
                                     className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                                   >
                                     <AiOutlineClose size={16} />
@@ -904,13 +904,13 @@ const ProfileViewPage = () => {
                                 <p className="text-white">New Image Preview:</p>
                                 <div className="relative">
                                   <img
-                                    src={URL.createObjectURL(editImageFile)} // Preview selected image
+                                    src={URL.createObjectURL(editImageFile)} 
                                     alt="Selected Image Preview"
                                     className="w-full object-cover rounded-lg mt-2"
                                   />
                                   {/* Close button overlaid on the image */}
                                   <button
-                                    onClick={() => setEditImageFile(null)} // Remove selected image
+                                    onClick={() => setEditImageFile(null)} 
                                     className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                                   >
                                     <AiOutlineClose size={16} />
@@ -932,7 +932,7 @@ const ProfileViewPage = () => {
                               accept="image/*"
                               onChange={(e) => {
                                 if (e.target.files && e.target.files[0]) {
-                                  setEditImageFile(e.target.files[0]); // Capture the selected image
+                                  setEditImageFile(e.target.files[0]); 
                                 }
                               }}
                               className="mt-4 text-white"
@@ -943,7 +943,7 @@ const ProfileViewPage = () => {
                               <button
                                 onClick={() => {
                                   setIsEditingPost(false);
-                                  setEditImageFile(null); // Clear selected image when canceling
+                                  setEditImageFile(null); 
                                 }}
                                 className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
                               >
@@ -952,7 +952,7 @@ const ProfileViewPage = () => {
                               <button
                                 onClick={handleSavePost}
                                 className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
-                                disabled={isSaving} // Disable button while saving
+                                disabled={isSaving} 
                               >
                                 {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
                               </button>
@@ -1002,7 +1002,7 @@ const ProfileViewPage = () => {
                         {/* Comment Button with Tooltip (View Post to Comment and Navigate to Post) */}
                         <button
                           onClick={() => {
-                            router.push(`/post-view/${post.id}`); // Navigate to the post
+                            router.push(`/post-view/${post.id}`); 
                           }}
                           className="relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto text-gray-400"
                         >
