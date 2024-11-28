@@ -1,8 +1,8 @@
-// app/admin-discussion-board/page.tsx (Admin Discussion Board Page)
-'use client';
+// app/admin-forum/page.tsx (Admin Forum Page)
+'use client'; // Render page in client side
 import Layout from '../../components/root/Layout';
-import { useState, useEffect, useRef } from 'react';
-import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
+import { useState, useEffect, useRef } from 'react'; 
+import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, deleteField } from 'firebase/firestore';
 import { app } from '../firebase/config';
 import PostForum from '../../components/forum/PostForum';
 import { formatDistanceToNow } from 'date-fns';
@@ -64,7 +64,7 @@ interface Post {
   }[];
 }
 
-const AdminDiscussionBoardPage = () => {
+const AdminForumPage = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const firestore = getFirestore(app);
   const router = useRouter();
@@ -121,7 +121,7 @@ const AdminDiscussionBoardPage = () => {
           const userData = userDoc.data() as User;
 
           if (userData.role !== 'admin') {
-            router.push('/discussion-board');
+            router.push('/forum');
           }
         } else {
           router.push('/sign-in');
@@ -172,14 +172,14 @@ const AdminDiscussionBoardPage = () => {
     };
   }, []);
 
-const filterBannedWords = (message: string): string => {
-  if (!bannedWords || bannedWords.length === 0) return message;
+  const filterBannedWords = (message: string): string => {
+    if (!bannedWords || bannedWords.length === 0) return message;
 
-  return bannedWords.reduce((acc, word) => {
-    const regex = new RegExp(`\\b${word}\\b`, 'gi');
-    return acc.replace(regex, (match) => `(**${match}**)`);
-  }, message);
-};
+    return bannedWords.reduce((acc, word) => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      return acc.replace(regex, (match) => `(**${match}**)`);
+    }, message);
+  };
 
   const filterPosts = (postsData: Post[], method: 'latest' | 'popular' = sortMethod) => {
     let filtered = postsData;
@@ -1226,7 +1226,7 @@ const filterBannedWords = (message: string): string => {
                                             handleDeletePost(post.id);
                                             setShowMoreOptions(prev => ({ ...prev, [post.id]: false }));
                                           }}
-                                          className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
+                                          className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500"
                                         >
                                           <FaTrash className="w-4 h-4 mr-2" />
                                           <span className="whitespace-nowrap">Delete Post</span>
@@ -1538,7 +1538,7 @@ const filterBannedWords = (message: string): string => {
                                             <div className="relative group inline-flex items-center">
                                             <button
                                                 onClick={() => handleDeleteComment(post.id, index)}
-                                                className="hover:text-yellow-500"
+                                                className="text-red-500 hover:text-red-600"
                                             >
                                                 <FaTrash className="w-3 h-3" />
                                             </button>
@@ -1707,7 +1707,7 @@ const filterBannedWords = (message: string): string => {
                                                             <div className="relative group inline-flex items-center">
                                                                 <button
                                                                 onClick={() => handleDeleteReply(post.id, index, replyIndex)}
-                                                                className="hover:text-yellow-500"
+                                                                className="text-red-500 hover:text-red-600"
                                                                 >
                                                                 <FaTrash className="w-3 h-3" />
                                                                 </button>
@@ -1893,4 +1893,4 @@ const filterBannedWords = (message: string): string => {
   );
 };
 
-export default AdminDiscussionBoardPage;
+export default AdminForumPage;

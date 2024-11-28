@@ -76,7 +76,7 @@ const SignInPage = () => {
           role: 'user',
         });
       }
-      router.push('/discussion-board');
+      router.push('/forum');
     } catch (e) {
       if (e instanceof FirebaseError) {
         if (e.code === 'auth/user-disabled') {
@@ -93,7 +93,7 @@ const SignInPage = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
-        router.push('/discussion-board');
+        router.push('/forum');
       }
     });
     return () => unsubscribe(); 

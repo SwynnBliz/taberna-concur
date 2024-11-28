@@ -20,7 +20,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   };
 
   
-  const isDiscussionBoard = pathname === '/discussion-board';
+  const isForum = pathname === '/forum';
 
   
   const isProfileView = pathname.startsWith('/profile-view/');
@@ -30,6 +30,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   
   const isAdmin = pathname.includes("/admin");
+
+  const isEducational = pathname.includes("educational");
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
@@ -53,13 +55,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Main Content */}
         <main 
-          className={`flex-1 bg-[#484242] overflow-auto ${isDiscussionBoard || isProfileView || isPostView || isAdmin ? "mr-60" : ""}`}
+          className={`flex-1 bg-[#484242] overflow-auto ${isForum || isProfileView || isPostView || isAdmin || isEducational ? "mr-60" : ""}`}
         >
           {children}
         </main>
 
         {/* Conditionally Render Right Sidebar */}
-        {(isDiscussionBoard || isProfileView || isPostView || isAdmin) && <RightSidebar />}
+        {(isForum|| isProfileView || isPostView || isAdmin || isEducational) && <RightSidebar />}
       </div>
     </div>
   );

@@ -36,16 +36,16 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     if (isAdmin) {
       
       if (isOnAdminPage) {
-        router.push("/admin-discussion-board"); 
+        router.push("/admin-forum"); 
       } else {
-        router.push("/discussion-board"); 
+        router.push("/forum"); 
       }
     } else {
       
       if (isOnAdminPage) {
-        router.push("/admin-discussion-board"); 
+        router.push("/admin-forum"); 
       } else {
-        router.push("/discussion-board"); 
+        router.push("/forum"); 
       }
     }
   };
@@ -94,16 +94,16 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     if (isAdmin) {
       
       if (isOnAdminPage) {
-        router.push("/discussion-board"); 
+        router.push("/forum"); 
       } else {
-        router.push("/admin-discussion-board"); 
+        router.push("/admin-forum"); 
       }
     } else {
       
       if (isOnAdminPage) {
-        router.push("/discussion-board"); 
+        router.push("/forum"); 
       } else {
-        router.push("/admin-discussion-board"); 
+        router.push("/admin-forum"); 
       }
     }
   };

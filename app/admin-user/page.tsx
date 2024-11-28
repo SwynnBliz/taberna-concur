@@ -59,7 +59,7 @@ const AdminUserPage = () => {
 
           if (userData.role !== 'admin') {
             
-            router.push('/discussion-board');
+            router.push('/forum');
           }
         } else {
           
@@ -174,18 +174,30 @@ const AdminUserPage = () => {
       return;
     }
   
-    
+    // Validate username
     if (!selectedUser.username || selectedUser.username.trim() === '') {
       alert('Username cannot be empty. Please provide a valid username.');
+      return;
+    }
+  
+    // Validate contact number format
+    const contactNumberRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/; // Example: +63 123 456 7890
+    if (
+      selectedUser.contactNumber && 
+      !contactNumberRegex.test(selectedUser.contactNumber)
+    ) {
+      alert(
+        'Contact number is invalid. It should be in the format: +63 123 456 7890'
+      );
       return;
     }
   
     setIsSaving(true);
   
     try {
-      let imageUrl = selectedUser.profilePhoto; 
+      let imageUrl = selectedUser.profilePhoto;
   
-      
+      // Handle image upload if a new file is provided
       if (editImageFile) {
         const formData = new FormData();
         formData.append('file', editImageFile);
@@ -201,19 +213,19 @@ const AdminUserPage = () => {
         }
   
         const data = await res.json();
-        imageUrl = data.secure_url; 
+        imageUrl = data.secure_url; // Update image URL
       }
   
-      
+      // Update Firestore document
       const userRef = doc(firestore, 'users', selectedUser.id);
       await updateDoc(userRef, {
-        profilePhoto: imageUrl, 
+        profilePhoto: imageUrl,
         username: selectedUser.username,
         bio: selectedUser.bio,
         contactNumber: selectedUser.contactNumber,
       });
   
-      
+      // Update local user state
       setUsers((prevUsers) =>
         prevUsers.map((user) =>
           user.id === selectedUser.id
@@ -228,10 +240,10 @@ const AdminUserPage = () => {
         )
       );
   
-      
+      // Reset modal and selected user
       setIsModalOpen(false);
       setSelectedUser(null);
-      setEditImageFile(null); 
+      setEditImageFile(null);
     } catch (error) {
       console.error('Error updating user profile:', error);
     } finally {
@@ -398,7 +410,7 @@ const AdminUserPage = () => {
                   {/* Ban Button */}
                   <button
                     onClick={() => handleBanUser(user.id, user.disabled)} 
-                    className={`h-8 w-12 text-xs rounded-2xl ${user.disabled ? 'bg-green-500' : 'bg-red-500'} text-white`}
+                    className={`h-8 w-12 text-xs rounded-2xl ${user.disabled ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white`}
                   >
                     {user.disabled ? 'Unban' : 'Ban'}
                   </button>

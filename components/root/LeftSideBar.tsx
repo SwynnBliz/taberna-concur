@@ -74,7 +74,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             <li>
               <button
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => handleNavigate('/discussion-board')}
+                onClick={() => handleNavigate('/forum')}
               >
                 Home
               </button>
@@ -82,7 +82,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             <li>
               <button
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => handleNavigate('/discussion-board')}
+                onClick={() => handleNavigate('/educational')}
               >
                 Educational
               </button>
@@ -98,7 +98,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             <li>
               <button
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => handleNavigate('/discussion-board')}
+                onClick={() => handleNavigate('/forum')}
               >
                 Collaboration
               </button>
@@ -119,7 +119,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
               <li>
                 <button
                   className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                  onClick={() => handleNavigate('/admin-discussion-board')}
+                  onClick={() => handleNavigate('/admin-forum')}
                 >
                   Manage Posts
                 </button>
@@ -130,6 +130,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                   onClick={() => handleNavigate('/admin-user')}
                 >
                   Manage Users
+                </button>
+              </li>
+              <li>
+                <button
+                  className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                  onClick={() => handleNavigate('/admin-educational')}
+                >
+                  Manage Tips
                 </button>
               </li>
               <li>

@@ -102,22 +102,31 @@ const ProfileManagePage = () => {
       setErrorMessage('Username is required.');
       return;
     }
-
-    
+  
     if (containsBannedWords(userData.username)) {
       setErrorMessage('Username contains a banned word, please change.');
       return;
     }
   
-    
-    if ((oldPassword || newPassword || confirmPassword) && (oldPassword === '' || newPassword === '' || confirmPassword === '')) {
+    if (
+      (oldPassword || newPassword || confirmPassword) &&
+      (oldPassword === '' || newPassword === '' || confirmPassword === '')
+    ) {
       setErrorMessage('Please fill in all the password fields if you want to change your password.');
       return;
     }
   
-    
     if (newPassword && confirmPassword && newPassword !== confirmPassword) {
       setErrorMessage('Passwords do not match.');
+      return;
+    }
+  
+    // Validate contact number format
+    const contactNumberRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/; // Example: +63 956 964 7481
+    if (userData.contactNumber && !contactNumberRegex.test(userData.contactNumber)) {
+      setErrorMessage(
+        'Contact number is invalid. It should be in the format: +63 123 456 7890'
+      );
       return;
     }
   
@@ -125,41 +134,34 @@ const ProfileManagePage = () => {
       const user = authInstance.currentUser;
       if (!user) return;
   
-      
       const userRef = doc(firestore, 'users', user.uid);
       await updateDoc(userRef, {
         username: userData.username,
         bio: userData.bio,
         contactNumber: userData.contactNumber,
-        profilePhoto: newPhotoUrl || userData.profilePhoto, 
+        profilePhoto: newPhotoUrl || userData.profilePhoto,
       });
   
-      
       if (oldPassword && newPassword && !isGoogleUser) {
         const credential = EmailAuthProvider.credential(user.email!, oldPassword);
   
         try {
-          
           await reauthenticateWithCredential(user, credential);
-  
-          
           await updatePassword(user, newPassword);
   
-          
           setNewPassword('');
           setConfirmPassword('');
           setOldPassword('');
   
           alert('Password updated successfully');
         } catch (err) {
-          
           setErrorMessage('Old password is incorrect.');
           return;
         }
       }
   
       alert('Profile updated successfully');
-      router.push(`/profile-view/${user.uid}`); 
+      router.push(`/profile-view/${user.uid}`);
     } catch (error: any) {
       setErrorMessage(error.message);
     }
@@ -262,7 +264,7 @@ const ProfileManagePage = () => {
               <div className="w-1/2 pl-4">
                 {/* Contact Number */}
                 <div className="mb-4">
-                  <label htmlFor="contactNumber" className="text-white mb-2">Contact Number</label>
+                  <label htmlFor="contactNumber" className="text-white mb-2">Contact Number (+63 123 456 7890)</label>
                     {/* Loading state for Bio */}
                     {!dataLoaded ? (
                       <div className="w-full h-10 bg-gray-300 animate-pulse rounded-lg"></div>

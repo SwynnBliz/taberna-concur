@@ -4,9 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { doc, getDoc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { firestore } from '../firebase/config';
 import Layout from '../../components/root/Layout'; 
+import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { BsDatabaseAdd, BsDatabaseX } from "react-icons/bs";
+import { useRouter } from 'next/navigation';
+
+interface User {
+  id: string;
+  profilePhoto: string;
+  username: string;
+  bio: string;
+  contactNumber: string;
+  visibility: 'public' | 'private';
+  role: 'admin' | 'user';
+}
 
 const AdminFilterPage: React.FC = () => {
+  const auth = getAuth();
+  const router = useRouter();
   const [newWord, setNewWord] = useState('');
   const [bannedWords, setBannedWords] = useState<string[]>([]);
   const [selectedWords, setSelectedWords] = useState<string[]>([]);
@@ -16,6 +30,42 @@ const AdminFilterPage: React.FC = () => {
   const [deletePrompt, setDeletePrompt] = useState(false); 
   const [searchQuery, setSearchQuery] = useState(''); 
 
+  useEffect(() => {
+    const checkAdminRole = async (authUser: FirebaseUser | null) => {
+      if (!authUser) {
+        router.push('/sign-in');
+        return;
+      }
+
+      try {
+        const userDocRef = doc(firestore, 'users', authUser.uid);
+        const userDoc = await getDoc(userDocRef);
+        
+        if (userDoc.exists()) {
+          const userData = userDoc.data() as User;
+
+          if (userData.role !== 'admin') {
+            router.push('/forum');
+          }
+        } else {
+          router.push('/sign-in');
+        }
+      } catch (error) {
+        console.error('Error checking user role: ', error);
+        router.push('/sign-in');
+      }
+    };
+
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        checkAdminRole(user);
+      } else {
+        router.push('/sign-in');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [auth, firestore, router]);
   
   const fetchBannedWords = async () => {
     try {
@@ -136,7 +186,7 @@ const AdminFilterPage: React.FC = () => {
             <div className="relative group inline-flex items-center">
               <button
                 onClick={() => setDeletePrompt(true)} 
-                className="bg-[#2c2c2c] text-white p-2 rounded hover:bg-yellow-500"
+                className="bg-[#2c2c2c] text-red-500 p-2 rounded hover:bg-yellow-500"
               >
                 <BsDatabaseX className="h-6 w-6"/>
               </button>

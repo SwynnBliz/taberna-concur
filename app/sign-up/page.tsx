@@ -25,7 +25,7 @@ const SignUpPage = () => {
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
-        router.push("/discussion-board");
+        router.push("/forum");
       }
     });
     return () => unsubscribe();

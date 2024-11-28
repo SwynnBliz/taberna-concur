@@ -1,7 +1,7 @@
 // components/forum/Forum.tsx
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
+import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, deleteField } from 'firebase/firestore';
 import { app } from '../../app/firebase/config'; 
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; 
@@ -1226,7 +1226,7 @@ const Forum = () => {
                                     handleDeletePost(post.id);
                                     setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
                                   }}
-                                  className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
+                                  className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500"
                                 >
                                   <FaTrash className="w-4 h-4 mr-2" />
                                   <span className="whitespace-nowrap">Delete Post</span>
@@ -1278,7 +1278,7 @@ const Forum = () => {
                     }}
                   >
                     <LinkIt component={renderLink} regex={urlRegex}>
-                      {post.message} {/* Render the message with linkified URLs */}
+                      {post.message}
                     </LinkIt>
                   </div>
 
@@ -1539,7 +1539,7 @@ const Forum = () => {
                                     <div className="relative group inline-flex items-center">
                                       <button
                                         onClick={() => handleDeleteComment(post.id, index)}
-                                        className="hover:text-yellow-500"
+                                        className="text-red-500 hover:text-red-600"
                                       >
                                         <FaTrash className="w-3 h-3" />
                                       </button>
@@ -1711,7 +1711,7 @@ const Forum = () => {
                                                   <div className="relative group inline-flex items-center">
                                                     <button
                                                       onClick={() => handleDeleteReply(post.id, index, replyIndex)}
-                                                      className="hover:text-yellow-500"
+                                                      className="text-red-500 hover:text-red-600"
                                                     >
                                                       <FaTrash className="w-3 h-3" />
                                                     </button>
