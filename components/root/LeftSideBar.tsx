@@ -82,17 +82,17 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             <li>
               <button
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => handleNavigate('/educational')}
+                onClick={() => userId && router.push(`/profile-view/${userId}`)}
               >
-                Educational
+                Profile
               </button>
             </li>
             <li>
               <button
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => handleNavigate('/quiz')}
+                onClick={() => handleNavigate('/educational')}
               >
-                Quiz
+                Educational
               </button>
             </li>
             <li>
@@ -106,9 +106,9 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             <li>
               <button
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => userId && router.push(`/profile-view/${userId}`)}
+                onClick={() => handleNavigate('/quiz')}
               >
-                Profile
+                Quiz
               </button>
             </li>
           </>
