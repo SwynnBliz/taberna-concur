@@ -100,7 +100,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
                 onClick={() => handleNavigate('/forum')}
               >
-                Collaboration
+                Collaborative
               </button>
             </li>
             <li>
@@ -108,7 +108,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
                 onClick={() => handleNavigate('/quiz')}
               >
-                Quiz
+                TESDA
               </button>
             </li>
           </>

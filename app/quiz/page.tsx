@@ -6,10 +6,10 @@ const QuizHomePage = () => {
     <Layout>
       <div className="h-full overflow-hidden flex flex-col items-center justify-center bg-[#2e2e2e] text-white">
         <h1 className="text-4xl font-extrabold mb-8 shadow-md p-4 rounded-lg bg-[#1f1f1f] text-yellow-500">
-          Welcome to the Quiz Module
+          Welcome to the TESDA Module
         </h1>
         <p className="text-lg mb-12 text-center text-gray-400">
-          Create quizzes or join existing ones and challenge your knowledge!
+          Create TESDA quiz or join existing ones and challenge your knowledge!
         </p>
         <div className="flex space-x-6">
           {/* Create Quiz Button */}
