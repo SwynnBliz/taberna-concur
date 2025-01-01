@@ -44,6 +44,3 @@ next-env.d.ts
 
 # Firebase Admin SDK Service Account Key
 /config/firebaseAdmin.json
-
-# Ignore admin.ts as it contains environment-specific configurations
-lib/admin.ts
