@@ -33,11 +33,9 @@ const ProfileManagePage = () => {
   const authInstance = getAuth();
   const [dataLoaded, setDataLoaded] = useState(false);
   const { bannedWords, loading: bannedWordsLoading } = useBannedWords(); 
-
-  
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
   const cloudinary = new Cloudinary({ cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME });
 
-  
   useEffect(() => {
     const fetchUserData = async () => {
       const user = authInstance.currentUser;
@@ -107,6 +105,14 @@ const ProfileManagePage = () => {
       setErrorMessage('Username contains a banned word, please change.');
       return;
     }
+
+    const contactNumberRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/; // Example: +63 956 964 7481
+    if (userData.contactNumber && !contactNumberRegex.test(userData.contactNumber)) {
+      setErrorMessage(
+        'Contact number is invalid. It should be in the format: +63 123 456 7890'
+      );
+      return;
+    }
   
     if (
       (oldPassword || newPassword || confirmPassword) &&
@@ -120,13 +126,9 @@ const ProfileManagePage = () => {
       setErrorMessage('Passwords do not match.');
       return;
     }
-  
-    // Validate contact number format
-    const contactNumberRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/; // Example: +63 956 964 7481
-    if (userData.contactNumber && !contactNumberRegex.test(userData.contactNumber)) {
-      setErrorMessage(
-        'Contact number is invalid. It should be in the format: +63 123 456 7890'
-      );
+
+    if (!isPasswordStrong) {
+      setErrorMessage("Password is not strong enough.");
       return;
     }
   
@@ -152,8 +154,6 @@ const ProfileManagePage = () => {
           setNewPassword('');
           setConfirmPassword('');
           setOldPassword('');
-  
-          alert('Password updated successfully');
         } catch (err) {
           setErrorMessage('Old password is incorrect.');
           return;
@@ -351,7 +351,7 @@ const ProfileManagePage = () => {
                         </div>
                       </div>
 
-                      <PasswordStrengthChecker password={newPassword} />
+                      <PasswordStrengthChecker password={newPassword} setStrengthValid={setIsPasswordStrong} />
                     </>
                   )}
 

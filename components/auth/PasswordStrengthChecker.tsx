@@ -2,56 +2,84 @@ import { useState, useEffect } from "react";
 
 type PasswordStrengthCheckerProps = {
   password: string;
+  setStrengthValid: (isValid: boolean) => void;
 };
 
-const PasswordStrengthChecker = ({ password }: PasswordStrengthCheckerProps) => {
+const PasswordStrengthChecker = ({ password, setStrengthValid }: PasswordStrengthCheckerProps) => {
   const [strength, setStrength] = useState("");
+  const [feedback, setFeedback] = useState<string[]>([]);
 
   useEffect(() => {
     const checkPasswordStrength = (password: string) => {
       let strengthLevel = 0;
+      const feedback: string[] = [];
 
-      
       if (password.length >= 8) strengthLevel++;
-      if (/[A-Z]/.test(password)) strengthLevel++;
-      if (/[0-9]/.test(password)) strengthLevel++;
-      if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strengthLevel++;
+      else feedback.push("At least 8 characters long");
 
-      
+      if (/[A-Z]/.test(password)) strengthLevel++;
+      else feedback.push("At least one uppercase letter");
+
+      if (/[0-9]/.test(password)) strengthLevel++;
+      else feedback.push("At least one number");
+
+      if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strengthLevel++;
+      else feedback.push("At least one special character");
+
       switch (strengthLevel) {
         case 0:
         case 1:
-          return "Weak";
+          setStrength("Weak");
+          setStrengthValid(false);
+          break;
         case 2:
-          return "Fair";
+          setStrength("Fair");
+          setStrengthValid(false);
+          break;
         case 3:
-          return "Good";
+          setStrength("Good");
+          setStrengthValid(false);
+          break;
         case 4:
-          return "Strong";
+          setStrength("Strong");
+          setStrengthValid(true);
+          break;
         default:
-          return "";
+          setStrength("");
+          setStrengthValid(false);
       }
+
+      setFeedback(feedback);
     };
 
-    setStrength(checkPasswordStrength(password));
-  }, [password]);
+    checkPasswordStrength(password);
+  }, [password, setStrengthValid]);
 
   const textStyles = {
-    Weak: "text-red-500 font-semibold text-shadow-lg",
-    Fair: "text-yellow-500 text-shadow-lg",
-    Good: "text-blue-500 text-shadow-lg",
-    Strong: "text-green-500 text-shadow-lg",
+    Weak: "text-red-500 font-semibold",
+    Fair: "text-yellow-500 font-semibold",
+    Good: "text-blue-500 font-semibold",
+    Strong: "text-green-500 font-semibold",
   };
 
   return (
     <div className="mt-2">
       <p
         id="password-strength"
-        className={`text-sm font-medium ${textStyles[strength as keyof typeof textStyles]}`}
-        style={{ textShadow: "2px 2px 4px rgba(0, 0, 0, 0.7)" }}
+        className={`text-sm font-medium ${textStyles[strength as keyof typeof textStyles]} p-1 rounded-md`}
+        style={{ textShadow: "2px 2px 5px rgba(0, 0, 0, 0.8)" }}
       >
         Password Strength: {strength}
       </p>
+      {feedback.length > 0 && (
+        <ul className="text-sm text-red-500 mt-1 p-2 rounded-md" style={{ textShadow: "2px 2px 5px rgba(0, 0, 0, 0.8)" }}>
+          {feedback.map((item, index) => (
+            <li key={index} className="mb-1">
+              - {item}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };

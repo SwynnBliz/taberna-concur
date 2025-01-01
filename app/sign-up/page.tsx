@@ -15,11 +15,10 @@ const SignUpPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
-
+  const [isPasswordStrong, setIsPasswordStrong] = useState(false);
   const firestore = getFirestore();
   const [createUserWithEmailAndPassword, user, loading] = useCreateUserWithEmailAndPassword(auth);
   const router = useRouter();
-
   const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
 
   useEffect(() => {
@@ -37,7 +36,7 @@ const SignUpPage = () => {
   };
 
   const validateUsername = (username: string): boolean => {
-    if (bannedWordsLoading) return false; 
+    if (bannedWordsLoading) return false;
     return bannedWords.some((word) => username.toLowerCase().includes(word.toLowerCase()));
   };
 
@@ -50,8 +49,8 @@ const SignUpPage = () => {
       return;
     }
 
-    if (password.length < 8) {
-      setErrorMessage("Password must be at least 8 characters.");
+    if (!isPasswordStrong) {
+      setErrorMessage("Password is not strong enough.");
       return;
     }
 
@@ -81,7 +80,6 @@ const SignUpPage = () => {
         role: "user",
       });
 
-      
       setEmail("");
       setUsername("");
       setPassword("");
@@ -95,7 +93,10 @@ const SignUpPage = () => {
   return (
     <div
       className="flex items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://wallup.net/wp-content/uploads/2019/09/929884-liquor-alcohol-spirits-poster-drinks-drink-whiskey.jpg')" }}
+      style={{
+        backgroundImage:
+          "url('https://wallup.net/wp-content/uploads/2019/09/929884-liquor-alcohol-spirits-poster-drinks-drink-whiskey.jpg')",
+      }}
     >
       <div className="bg-white/20 border border-white rounded-xl backdrop-blur-lg p-8 shadow-lg w-full max-w-md">
         <h1 className="text-4xl font-bold text-center text-white mb-8">
@@ -157,12 +158,12 @@ const SignUpPage = () => {
             </button>
           </div>
 
-          <PasswordStrengthChecker password={password} />
+          <PasswordStrengthChecker password={password} setStrengthValid={setIsPasswordStrong} />
 
           <button
             type="submit"
             className="w-full py-2 mt-4 bg-yellow-500 text-white font-semibold rounded-md hover:bg-yellow-600"
-            disabled={loading}
+            disabled={loading || !isPasswordStrong}
           >
             {loading ? "Signing Up..." : "Sign Up"}
           </button>
@@ -176,7 +177,10 @@ const SignUpPage = () => {
           <div className="text-center mt-4">
             <p className="text-white">
               Already have an account?{" "}
-              <a href="/sign-in" className="text-white hover:underline hover:text-yellow-300 font-bold">
+              <a
+                href="/sign-in"
+                className="text-white hover:underline hover:text-yellow-300 font-bold"
+              >
                 Sign In
               </a>
             </p>
