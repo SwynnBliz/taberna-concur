@@ -9,6 +9,8 @@ import { signInWithPopup } from "firebase/auth";
 import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { FcGoogle } from "react-icons/fc";
 import { FirebaseError } from 'firebase/app';
+import { query, where, getDocs, collection } from 'firebase/firestore'; 
+import { User } from 'firebase/auth'; // Import User type
 
 const SignInPage = () => {
   const [email, setEmail] = useState("");
@@ -16,27 +18,18 @@ const SignInPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
-
   const router = useRouter();
   const firestore = getFirestore();
 
-  
   const getErrorMessage = (error: any) => {
     if (error) {
       const errorMessage = error.message;
       
-      if (errorMessage.includes('auth/user-disabled')) {
-        return "Your account has been disabled.";
-      }
-      
-      if (errorMessage.includes('auth/user-not-found')) {
-        return "No user found with this email address.";
-      }
       if (errorMessage.includes('auth/wrong-password')) {
         return "Incorrect password. Please try again.";
       }
       
-      return "Error signing in. Please try again.";
+      return "Incorrect email/password. Please try again.";
     }
     return "";
   };
@@ -50,23 +43,50 @@ const SignInPage = () => {
   const handleEmailPasswordSignIn = async (e: any) => {
     e.preventDefault();
     setErrorMessage(""); 
-
+  
     try {
       await signInWithEmailAndPassword(email, password);
+      const usersQuery = query(
+        collection(firestore, "users"),
+        where("email", "==", email)
+      );
+      const querySnapshot = await getDocs(usersQuery);
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0];
+        const banMessage = userDoc.data().banMessage;
+        if (banMessage) {
+          setErrorMessage("Your account has been disabled, Reason: " + banMessage); 
+        }
+      } else {
+        setErrorMessage("Incorrect email/password. Please try again.");
+      }
     } catch (e) {
-      console.error(e); 
+      setErrorMessage("Error signing in. Please try again.");
     }
-  };
+  };  
 
   const handleGoogleSignIn = async () => {
     setErrorMessage(""); 
+  
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      const userRef = doc(firestore, "users", user.uid);
+      const user = result.user as User; // Explicitly cast result.user to the User type
+      const userRef = doc(firestore, "users", user.uid); // Use user.uid directly
+  
       const userDoc = await getDoc(userRef);
-
-      if (!userDoc.exists()) {
+  
+      if (userDoc.exists()) {
+        const banMessage = userDoc.data().banMessage;
+  
+        if (banMessage) {
+          // If there's a ban message, display it in the error message
+          setErrorMessage("Your account has been disabled, Reason: " + banMessage);
+        } else {
+          // If no ban message, proceed to the forum
+          router.push('/forum');
+        }
+      } else {
+        // If the user document does not exist, create a new one
         const defaultUsername = user.email?.split('@')[0];
         await setDoc(userRef, {
           email: user.email,
@@ -75,12 +95,38 @@ const SignInPage = () => {
           visibility: 'public',
           role: 'user',
         });
+        router.push('/forum');
       }
-      router.push('/forum');
     } catch (e) {
       if (e instanceof FirebaseError) {
         if (e.code === 'auth/user-disabled') {
-          setErrorMessage("Your account has been disabled.");
+          // Handle user-disabled case
+          const email = e.customData?.email;
+  
+          if (email) {
+            // Query Firestore for the user using their email
+            const usersQuery = query(
+              collection(firestore, "users"),
+              where("email", "==", email)
+            );
+  
+            const querySnapshot = await getDocs(usersQuery);
+  
+            if (!querySnapshot.empty) {
+              const userDoc = querySnapshot.docs[0];
+              const banMessage = userDoc.data().banMessage;
+  
+              if (banMessage) {
+                setErrorMessage("Your account has been disabled, Reason: " + banMessage);
+              } else {
+                setErrorMessage("Your account has been disabled.");
+              }
+            } else {
+              setErrorMessage("Your account has been disabled, but no user found.");
+            }
+          } else {
+            setErrorMessage("Your account has been disabled, but no user found.");
+          }
         } else {
           setErrorMessage("Google sign-in failed. Please try again.");
         }

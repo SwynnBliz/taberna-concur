@@ -249,10 +249,17 @@ const AdminUserPage = () => {
     } finally {
       setIsSaving(false);
     }
-  };  
+  };
 
   const handleBanUser = async (userId: string, isCurrentlyDisabled: boolean) => {
     if (!confirm(`Are you sure you want to ${isCurrentlyDisabled ? 'unban' : 'ban'} this user?`)) return;
+  
+    // Show prompt for ban reason only when banning (i.e., when the user is not currently disabled)
+    let banMessage: string | null = '';
+    if (!isCurrentlyDisabled) {
+      banMessage = prompt("Please provide a reason for banning (leave empty if none):");
+      if (banMessage === null) return;
+    }
   
     try {
       const userRef = doc(firestore, "users", userId);
@@ -262,7 +269,6 @@ const AdminUserPage = () => {
         const userData = userDoc.data();
         const currentTimestamp = new Date().toISOString();
   
-        
         const response = await fetch('/api/admin/disableUser', {
           method: 'POST',
           headers: {
@@ -276,25 +282,26 @@ const AdminUserPage = () => {
   
         const data = await response.json();
         if (response.ok) {
-          
+          // Update user document in Firestore with the new disabled state and ban reason (only if banning)
           await updateDoc(userRef, {
             disabled: !isCurrentlyDisabled, 
             disabledBy: !isCurrentlyDisabled ? auth.currentUser?.uid : null, 
             disabledAt: !isCurrentlyDisabled ? currentTimestamp : null, 
+            banMessage: !isCurrentlyDisabled ? banMessage || '' : null,  // Add the ban reason only if banning
           });
   
-          
+          // Update users state and filteredUsers with the new disabled state
           setUsers((prevUsers) =>
             prevUsers.map((user) =>
               user.id === userId
-                ? { ...user, disabled: !isCurrentlyDisabled }
+                ? { ...user, disabled: !isCurrentlyDisabled, banMessage: !isCurrentlyDisabled ? banMessage : null }
                 : user
             )
           );
           setFilteredUsers((prevUsers) =>
             prevUsers.map((user) =>
               user.id === userId
-                ? { ...user, disabled: !isCurrentlyDisabled }
+                ? { ...user, disabled: !isCurrentlyDisabled, banMessage: !isCurrentlyDisabled ? banMessage : null }
                 : user
             )
           );
