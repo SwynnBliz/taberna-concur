@@ -19,6 +19,7 @@ interface User {
   contactNumber: string;
   visibility: 'public' | 'private';
   role: 'admin' | 'user';
+  isNCIIHolder: boolean;
   disabled: boolean; 
   disabledBy: string | null; 
   disabledAt: Timestamp | null; 
@@ -347,6 +348,35 @@ const AdminUserPage = () => {
     }
   };
 
+  const handleToggleNCIIHolder = async (userId: string, isNCIIHolder: boolean) => {
+    const newStatus = !isNCIIHolder;
+  
+    if (!confirm(`Are you sure you want to ${newStatus ? 'make this user an NC II holder' : 'revoke NC II status from this user'}?`)) return;
+  
+    try {
+      const userRef = doc(firestore, 'users', userId);
+  
+      await updateDoc(userRef, {
+        isNCIIHolder: newStatus,
+      });
+  
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, isNCIIHolder: newStatus } : user
+        )
+      );
+      setFilteredUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.id === userId ? { ...user, isNCIIHolder: newStatus } : user
+        )
+      );
+  
+    } catch (error) {
+      console.error("Error toggling NC II status:", error);
+      setError("Failed to update NC II status.");
+    }
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -405,6 +435,13 @@ const AdminUserPage = () => {
                     className="h-8 w-28 text-xs rounded-2xl bg-[#2c2c2c] text-white"
                   >
                     {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
+                  </button>
+                  {/* NCII Holder Button */}
+                  <button
+                    onClick={() => handleToggleNCIIHolder(user.id, user.isNCIIHolder)}
+                    className="h-8 w-28 text-xs rounded-2xl bg-[#2c2c2c] text-white ml-2"
+                  >
+                    {user.isNCIIHolder ? 'Revoke NC II' : 'Make NC II'}
                   </button>
                   {/* Edit Button */}
                   <button
