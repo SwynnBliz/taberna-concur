@@ -15,7 +15,7 @@ import { User } from 'firebase/auth'; // Import User type
 const SignInPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState<React.ReactNode>("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
   const router = useRouter();
@@ -55,7 +55,22 @@ const SignInPage = () => {
         const userDoc = querySnapshot.docs[0];
         const banMessage = userDoc.data().banMessage;
         if (banMessage) {
-          setErrorMessage("Your account has been disabled, Reason: " + banMessage); 
+          setErrorMessage(
+            <div>
+              Your account has been disabled, Reason: {banMessage}. Please contact us at{" "}
+              <a
+                className="text-yellow-500 hover:text-yellow-600 hover:underline active:text-white"
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=tabernaconcur.support@gmail.com&su=Request for Unban&body=Dear TabernaConcur Support,%0D%0A%0D%0AI would like to request an unban for my account. Here are the details for justification:%0D%0A%0D%0A[Explanation]%0D%0A%0D%0AReason for ban: ${encodeURIComponent(
+                  banMessage
+                )}%0D%0A%0D%0AThank you for your time.%0D%0A%0D%0A[Your Name]`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                tabernaconcur.support@gmail.com
+              </a>{" "}
+              to request an unban.
+            </div>
+          );
         }
       } else {
         setErrorMessage("Incorrect email/password. Please try again.");
@@ -79,8 +94,22 @@ const SignInPage = () => {
         const banMessage = userDoc.data().banMessage;
   
         if (banMessage) {
-          // If there's a ban message, display it in the error message
-          setErrorMessage("Your account has been disabled, Reason: " + banMessage);
+          setErrorMessage(
+            <div>
+              Your account has been disabled, Reason: {banMessage}. Please contact us at{" "}
+              <a
+                className="text-yellow-500 hover:text-yellow-600 hover:underline active:text-white"
+                href={`https://mail.google.com/mail/?view=cm&fs=1&to=tabernaconcur.support@gmail.com&su=Request for Unban&body=Dear TabernaConcur Support,%0D%0A%0D%0AI would like to request an unban for my account. Here are the details for justification:%0D%0A%0D%0A[Explanation]%0D%0A%0D%0AReason for ban: ${encodeURIComponent(
+                  banMessage
+                )}%0D%0A%0D%0AThank you for your time.%0D%0A%0D%0A[Your Name]`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                tabernaconcur.support@gmail.com
+              </a>{" "}
+              to request an unban.
+            </div>
+          );
         } else {
           // If no ban message, proceed to the forum
           router.push('/forum');
@@ -117,7 +146,22 @@ const SignInPage = () => {
               const banMessage = userDoc.data().banMessage;
   
               if (banMessage) {
-                setErrorMessage("Your account has been disabled, Reason: " + banMessage);
+                setErrorMessage(
+                  <div>
+                    Your account has been disabled, Reason: {banMessage}. Please contact us at{" "}
+                    <a
+                      className="text-yellow-500 hover:text-yellow-600 hover:underline active:text-white"
+                      href={`https://mail.google.com/mail/?view=cm&fs=1&to=tabernaconcur.support@gmail.com&su=Request for Unban&body=Dear TabernaConcur Support,%0D%0A%0D%0AI would like to request an unban for my account. Here are the details for justification:%0D%0A%0D%0A[Explanation]%0D%0A%0D%0AReason for ban: ${encodeURIComponent(
+                        banMessage
+                      )}%0D%0A%0D%0AThank you for your time.%0D%0A%0D%0A[Your Name]`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      tabernaconcur.support@gmail.com
+                    </a>{" "}
+                    to request an unban.
+                  </div>
+                );                          
               } else {
                 setErrorMessage("Your account has been disabled.");
               }
