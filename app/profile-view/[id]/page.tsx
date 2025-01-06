@@ -21,6 +21,7 @@ interface User {
   contactNumber: string;
   visibility: 'public' | 'private';
   role: 'admin' | 'user';
+  isNCIIHolder: boolean;
 }
 
 interface Post {
@@ -76,6 +77,7 @@ const ProfileViewPage = () => {
   const [isProfilePublic, setIsProfilePublic] = useState(true); 
   const [deletePostPrompt, setDeletePostPrompt] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState<string | null>(null);
+  const [userDetails, setUserDetails] = useState(new Map());
 
   
   const toggleMessage = (postId: string) => {
@@ -168,7 +170,6 @@ const ProfileViewPage = () => {
       where("userId", "==", id), 
       orderBy("createdAt", "desc") 
     );
-  
     
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
@@ -194,6 +195,26 @@ const ProfileViewPage = () => {
     };
   }, [bannedWords]); 
 
+  useEffect(() => {
+    filteredPosts.forEach((post) => {
+      fetchUserDetails(post.userId);
+    });
+  }, [filteredPosts]);
+
+  const fetchUserDetails = async (userId: string): Promise<void> => {
+    if (userDetails.has(userId)) return; // Avoid redundant fetches
+  
+    try {
+      const userDoc = await getDoc(doc(firestore, "users", userId));
+      if (userDoc.exists()) {
+        setUserDetails((prev) => new Map(prev).set(userId, userDoc.data()));
+      } else {
+        console.error("No such user document!");
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
   
   const filterBannedWords = (message: string): string => {
     if (!bannedWords || bannedWords.length === 0) return message; 
@@ -625,9 +646,26 @@ const ProfileViewPage = () => {
               />
               <h1 className="text-2xl text-white font-bold">{userData.username}</h1>
             </div>
-    
-            {/* Right Section: Bio and Contact Number */}
+
+            {/* Right Section: Role, Bio, and Contact Number */}
             <div className="flex flex-col w-2/3">
+
+              {/* Role and NCII Labels */}
+              <div className="flex space-x-4 mb-4">
+                {/* Admin Label */}
+                {userData.role === "admin" && (
+                  <div className="bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-md">
+                    Admin
+                  </div>
+                )}
+                {/* NCII Label */}
+                {userData.isNCIIHolder && (
+                  <div className="bg-yellow-500 text-white text-sm font-semibold px-4 py-2 rounded-md">
+                    NCII
+                  </div>
+                )}
+              </div>
+
               {/* Bio */}
               <div className="bg-[#424242] p-4 rounded-lg mb-4 max-h-60 overflow-auto">
                 <p className="text-gray-300 whitespace-pre-wrap">
@@ -639,7 +677,7 @@ const ProfileViewPage = () => {
                   )}
                 </p>
               </div>
-    
+
               {/* Contact Number */}
               <div className="bg-[#424242] p-4 rounded-lg">
                 <p className="text-gray-300">
@@ -697,15 +735,26 @@ const ProfileViewPage = () => {
                           </div>
 
                           <div>
-                            <p className="text-xl font-semibold text-white">
-                              {userData.username || "Loading..."}
+                            <p className="text-xl font-semibold text-white flex items-center space-x-2">
+                              <span>{userData.username || "Loading..."}</span>
+                              {/* Display Role and NCII */}
+                              {userDetails.get(post.userId)?.role === "admin" && (
+                                <span className="text-red-500 font-bold text-sm">
+                                  Admin
+                                </span>
+                              )}
+                              {userDetails.get(post.userId)?.isNCIIHolder && (
+                                <span className="text-yellow-500 font-bold text-sm">
+                                  NCII
+                                </span>
+                              )}
                             </p>
 
-                            {/* Check if updatedAt exists */}
                             <p className="text-sm text-gray-400">
                               {post.updatedAt ? (
                                 <>
-                                  {formatTimestamp(post.updatedAt)} <span className="text-gray-400">(edited)</span>
+                                  {formatTimestamp(post.updatedAt)}{" "}
+                                  <span className="text-gray-400">(edited)</span>
                                 </>
                               ) : (
                                 formatTimestamp(post.createdAt)

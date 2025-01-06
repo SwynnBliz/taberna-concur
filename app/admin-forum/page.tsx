@@ -105,6 +105,7 @@ const AdminForumPage = () => {
   const [commentToDelete, setCommentToDelete] = useState<{ postId: string; commentIndex: number } | null>(null);
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
+  const [userDetails, setUserDetails] = useState(new Map());
 
   useEffect(() => {
     const checkAdminRole = async (authUser: FirebaseUser | null) => {
@@ -171,6 +172,27 @@ const AdminForumPage = () => {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    filteredPosts.forEach((post) => {
+      fetchUserDetails(post.userId);
+    });
+  }, [filteredPosts]);
+
+  const fetchUserDetails = async (userId: string): Promise<void> => {
+    if (userDetails.has(userId)) return; // Avoid redundant fetches
+  
+    try {
+      const userDoc = await getDoc(doc(firestore, "users", userId));
+      if (userDoc.exists()) {
+        setUserDetails((prev) => new Map(prev).set(userId, userDoc.data()));
+      } else {
+        console.error("No such user document!");
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };  
 
   const filterBannedWords = (message: string): string => {
     if (!bannedWords || bannedWords.length === 0) return message;
@@ -1118,7 +1140,7 @@ const AdminForumPage = () => {
                         <div className="flex items-center justify-between mb-4">
                         {/* Left Section: Image, Username, and Timestamp */}
                         <div className="flex items-center">
-                            <div className="relative group inline-flex items-center">
+                          <div className="relative group inline-flex items-center">
                             <Link href={`/profile-view/${post.userId}`}>
                                 <img
                                 src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
@@ -1132,24 +1154,35 @@ const AdminForumPage = () => {
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                                 View User's Profile
                             </div>
-                            </div>
-                        
-                            <div>
-                            <p className="text-xl font-semibold text-white">
-                                {usernames.get(post.userId) || "Loading..."}
+                          </div>
+                      
+                          <div>
+                            <p className="text-xl font-semibold text-white flex items-center space-x-2">
+                              <span>{usernames.get(post.userId) || "Loading..."}</span>
+                              {/* Display Role and NCII */}
+                              {userDetails.get(post.userId)?.role === "admin" && (
+                                <span className="text-red-500 font-bold text-sm">
+                                  Admin
+                                </span>
+                              )}
+                              {userDetails.get(post.userId)?.isNCIIHolder && (
+                                <span className="text-yellow-500 font-bold text-sm">
+                                  NCII
+                                </span>
+                              )}
                             </p>
 
-                            {/* Check if updatedAt exists */}
                             <p className="text-sm text-gray-400">
-                                {post.updatedAt ? (
+                              {post.updatedAt ? (
                                 <>
-                                    {formatTimestamp(post.updatedAt)} <span className="text-gray-400">(edited)</span>
+                                  {formatTimestamp(post.updatedAt)}{" "}
+                                  <span className="text-gray-400">(edited)</span>
                                 </>
-                                ) : (
+                              ) : (
                                 formatTimestamp(post.createdAt)
-                                )}
+                              )}
                             </p>
-                            </div>
+                          </div>
                         </div>
         
                         {/* Right Section: View Post, Bookmark, and More Options */}
@@ -1501,24 +1534,36 @@ const AdminForumPage = () => {
                                     />
                                     </Link>
                                     <div className="flex flex-col w-full">
-                                    <div className="flex flex-row justify-between">
+                                      <div className="flex flex-row justify-between">
                                         <div>
-                                        <p className="font-semibold text-white">
+                                          <p className="font-semibold text-white">
                                             {usernames.get(comment.userId) || "Loading..."}
-                                        </p>
-                                        <p className="text-sm text-gray-400">
+                                            {/* Check if the comment user is the post creator */}
+                                            {comment.userId === post.userId && (
+                                              <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
+                                                Post Creator
+                                              </span>
+                                            )}
+                                            {/* Add Admin and NCII text */}
+                                            {userDetails.get(comment.userId)?.role === "admin" && (
+                                              <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                            )}
+                                            {userDetails.get(comment.userId)?.isNCIIHolder && (
+                                              <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                            )}
+                                          </p>
+                                          <p className="text-sm text-gray-400">
                                             {comment.updatedAt ? (
-                                            <>
+                                              <>
                                                 {formatTimestamp(comment.updatedAt)}{" "}
                                                 <span className="text-gray-400">(edited)</span>
-                                            </>
+                                              </>
                                             ) : (
-                                            formatTimestamp(comment.createdAt)
+                                              formatTimestamp(comment.createdAt)
                                             )}
-                                        </p>
+                                          </p>
                                         </div>
-                                        
-                                        
+                                                                          
                                         <div className="bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
                                             {/* Update Button with Tooltip */}
                                             <div className="relative group inline-flex items-center">
@@ -1674,20 +1719,34 @@ const AdminForumPage = () => {
                                                 </Link>
                                                 <div className="flex flex-col w-full">
                                                     <div className="flex flex-row justify-between">
-                                                        <div>
-                                                            <p className="font-semibold text-white">
-                                                            {usernames.get(reply.userId) || "Loading..."}
-                                                            </p>
-                                                            <p className="text-sm text-gray-400">
-                                                            {reply.updatedAt ? (
-                                                                <>
-                                                                {formatTimestamp(reply.updatedAt)} <span className="text-sm text-gray-400">(edited)</span>
-                                                                </>
-                                                            ) : (
-                                                                formatTimestamp(reply.createdAt)
-                                                            )}
-                                                            </p>
-                                                        </div>
+                                                      <div>
+                                                        <p className="font-semibold text-white">
+                                                          {usernames.get(reply.userId) || "Loading..."}
+                                                          {/* Check if the reply user is the post creator */}
+                                                          {reply.userId === post.userId && (
+                                                            <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
+                                                              Post Creator
+                                                            </span>
+                                                          )}
+                                                          {/* Add Admin and NCII text */}
+                                                          {userDetails.get(reply.userId)?.role === "admin" && (
+                                                            <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                                          )}
+                                                          {userDetails.get(reply.userId)?.isNCIIHolder && (
+                                                            <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                                          )}
+                                                        </p>
+                                                        <p className="text-sm text-gray-400">
+                                                          {reply.updatedAt ? (
+                                                            <>
+                                                              {formatTimestamp(reply.updatedAt)}{" "}
+                                                              <span className="text-sm text-gray-400">(edited)</span>
+                                                            </>
+                                                          ) : (
+                                                            formatTimestamp(reply.createdAt)
+                                                          )}
+                                                        </p>
+                                                      </div>
 
                                                         <div className="bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
                                                             {/* Update Button for Reply */}

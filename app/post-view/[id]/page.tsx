@@ -91,6 +91,7 @@ const PostViewPage = () => {
   const [commentToDelete, setCommentToDelete] = useState<{ postId: string; commentIndex: number } | null>(null);
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
+  const [userDetails, setUserDetails] = useState(new Map());
 
   
   useEffect(() => {
@@ -103,7 +104,6 @@ const PostViewPage = () => {
       orderBy("createdAt", "desc") 
     );
 
-    
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -140,7 +140,6 @@ const PostViewPage = () => {
       orderBy("createdAt", "desc") 
     );
   
-    
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -165,6 +164,26 @@ const PostViewPage = () => {
     };
   }, [bannedWords]); 
 
+  useEffect(() => {
+    filteredPosts.forEach((post) => {
+      fetchUserDetails(post.userId);
+    });
+  }, [filteredPosts]);
+
+  const fetchUserDetails = async (userId: string): Promise<void> => {
+    if (userDetails.has(userId)) return; // Avoid redundant fetches
+  
+    try {
+      const userDoc = await getDoc(doc(firestore, "users", userId));
+      if (userDoc.exists()) {
+        setUserDetails((prev) => new Map(prev).set(userId, userDoc.data()));
+      } else {
+        console.error("No such user document!");
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };  
   
   const filterBannedWords = (message: string): string => {
     if (!bannedWords || bannedWords.length === 0) return message; 
@@ -1072,15 +1091,26 @@ const PostViewPage = () => {
                       </div>
                     
                       <div>
-                        <p className="text-xl font-semibold text-white">
-                          {usernames.get(post.userId) || "Loading..."}
+                        <p className="text-xl font-semibold text-white flex items-center space-x-2">
+                          <span>{usernames.get(post.userId) || "Loading..."}</span>
+                          {/* Display Role and NCII */}
+                          {userDetails.get(post.userId)?.role === "admin" && (
+                            <span className="text-red-500 font-bold text-sm">
+                              Admin
+                            </span>
+                          )}
+                          {userDetails.get(post.userId)?.isNCIIHolder && (
+                            <span className="text-yellow-500 font-bold text-sm">
+                              NCII
+                            </span>
+                          )}
                         </p>
 
-                        {/* Check if updatedAt exists */}
                         <p className="text-sm text-gray-400">
                           {post.updatedAt ? (
                             <>
-                              {formatTimestamp(post.updatedAt)} <span className="text-gray-400">(edited)</span>
+                              {formatTimestamp(post.updatedAt)}{" "}
+                              <span className="text-gray-400">(edited)</span>
                             </>
                           ) : (
                             formatTimestamp(post.createdAt)
@@ -1444,6 +1474,19 @@ const PostViewPage = () => {
                                   <div>
                                     <p className="font-semibold text-white">
                                       {usernames.get(comment.userId) || "Loading..."}
+                                      {/* Check if the comment user is the post creator */}
+                                      {comment.userId === post.userId && (
+                                        <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
+                                          Post Creator
+                                        </span>
+                                      )}
+                                      {/* Add Admin and NCII text */}
+                                      {userDetails.get(comment.userId)?.role === "admin" && (
+                                        <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                      )}
+                                      {userDetails.get(comment.userId)?.isNCIIHolder && (
+                                        <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                      )}
                                     </p>
                                     <p className="text-sm text-gray-400">
                                       {comment.updatedAt ? (
@@ -1617,11 +1660,25 @@ const PostViewPage = () => {
                                               <div>
                                                 <p className="font-semibold text-white">
                                                   {usernames.get(reply.userId) || "Loading..."}
+                                                  {/* Check if the reply user is the post creator */}
+                                                  {reply.userId === post.userId && (
+                                                    <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
+                                                      Post Creator
+                                                    </span>
+                                                  )}
+                                                  {/* Add Admin and NCII text */}
+                                                  {userDetails.get(reply.userId)?.role === "admin" && (
+                                                    <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                                  )}
+                                                  {userDetails.get(reply.userId)?.isNCIIHolder && (
+                                                    <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                                  )}
                                                 </p>
                                                 <p className="text-sm text-gray-400">
                                                   {reply.updatedAt ? (
                                                     <>
-                                                      {formatTimestamp(reply.updatedAt)} <span className="text-sm text-gray-400">(edited)</span>
+                                                      {formatTimestamp(reply.updatedAt)}{" "}
+                                                      <span className="text-sm text-gray-400">(edited)</span>
                                                     </>
                                                   ) : (
                                                     formatTimestamp(reply.createdAt)

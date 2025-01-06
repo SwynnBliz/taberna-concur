@@ -91,6 +91,7 @@ const Forum = () => {
   const [commentToDelete, setCommentToDelete] = useState<{ postId: string; commentIndex: number } | null>(null);
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
+  const [userDetails, setUserDetails] = useState(new Map());
 
   
   useEffect(() => {
@@ -123,6 +124,34 @@ const Forum = () => {
       unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    filteredPosts.forEach((post) => {
+      fetchUserDetails(post.userId);
+    });
+  }, [filteredPosts]);
+
+  const fetchUserDetails = async (userId: string): Promise<void> => {
+    if (userDetails.has(userId)) return; // Avoid redundant fetches
+  
+    try {
+      const userDoc = await getDoc(doc(firestore, "users", userId));
+      if (userDoc.exists()) {
+        setUserDetails((prev) => new Map(prev).set(userId, userDoc.data()));
+      } else {
+        console.error("No such user document!");
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };  
+
+  // Trigger fetching of user details for all posts
+  useEffect(() => {
+    filteredPosts.forEach((post) => {
+      fetchUserDetails(post.userId);
+    });
+  }, [filteredPosts]);
 
   const filterBannedWords = (message: string): string => {
     if (!bannedWords || bannedWords.length === 0) return message; 
@@ -846,13 +875,11 @@ const Forum = () => {
     }
   };
 
-  
   const handleDeleteReply = (postId: string, commentIndex: number, replyIndex: number) => {
     setReplyToDelete({ postId, commentIndex, replyIndex });
     setDeleteReplyPrompt(true); 
   };
 
-  
   const deleteReply = async (postId: string, commentIndex: number, replyIndex: number) => {
     try {
       const postRef = doc(firestore, 'posts', postId);
@@ -886,7 +913,6 @@ const Forum = () => {
     }
   };
 
-  
   const renderReplyText = (text: string, userId: string) => {
     const regex = /@([a-zA-Z0-9._-]+)/g; 
     
@@ -903,7 +929,6 @@ const Forum = () => {
     });
   };
 
-  
   const handleBookmarkPost = async (postId: string) => {
     const currentUserId = auth.currentUser?.uid;
     if (!currentUserId) return; 
@@ -945,17 +970,14 @@ const Forum = () => {
     }
   };
 
-  
   const togglePostForum = () => {
     setIsPostForumVisible((prevState) => !prevState);
   };
 
-  
   const toggleSearch = () => {
     setIsSearchVisible((prevState) => !prevState);
   };
 
-  
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
       ...prev,
@@ -963,7 +985,6 @@ const Forum = () => {
     }));
   };
 
-  
   const checkTruncation = (postId: string) => {
     const element = contentRefs.current[postId];
     if (element) {
@@ -1134,15 +1155,26 @@ const Forum = () => {
                     </div>
                   
                     <div>
-                      <p className="text-xl font-semibold text-white">
-                        {usernames.get(post.userId) || "Loading..."}
+                      <p className="text-xl font-semibold text-white flex items-center space-x-2">
+                        <span>{usernames.get(post.userId) || "Loading..."}</span>
+                        {/* Display Role and NCII */}
+                        {userDetails.get(post.userId)?.role === "admin" && (
+                          <span className="text-red-500 font-bold text-sm">
+                            Admin
+                          </span>
+                        )}
+                        {userDetails.get(post.userId)?.isNCIIHolder && (
+                          <span className="text-yellow-500 font-bold text-sm">
+                            NCII
+                          </span>
+                        )}
                       </p>
 
-                      {/* Check if updatedAt exists */}
                       <p className="text-sm text-gray-400">
                         {post.updatedAt ? (
                           <>
-                            {formatTimestamp(post.updatedAt)} <span className="text-gray-400">(edited)</span>
+                            {formatTimestamp(post.updatedAt)}{" "}
+                            <span className="text-gray-400">(edited)</span>
                           </>
                         ) : (
                           formatTimestamp(post.createdAt)
@@ -1506,6 +1538,19 @@ const Forum = () => {
                                 <div>
                                   <p className="font-semibold text-white">
                                     {usernames.get(comment.userId) || "Loading..."}
+                                    {/* Check if the comment user is the post creator */}
+                                    {comment.userId === post.userId && (
+                                      <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
+                                        Post Creator
+                                      </span>
+                                    )}
+                                    {/* Add Admin and NCII text */}
+                                    {userDetails.get(comment.userId)?.role === "admin" && (
+                                      <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                    )}
+                                    {userDetails.get(comment.userId)?.isNCIIHolder && (
+                                      <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                    )}
                                   </p>
                                   <p className="text-sm text-gray-400">
                                     {comment.updatedAt ? (
@@ -1518,7 +1563,7 @@ const Forum = () => {
                                     )}
                                   </p>
                                 </div>
-                                
+
                                 {auth.currentUser?.uid === comment.userId && (
                                   <div className="bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
                                     {/* Update Button with Tooltip */}
@@ -1679,11 +1724,25 @@ const Forum = () => {
                                               <div>
                                                 <p className="font-semibold text-white">
                                                   {usernames.get(reply.userId) || "Loading..."}
+                                                  {/* Check if the reply user is the post creator */}
+                                                  {reply.userId === post.userId && (
+                                                    <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
+                                                      Post Creator
+                                                    </span>
+                                                  )}
+                                                  {/* Add Admin and NCII text */}
+                                                  {userDetails.get(reply.userId)?.role === "admin" && (
+                                                    <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                                  )}
+                                                  {userDetails.get(reply.userId)?.isNCIIHolder && (
+                                                    <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                                  )}
                                                 </p>
                                                 <p className="text-sm text-gray-400">
                                                   {reply.updatedAt ? (
                                                     <>
-                                                      {formatTimestamp(reply.updatedAt)} <span className="text-sm text-gray-400">(edited)</span>
+                                                      {formatTimestamp(reply.updatedAt)}{" "}
+                                                      <span className="text-sm text-gray-400">(edited)</span>
                                                     </>
                                                   ) : (
                                                     formatTimestamp(reply.createdAt)
