@@ -1,8 +1,6 @@
-// app/firebase/config.tsx (Firebase Config File)
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, setPersistence, browserLocalPersistence } from "firebase/auth"; 
 import { getFirestore } from "firebase/firestore"; 
-
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -13,13 +11,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
 
 const auth = getAuth(app);
 
-
+// Ensure persistence is set before using the auth instance
 setPersistence(auth, browserLocalPersistence)
   .then(() => {
     console.log('Session persistence set to local');
@@ -29,9 +25,6 @@ setPersistence(auth, browserLocalPersistence)
   });
 
 const googleProvider = new GoogleAuthProvider(); 
-
-
-const firestore = getFirestore(app); 
-
+const firestore = getFirestore(app);
 
 export { app, auth, googleProvider, firestore };

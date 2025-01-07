@@ -4,8 +4,8 @@ import Layout from '../../components/root/Layout';
 import { useEffect, useState } from 'react';
 import { app } from '../firebase/config'; 
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, collection, getDoc, getDocs, doc, updateDoc, deleteField, Timestamp } from 'firebase/firestore'; 
-import { FaEdit } from 'react-icons/fa'; 
+import { getFirestore, collection, getDoc, getDocs, doc, updateDoc, Timestamp, query, where, addDoc, deleteDoc } from 'firebase/firestore'; 
+import { FaEdit, FaTrash, FaTimes } from 'react-icons/fa'; 
 import { AiOutlineClose } from 'react-icons/ai';  
 import { useRouter } from 'next/navigation';
 import useBannedWords from '../../components/forum/hooks/useBannedWords';
@@ -40,49 +40,46 @@ const AdminUserPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>(""); 
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]); 
   const [statusFilter, setStatusFilter] = useState<'all' | 'disabled' | 'notDisabled'>('all');
+  const [selectedWarningUser, setSelectedWarningUser] = useState<User | null>(null);
+  const [warnings, setWarnings] = useState<{ id: string; [key: string]: any }[]>([]);
+  const [newWarning, setNewWarning] = useState({ category: '', message: '', id: '' });
 
   useEffect(() => {
-    
-    const checkAdminRole = async (authUser: FirebaseUser | null) => {
-      if (!authUser) {
-        
-        router.push('/sign-in');
-        return;
-      }
-
-      try {
-        
-        const userDocRef = doc(firestore, 'users', authUser.uid);
-        const userDoc = await getDoc(userDocRef);
-        
-        if (userDoc.exists()) {
-          const userData = userDoc.data() as User;
-
-          if (userData.role !== 'admin') {
-            
-            router.push('/forum');
-          }
-        } else {
-          
-          router.push('/sign-in');
-        }
-      } catch (error) {
-        console.error('Error checking user role: ', error);
-        router.push('/sign-in');
-      }
-    };
-
-    
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        checkAdminRole(user); 
-      } else {
-        router.push('/sign-in'); 
-      }
-    });
-
-    return () => unsubscribe(); 
-  }, [auth, firestore, router]);
+     const checkAdminRole = async (authUser: FirebaseUser | null) => {
+       if (!authUser) {
+         router.push('/sign-in');
+         return;
+       }
+ 
+       try {
+         const userDocRef = doc(firestore, 'users', authUser.uid);
+         const userDoc = await getDoc(userDocRef);
+         
+         if (userDoc.exists()) {
+           const userData = userDoc.data() as User;
+ 
+           if (userData.role !== 'admin') {
+             router.push('/forum');
+           }
+         } else {
+           router.push('/sign-in');
+         }
+       } catch (error) {
+         console.error('Error checking user role: ', error);
+         router.push('/sign-in');
+       }
+     };
+ 
+     const unsubscribe = onAuthStateChanged(auth, (user) => {
+       if (user) {
+         checkAdminRole(user);
+       } else {
+         router.push('/sign-in');
+       }
+     });
+ 
+     return () => unsubscribe();
+   }, [auth, firestore, router]);
 
   useEffect(() => {
     let filtered = [...users];
@@ -258,8 +255,13 @@ const AdminUserPage = () => {
     // Show prompt for ban reason only when banning (i.e., when the user is not currently disabled)
     let banMessage: string | null = '';
     if (!isCurrentlyDisabled) {
-      banMessage = prompt("Please provide a reason for banning (leave empty if none):");
-      if (banMessage === null) return;
+      // Prompt for the ban reason
+      do {
+        banMessage = prompt("Please provide a reason for banning (cannot be empty):");
+
+        // If the user clicks cancel or provides an empty reason, prompt again
+        if (banMessage === null) return; // Exit if cancel is pressed
+      } while (banMessage.trim() === ''); // Keep asking until a non-empty reason is provided
     }
   
     try {
@@ -377,6 +379,78 @@ const AdminUserPage = () => {
     }
   };
 
+  // Open Warning Modal
+  const handleOpenWarningModal = async (user: User) => {
+    setSelectedWarningUser(user); // Set user for warning modal
+    
+    try {
+      // Fetch warnings from Firestore
+      const warningsSnapshot = await getDocs(
+        query(collection(firestore, "warnings"), where("userId", "==", user.id))
+      );
+
+      const userWarnings = warningsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as Record<string, any>),
+      }));
+
+      setWarnings(userWarnings); // Set the warnings state
+    } catch (error) {
+      console.error("Error fetching warnings:", error);
+    }
+  };
+
+  // Close Warning Modal
+  const handleCloseWarningModal = () => {
+    setSelectedWarningUser(null); // Reset the warning modal state
+    setWarnings([]);
+    setNewWarning({ category: '', message: '', id: '' });
+  };
+
+  // Create Warning
+  const handleCreateWarning = async () => {
+    const { category, message, id } = newWarning;
+    if (!category || !message || !id) {
+      alert('All fields are required.');
+      return;
+    }
+
+    const baseUrl = category === 'profile' ? '/profile-view/' : '/post-view/';
+    const link = `${baseUrl}${id}`;
+
+    if (!selectedWarningUser) {
+      alert("No user selected.");
+      return;
+    }
+
+    await addDoc(collection(firestore, "warnings"), {
+      userId: selectedWarningUser.id,
+      username: selectedWarningUser.username,
+      category,
+      message,
+      link,
+      timestamp: new Date().toISOString(),
+      status: "pending",
+    });
+
+    alert('Warning created successfully.');
+    handleOpenWarningModal(selectedWarningUser); // Refresh warnings
+  };
+
+  // Delete Warning
+  const handleDeleteWarning = async (warningId: string) => {
+    if (window.confirm("Are you sure you want to delete this warning?")) {
+      try {
+        await deleteDoc(doc(firestore, "warnings", warningId));
+        setWarnings(warnings.filter((warning) => warning.id !== warningId));
+        alert("Warning deleted successfully.");
+      } catch (error) {
+        console.error("Error deleting warning:", error);
+        alert("Failed to delete the warning. Please try again.");
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -388,7 +462,11 @@ const AdminUserPage = () => {
   }
 
   if (error) {
-    return <p className="text-center text-red-500 mt-10">{error}</p>;
+    return (
+      <Layout>
+        <p className="text-center text-white mt-10">{error}</p>
+      </Layout>
+    );
   }
 
   return (
@@ -428,18 +506,18 @@ const AdminUserPage = () => {
                 key={user.id}
                 className="flex items-start space-x-8 space-y-4 bg-[#424242] p-8 rounded-lg mb-6 relative"
               >
-                <div className="absolute top-2 right-4 flex space-x-2">
+                <div className="absolute top-2 right-8 flex space-x-2">
                   {/* Role Button */}
                   <button
                     onClick={() => handleToggleRole(user.id, user.role)} 
-                    className="h-8 w-28 text-xs rounded-2xl bg-[#2c2c2c] text-white"
+                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white"
                   >
                     {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
                   </button>
                   {/* NCII Holder Button */}
                   <button
                     onClick={() => handleToggleNCIIHolder(user.id, user.isNCIIHolder)}
-                    className="h-8 w-28 text-xs rounded-2xl bg-[#2c2c2c] text-white ml-2"
+                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white ml-2"
                   >
                     {user.isNCIIHolder ? 'Revoke NC II' : 'Make NC II'}
                   </button>
@@ -451,6 +529,14 @@ const AdminUserPage = () => {
                     <FaEdit className="h-4 w-4"/>
                   </button>
 
+                  {/* Warning Button */}
+                  <button
+                    onClick={() => handleOpenWarningModal(user)}
+                    className="h-8 w-16 text-xs rounded-2xl bg-orange-500 text-white hover:bg-orange-600"
+                  >
+                    Warn
+                  </button>
+
                   {/* Ban Button */}
                   <button
                     onClick={() => handleBanUser(user.id, user.disabled)} 
@@ -460,8 +546,113 @@ const AdminUserPage = () => {
                   </button>
                 </div>
 
+                {selectedWarningUser && (
+                  <div className="fixed inset-0 bg-[#484242] bg-opacity-10 flex items-center justify-center z-40 pt-20 pb-10">
+                    <div className="bg-[#2c2c2c] p-6 rounded-lg w-8/12 max-h-[74vh] overflow-y-auto relative">
+                      {/* Close Button */}
+                      <button
+                        onClick={handleCloseWarningModal}
+                        className="absolute top-2 right-2 bg-[#2c2c2c] hover:bg-yellow-500 text-white p-2 rounded-full"
+                      >
+                        <FaTimes className="h-5 w-5" />
+                      </button>
+
+                      <h2 className="text-white font-bold mb-4">Warnings for {selectedWarningUser.username}</h2>
+
+                      {/* List Existing Warnings */}
+                      {warnings.length > 0 ? (
+                        <div className="space-y-4 max-h-48 overflow-y-auto">
+                          {warnings
+                            .sort((a, b) => {
+                              // Sort first by category (profile first, then forum)
+                              if (a.category === 'profile' && b.category !== 'profile') return -1;
+                              if (a.category !== 'profile' && b.category === 'profile') return 1;
+                              // Then by timestamp (ascending order, earliest first)
+                              return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+                            })
+                            .map((warning) => (
+                              <div key={warning.id} className="relative p-4 bg-[#424242] rounded-lg">
+                                {/* Delete Button */}
+                                <button
+                                  onClick={() => handleDeleteWarning(warning.id)}
+                                  className="absolute top-2 right-2 bg-[#2c2c2c] hover:bg-yellow-500 text-white p-1 rounded-full"
+                                >
+                                  <FaTrash className="h-4 w-4" />
+                                </button>
+
+                                <p className="text-gray-300">
+                                  <span className="font-bold">Category:</span>{" "}
+                                  <span className="text-yellow-500 font-bold">{warning.category}</span>
+                                </p>
+                                <p className="text-gray-300">
+                                  <span className="font-bold">Message:</span> {warning.message}
+                                </p>
+                                <p className="text-gray-300">
+                                  <span className="font-bold">Status:</span> {warning.status}
+                                </p>
+                                <p className="text-gray-300">
+                                  <span className="font-bold">Created:</span>{" "}
+                                  {new Date(warning.timestamp).toLocaleString()}
+                                </p>
+
+                                {/* Warning URL (clickable) */}
+                                <p className="text-gray-300">
+                                  <span className="font-bold">URL:</span>{" "}
+                                  <a
+                                    href={`${window.location.origin}${warning.link}`}
+                                    onClick={(e) => {
+                                      window.location.href = `${window.location.origin}${warning.link}`;
+                                    }}
+                                    className="text-yellow-500 hover:text-yellow-600"
+                                  >
+                                    View {warning.category} link
+                                  </a>
+                                </p>
+                              </div>
+                            ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-400">No warnings for this user.</p>
+                      )}
+
+                      {/* Create New Warning */}
+                      <div className="mt-4">
+                        <select
+                          value={newWarning.category}
+                          onChange={(e) => setNewWarning({ ...newWarning, category: e.target.value })}
+                          className="w-full p-2 mb-2 bg-[#424242] text-white rounded-lg"
+                        >
+                          <option value="" disabled>Select Category</option>
+                          <option value="profile">Profile</option>
+                          <option value="forum">Forum</option>
+                        </select>
+                        <textarea
+                          placeholder="Message"
+                          value={newWarning.message}
+                          onChange={(e) => setNewWarning({ ...newWarning, message: e.target.value })}
+                          className="w-full p-2 mb-2 bg-[#424242] text-white rounded-lg h-auto oresize-none"
+                          rows={6}
+                        />
+                        <input
+                          type="text"
+                          placeholder="ID (Profile or Forum Post)"
+                          value={newWarning.id}
+                          onChange={(e) => setNewWarning({ ...newWarning, id: e.target.value })}
+                          className="w-full p-2 mb-2 bg-[#424242] text-white rounded-lg"
+                        />
+                        <button
+                          onClick={handleCreateWarning}
+                          className="w-full bg-orange-500 hover:bg-orange-600 p-2 text-white rounded-lg"
+                        >
+                          Add Warning
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Left Section: Profile Image and Username */}
-                <div className="flex flex-col items-center w-1/3">
+                <div className="flex flex-col items-center w-1/4">
                   <Link href={`/profile-view/${user.id}`}>
                     <img
                       src={user.profilePhoto || 'https://via.placeholder.com/150'}
@@ -469,7 +660,7 @@ const AdminUserPage = () => {
                       className="w-32 h-32 rounded-full mb-4"
                     />
                   </Link>
-                  <h2 className="text-xl text-white font-bold">{user.username}</h2>
+                  <h2 className="text-base text-white font-bold">{user.username}</h2>
                 </div>
         
                 {/* Right Section: Bio and Contact Number */}

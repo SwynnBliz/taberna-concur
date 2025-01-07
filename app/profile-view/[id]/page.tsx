@@ -300,7 +300,11 @@ const ProfileViewPage = () => {
   }
 
   if (error) {
-    return <p className="text-center text-red-500 mt-10">{error}</p>;
+    return (
+      <Layout>
+        <p className="text-center text-white mt-10">User Not Found</p>
+      </Layout>
+    );
   }
 
   if (!userData) {

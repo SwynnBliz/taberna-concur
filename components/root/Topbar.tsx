@@ -109,7 +109,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   };
 
   return (
-    <div className="sticky top-0 z-50 flex justify-between items-center bg-[#302C2C] text-white p-4 shadow-md">
+    <div className="sticky top-0 z-50 flex justify-between items-center bg-[#302C2C] text-white p-4 shadow-md max-h-18">
       <div className="relative group">
         <button
           onClick={handleSidebarToggle} 
