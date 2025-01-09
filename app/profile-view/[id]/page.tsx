@@ -665,12 +665,14 @@ const ProfileViewPage = () => {
               </div>
 
               {/* Warning List Button */}
-              <button
-                onClick={handleOpenWarningsModal}
-                className="p-2 bg-[#2c2c2c] text-red-500 rounded-full hover:bg-yellow-500 hover:text-white text-xs"
-              >
-                {warnings.length} Warnings
-              </button>
+              {warnings.length > 0 && (
+                <button
+                  onClick={handleOpenWarningsModal}
+                  className="p-2 bg-[#2c2c2c] text-red-500 rounded-full hover:bg-yellow-500 hover:text-white text-xs"
+                >
+                  {warnings.length} {warnings.length === 1 ? 'Warning' : 'Warnings'}
+                </button>
+              )}
 
               {/* Edit Button */}
               <div className="relative group">
@@ -712,7 +714,7 @@ const ProfileViewPage = () => {
                           <button
                             onClick={() =>
                               window.open(
-                                `https://mail.google.com/mail/?view=cm&fs=1&to=tabernaconcur.support@gmail.com&su=Appeal Warning&body=Hello,%0D%0AI would like to appeal the following warning:%0D%0AWarning ID: ${warning.id}%0D%0AMessage: ${warning.message}%0D%0AThank you.`,
+                                `https://mail.google.com/mail/?view=cm&fs=1&to=tabernaconcur.support@gmail.com&su=Appeal Warning&body=Dear TabernaConcur Support,%0D%0AI would like to appeal the following warning:%0D%0AWarning ID: ${warning.id}%0D%0AWarning Message: ${warning.message}%0D%0AAppeal Explanation:%0D%0A[Explain]%0D%0A%0D%0AThank you.`,
                                 "_blank"
                               )
                             }

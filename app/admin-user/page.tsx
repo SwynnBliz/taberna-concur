@@ -421,6 +421,13 @@ const AdminUserPage = () => {
 
     alert('Warning created successfully.');
     handleOpenWarningModal(selectedWarningUser); // Refresh warnings
+
+    // Clear the form fields
+    setNewWarning({
+      category: '',
+      message: '',
+      id: ''
+    });
   };
 
   // Delete Warning
