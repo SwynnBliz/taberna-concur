@@ -178,18 +178,6 @@ const AdminUserPage = () => {
       return;
     }
   
-    // Validate contact number format
-    const contactNumberRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/; // Example: +63 123 456 7890
-    if (
-      selectedUser.contactNumber && 
-      !contactNumberRegex.test(selectedUser.contactNumber)
-    ) {
-      alert(
-        'Contact number is invalid. It should be in the format: +63 123 456 7890'
-      );
-      return;
-    }
-  
     setIsSaving(true);
   
     try {
@@ -220,7 +208,6 @@ const AdminUserPage = () => {
         profilePhoto: imageUrl,
         username: selectedUser.username,
         bio: selectedUser.bio,
-        contactNumber: selectedUser.contactNumber,
       });
   
       // Update local user state
@@ -232,7 +219,6 @@ const AdminUserPage = () => {
                 profilePhoto: imageUrl,
                 username: selectedUser.username,
                 bio: selectedUser.bio,
-                contactNumber: selectedUser.contactNumber,
               }
             : user
         )
@@ -747,18 +733,6 @@ const AdminUserPage = () => {
                     value={selectedUser?.bio || ""}
                     onChange={handleInputChange}
                     className="w-full p-2 min-h-40 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323]"
-                />
-                </div>
-
-                {/* Contact Number */}
-                <div className="mb-4">
-                <label className="block text-white">Contact Number</label>
-                <input
-                    type="text"
-                    name="contactNumber"
-                    value={selectedUser.contactNumber}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323]"
                 />
                 </div>
 

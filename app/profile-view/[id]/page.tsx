@@ -3,13 +3,13 @@
 import Layout from '../../../components/root/Layout'; 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation'; 
-import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, where, deleteField, getDocs } from 'firebase/firestore';
 import { firestore } from '../../firebase/config'; 
 import { getAuth, onAuthStateChanged } from 'firebase/auth'; 
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; 
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; 
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare, FaTimes, FaRegEnvelope } from 'react-icons/fa'; 
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
 import { AiOutlineClose } from 'react-icons/ai'; 
 import { LinkIt } from 'react-linkify-it';
@@ -51,6 +51,15 @@ interface Post {
   }[]; 
 }
 
+interface Warning {
+  id: string;
+  category: string;
+  message: string;
+  status: string;
+  timestamp: string;
+  link: string;
+}
+
 const ProfileViewPage = () => {
   const { id } = useParams(); 
   const auth = getAuth();
@@ -78,7 +87,8 @@ const ProfileViewPage = () => {
   const [deletePostPrompt, setDeletePostPrompt] = useState(false);
   const [postIdToDelete, setPostIdToDelete] = useState<string | null>(null);
   const [userDetails, setUserDetails] = useState(new Map());
-
+  const [warnings, setWarnings] = useState<Warning[]>([]);
+  const [showWarningsModal, setShowWarningsModal] = useState(false);
   
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
@@ -200,6 +210,37 @@ const ProfileViewPage = () => {
       fetchUserDetails(post.userId);
     });
   }, [filteredPosts]);
+
+  useEffect(() => {
+    const fetchWarnings = async () => {
+      try {
+        const warningsRef = collection(firestore, 'warnings');
+        const q = query(warningsRef, where('userId', '==', currentUserId), orderBy('timestamp', 'asc'));
+        const querySnapshot = await getDocs(q);
+  
+        const fetchedWarnings = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        })) as Warning[]; // Cast to Warning[] to match the state type
+  
+        setWarnings(fetchedWarnings);
+      } catch (error) {
+        console.error('Error fetching warnings:', error);
+      }
+    };
+  
+    if (currentUserId) {
+      fetchWarnings();
+    }
+  }, [currentUserId, firestore]);
+  
+  const handleOpenWarningsModal = () => {
+    setShowWarningsModal(true);
+  };
+  
+  const handleCloseWarningsModal = () => {
+    setShowWarningsModal(false);
+  };
 
   const fetchUserDetails = async (userId: string): Promise<void> => {
     if (userDetails.has(userId)) return; // Avoid redundant fetches
@@ -604,11 +645,11 @@ const ProfileViewPage = () => {
     <Layout>
       <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative flex flex-col">
         <section>
-          {/* Container for Edit Button and Visibility Toggle */}
+          {/* Container for Edit Button, Visibility Toggle, and Warning List Button */}
           {currentUserId === id && (
             <div className="absolute top-3 right-4 flex space-x-2">
-              <label className="text-xs text-white text-opacity-60 mt-2">Set Privacy:</label>
               {/* Visibility Toggle Button with Dropdown Indicator */}
+              <label className="text-xs text-white text-opacity-60 mt-2">Set Privacy:</label>
               <div className="relative group">
                 <button
                   onClick={toggleProfileVisibility}
@@ -623,6 +664,14 @@ const ProfileViewPage = () => {
                 </div>
               </div>
 
+              {/* Warning List Button */}
+              <button
+                onClick={handleOpenWarningsModal}
+                className="p-2 bg-[#2c2c2c] text-red-500 rounded-full hover:bg-yellow-500 hover:text-white text-xs"
+              >
+                {warnings.length} Warnings
+              </button>
+
               {/* Edit Button */}
               <div className="relative group">
                 <button
@@ -636,6 +685,82 @@ const ProfileViewPage = () => {
                 <div className="absolute bottom-full mt-2 -right-6 transform -translate-y-0 translate-x-0 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                   Edit Profile
                 </div>
+              </div>
+            </div>
+          )}
+
+          {showWarningsModal && (
+            <div className="fixed inset-0 bg-[#484242] bg-opacity-10 flex items-center justify-center z-40 pt-20 pb-10">
+              <div className="bg-[#2c2c2c] p-6 rounded-lg w-8/12 max-h-[74vh] overflow-y-auto relative">
+                {/* Close Button */}
+                <button
+                  onClick={handleCloseWarningsModal}
+                  className="absolute top-2 right-2 bg-[#2c2c2c] hover:bg-yellow-500 text-white p-2 rounded-full"
+                >
+                  <FaTimes className="h-5 w-5" />
+                </button>
+
+                <h2 className="text-white font-bold mb-4">Warnings</h2>
+
+                {/* List of Warnings */}
+                {warnings.length > 0 ? (
+                  <div className="space-y-4 p-2 max-h-72 overflow-y-auto">
+                    {warnings.map((warning) => (
+                      <div key={warning.id} className="relative p-4 bg-[#424242] rounded-lg">
+                        {/* Appeal Button (Icon) */}
+                        <div className="relative group">
+                          <button
+                            onClick={() =>
+                              window.open(
+                                `https://mail.google.com/mail/?view=cm&fs=1&to=tabernaconcur.support@gmail.com&su=Appeal Warning&body=Hello,%0D%0AI would like to appeal the following warning:%0D%0AWarning ID: ${warning.id}%0D%0AMessage: ${warning.message}%0D%0AThank you.`,
+                                "_blank"
+                              )
+                            }
+                            className="p-2 bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500 absolute top-2 right-2"
+                            title="Appeal Warning"
+                          >
+                            <FaRegEnvelope className="h-5 w-5" />
+                          </button>
+
+                          {/* Tooltip for Appeal Button */}
+                          <div className="absolute bottom-full mt-2 right-0 transform translate-y-1 translate-x-6 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                            Appeal Warning
+                          </div>
+                        </div>
+
+                        {/* Warning Details */}
+                        <p className="text-gray-300">
+                          <span className="font-bold">Category:</span> {warning.category}
+                        </p>
+                        <p className="text-gray-300">
+                          <span className="font-bold">Message:</span> {warning.message}
+                        </p>
+                        <p className="text-gray-300">
+                          <span className="font-bold">Created:</span> {new Date(warning.timestamp).toLocaleString()}
+                        </p>
+
+                        {/* Warning URL (clickable) */}
+                        {warning.link && (
+                          <p className="text-gray-300">
+                            <span className="font-bold">URL:</span>{" "}
+                            <a
+                              href={`${window.location.origin}${warning.link}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                window.location.href = `${window.location.origin}${warning.link}`;
+                              }}
+                              className="text-yellow-500 hover:text-yellow-600"
+                            >
+                              View {warning.category} link
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400">No warnings found.</p>
+                )}
               </div>
             </div>
           )}
