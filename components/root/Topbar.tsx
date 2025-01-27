@@ -65,11 +65,11 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         const userDoc = await getDoc(userRef);
         if (userDoc.exists()) {
           const userData = userDoc.data();
-          setProfilePhoto(userData?.profilePhoto || "https://via.placeholder.com/150");
+          setProfilePhoto(userData?.profilePhoto || "/placeholder.jpg");
           setIsAdmin(userData?.role === "admin");
         }
       } else {
-        setProfilePhoto("https://via.placeholder.com/150");
+        setProfilePhoto("/placeholder.jpg");
       }
       setLoading(false); 
     };
@@ -148,7 +148,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
             </div>
           ) : (
             <Image
-              src={profilePhoto || "https://via.placeholder.com/150"}
+              src={profilePhoto || "/placeholder.jpg"}
               alt="Profile"
               width={40}
               height={40}

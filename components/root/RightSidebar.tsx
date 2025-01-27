@@ -64,7 +64,7 @@ const RightSidebar = () => {
             return {
               ...post,
               username: userData.username || "Unknown",
-              profilePhoto: userData.profilePhoto || "https://via.placeholder.com/150",
+              profilePhoto: userData.profilePhoto || "/placeholder.jpg",
             };
           }
           return post;
@@ -109,7 +109,7 @@ const RightSidebar = () => {
               {/* User Photo and Username */}
               <div className="flex items-center space-x-4">
                 <img
-                  src={post.profilePhoto || 'https://via.placeholder.com/150'}
+                  src={post.profilePhoto || '/placeholder.jpg'}
                   alt="User Profile"
                   className="w-12 h-12 rounded-full"
                 />

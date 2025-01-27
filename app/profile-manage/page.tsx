@@ -192,7 +192,7 @@ const ProfileManagePage = () => {
                   </div>
                 ) : (
                   <img
-                    src={newPhotoUrl || userData.profilePhoto || "https://via.placeholder.com/150"}
+                    src={newPhotoUrl || userData.profilePhoto || "/placeholder.jpg"}
                     alt="Profile Photo"
                     className="w-56 h-56 rounded-full ml-10 mb-10 mt-0 mr-80"
                   />

@@ -536,7 +536,7 @@ const Forum = () => {
   
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const profilePhoto = userData?.profilePhoto || 'https://via.placeholder.com/150';
+        const profilePhoto = userData?.profilePhoto || '/placeholder.jpg';
         
         
         setUserPhotos((prev) => new Map(prev).set(userId, profilePhoto));
@@ -546,7 +546,7 @@ const Forum = () => {
       console.error(`Failed to fetch user photo for userId: ${userId}`, error);
     }
   
-    return 'https://via.placeholder.com/150'; // Default placeholder image
+    return '/placeholder.jpg';
   };
 
   
@@ -1141,7 +1141,7 @@ const Forum = () => {
                     <div className="relative group inline-flex items-center">
                       <Link href={`/profile-view/${post.userId}`}>
                         <img
-                          src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
+                          src={userPhotos.get(post.userId) || '/placeholder.jpg'}
                           alt="Profile"
                           className="w-12 h-12 rounded-full mr-4 cursor-pointer"
                           onLoad={() => fetchUserPhoto(post.userId)}
@@ -1526,7 +1526,7 @@ const Forum = () => {
                             <Link href={`/profile-view/${comment.userId}`}>
                               <img
                                 src={
-                                  userPhotos.get(comment.userId) || "https://via.placeholder.com/150"
+                                  userPhotos.get(comment.userId) || "/placeholder.jpg"
                                 }
                                 alt="Commenter profile"
                                 className="w-8 h-8 rounded-full mr-2 cursor-pointer"
@@ -1713,7 +1713,7 @@ const Forum = () => {
                                         <div key={replyIndex} className="flex items-start mb-2">
                                           <Link href={`/profile-view/${reply.userId}`}>
                                             <img
-                                              src={userPhotos.get(reply.userId) || "https://via.placeholder.com/150"}
+                                              src={userPhotos.get(reply.userId) || "/placeholder.jpg"}
                                               alt="Reply User"
                                               className="w-6 h-6 rounded-full mr-2 cursor-pointer"
                                               onLoad={() => fetchUserPhoto(reply.userId)}

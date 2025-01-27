@@ -371,7 +371,7 @@ const ProfileViewPage = () => {
   
       if (userDoc.exists()) {
         const userData = userDoc.data();
-        const profilePhoto = userData?.profilePhoto || 'https://via.placeholder.com/150';
+        const profilePhoto = userData?.profilePhoto || '/placeholder.jpg';
         
         
         setUserPhotos((prev) => new Map(prev).set(userId, profilePhoto));
@@ -381,7 +381,7 @@ const ProfileViewPage = () => {
       console.error(`Failed to fetch user photo for userId: ${userId}`, error);
     }
   
-    return 'https://via.placeholder.com/150';
+    return '/placeholder.jpg';
   };
 
   const formatTimestamp = (timestamp: any) => {
@@ -771,7 +771,7 @@ const ProfileViewPage = () => {
             {/* Left Section: Profile Image and Username */}
             <div className="flex flex-col items-center w-1/3">
               <img
-                src={userData.profilePhoto || 'https://via.placeholder.com/150'}
+                src={userData.profilePhoto || '/placeholder.jpg'}
                 alt="Profile"
                 className="w-48 h-48 rounded-full mb-4"
               />
@@ -852,7 +852,7 @@ const ProfileViewPage = () => {
                           <div className="relative group inline-flex items-center">
                             <Link href={`/profile-view/${post.userId}`}>
                               <img
-                                src={userPhotos.get(post.userId) || 'https://via.placeholder.com/150'}
+                                src={userPhotos.get(post.userId) || '/placeholder.jpg'}
                                 alt="Profile"
                                 className="w-12 h-12 rounded-full mr-4 cursor-pointer"
                                 onLoad={() => fetchUserPhoto(post.userId)}

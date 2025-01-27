@@ -648,7 +648,7 @@ const AdminUserPage = () => {
                 <div className="flex flex-col items-center w-1/4">
                   <Link href={`/profile-view/${user.id}`}>
                     <img
-                      src={user.profilePhoto || 'https://via.placeholder.com/150'}
+                      src={user.profilePhoto || '/placeholder.jpg'}
                       alt="Profile"
                       className="w-32 h-32 rounded-full mb-4"
                     />
@@ -687,7 +687,7 @@ const AdminUserPage = () => {
                   <div className="flex items-center justify-center space-x-4">
                     {/* Current Profile Image */}
                     <img
-                      src={selectedUser.profilePhoto || 'https://via.placeholder.com/150'}
+                      src={selectedUser.profilePhoto || '/placeholder.jpg'}
                       alt="Current Profile"
                       className="w-32 h-32 rounded-full"
                     />
