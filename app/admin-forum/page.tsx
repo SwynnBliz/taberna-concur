@@ -518,9 +518,9 @@ const AdminForumPage = () => {
       const updatedComments = [
         ...postData.comments,
         {
-          username, 
-          comment, 
-          createdAt: new Date(), 
+          username,
+          comment,
+          createdAt: new Date(),
           userId,
           likedBy: [],
           dislikedBy: [],
@@ -535,6 +535,34 @@ const AdminForumPage = () => {
       });
   
       console.log('Comment added successfully');
+  
+      console.log("Sending notification...");
+  
+      const postCreatorId = postData.userId;
+      if (postCreatorId !== userId) {
+        try {
+          const response = await fetch("/api/admin/notifications", {
+            method: "POST",
+            body: JSON.stringify({
+              postId,
+              comment,
+              commentUserId: userId,
+              commentUsername: username,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+  
+          if (!response.ok) {
+            console.error("Failed to send notification");
+          } else {
+            console.log("Notification sent!");
+          }
+        } catch (error) {
+          console.error("Error while sending notification:", error);
+        }
+      }
     } else {
       console.error('Post does not exist.');
     }
@@ -790,7 +818,15 @@ const AdminForumPage = () => {
         setEditingPostId(postId);
         setEditingCommentIndex(commentIndex);
         setEditingReplyIndex(replyIndex);
-        setEditContentReply(replyToEdit.reply);
+  
+        const replyContent = replyToEdit.reply;
+        const regex = /(@[a-zA-Z0-9._-]+)/;
+        const match = replyContent.match(regex);
+        const userName = match ? match[0] : "";
+        const content = replyContent.replace(userName, "");
+  
+        setEditContentReply(content);
+        setRepliedToUserId(userName);
         setIsEditingReply(true);
       }
     }
@@ -804,26 +840,22 @@ const AdminForumPage = () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
   
-    try {
-      const userRole = await getUserRole(userId);
-      const isAdmin = userRole === 'admin';
-      const postRef = doc(firestore, 'posts', editingPostId);
-      const postToUpdate = await getDoc(postRef);
-      const postData = postToUpdate.data() as Post;
-      const commentToUpdate = postData.comments[editingCommentIndex];
-      const replyToUpdate = commentToUpdate.replies?.[editingReplyIndex];
+    const postRef = doc(firestore, 'posts', editingPostId);
+    const postToUpdate = await getDoc(postRef);
+    const postData = postToUpdate.data() as Post;
   
-      if (replyToUpdate) {
-        postData.comments[editingCommentIndex].replies[editingReplyIndex] = {
-          ...replyToUpdate,
-          reply: editContentReply,
-          updatedAt: new Date(),
-          ...(isAdmin && {
-            adminUpdatedBy: userId,
-            adminUpdatedAt: new Date(),
-          }),
-        };
+    const commentToUpdate = postData.comments[editingCommentIndex];
+    const replyToUpdate = commentToUpdate.replies?.[editingReplyIndex];
   
+    if (replyToUpdate) {
+      const finalReply = repliedToUserId + ' ' + editContentReply;
+      postData.comments[editingCommentIndex].replies[editingReplyIndex] = {
+        ...replyToUpdate,
+        reply: finalReply,
+        updatedAt: new Date(),
+      };
+  
+      try {
         await updateDoc(postRef, {
           comments: postData.comments,
         });
@@ -833,13 +865,13 @@ const AdminForumPage = () => {
         setEditingPostId(null);
         setEditingCommentIndex(null);
         setEditingReplyIndex(null);
+      } catch (error) {
+        console.error("Error saving reply:", error);
+      } finally {
+        setIsSaving(false);
       }
-    } catch (error) {
-      console.error("Error saving reply:", error);
-    } finally {
-      setIsSaving(false);
     }
-  };  
+  };
 
   const handleAddReply = async (postId: string, commentIndex: number, reply: string, repliedToUserId: string | null) => {
     const userId = auth.currentUser?.uid;
@@ -1807,31 +1839,40 @@ const AdminForumPage = () => {
                                                     )}
 
                                                     {isEditingReply && (
-                                                    <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                                                      <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
                                                         <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
-                                                        <textarea
+                                                          {/* Display @name separately, uneditable */}
+                                                          {repliedToUserId && (
+                                                            <div className="text-sm text-blue-500 mb-4">
+                                                              Replied to: {repliedToUserId} {/* Just show @name as plain text */}
+                                                            </div>
+                                                          )}
+
+                                                          {/* Editable text area for the reply */}
+                                                          <textarea
                                                             value={editContentReply}
                                                             onChange={(e) => setEditContentReply(e.target.value)}
                                                             className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
                                                             rows={5}
-                                                        />
-                                                        <div className="mt-4 flex justify-end space-x-2">
+                                                          />
+
+                                                          <div className="mt-4 flex justify-end space-x-2">
                                                             <button
-                                                            onClick={() => setIsEditingReply(false)}
-                                                            className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
+                                                              onClick={() => setIsEditingReply(false)}
+                                                              className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
                                                             >
-                                                            Cancel
+                                                              Cancel
                                                             </button>
                                                             <button
-                                                            onClick={handleSaveReply}
-                                                            className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
-                                                            disabled={isSaving}
+                                                              onClick={handleSaveReply}
+                                                              className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+                                                              disabled={isSaving}
                                                             >
-                                                            {isSaving ? "Saving..." : "Save"}
+                                                              {isSaving ? "Saving..." : "Save"}
                                                             </button>
+                                                          </div>
                                                         </div>
-                                                        </div>
-                                                    </div>
+                                                      </div>
                                                     )}
 
                                                     <LinkIt component={renderLink} regex={urlRegex}>

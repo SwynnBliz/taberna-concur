@@ -476,7 +476,6 @@ const PostViewPage = () => {
   
     if (!userId || !comment.trim()) return;
   
-    
     const userRef = doc(firestore, 'users', userId);
     const userDoc = await getDoc(userRef);
   
@@ -491,20 +490,20 @@ const PostViewPage = () => {
     const postDoc = await getDoc(postRef);
   
     if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; 
+      const postData = postDoc.data() as Post;
   
       const updatedComments = [
         ...postData.comments,
         {
-          username, 
-          comment, 
-          createdAt: new Date(), 
-          userId, 
-          likedBy: [], 
-          dislikedBy: [], 
-          likes: 0, 
-          dislikes: 0, 
-          replies: [], 
+          username,
+          comment,
+          createdAt: new Date(),
+          userId,
+          likedBy: [],
+          dislikedBy: [],
+          likes: 0,
+          dislikes: 0,
+          replies: [],
         },
       ];
   
@@ -513,6 +512,34 @@ const PostViewPage = () => {
       });
   
       console.log('Comment added successfully');
+  
+      console.log("Sending notification...");
+  
+      const postCreatorId = postData.userId;
+      if (postCreatorId !== userId) {
+        try {
+          const response = await fetch("/api/admin/notifications", {
+            method: "POST",
+            body: JSON.stringify({
+              postId,
+              comment,
+              commentUserId: userId,
+              commentUsername: username,
+            }),
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
+  
+          if (!response.ok) {
+            console.error("Failed to send notification");
+          } else {
+            console.log("Notification sent!");
+          }
+        } catch (error) {
+          console.error("Error while sending notification:", error);
+        }
+      }
     } else {
       console.error('Post does not exist.');
     }
@@ -770,11 +797,19 @@ const PostViewPage = () => {
       const commentToEdit = postToEdit.comments[commentIndex];
       const replyToEdit = commentToEdit.replies?.[replyIndex];
       if (replyToEdit) {
-        setEditingPostId(postId); 
-        setEditingCommentIndex(commentIndex); 
-        setEditingReplyIndex(replyIndex); 
-        setEditContentReply(replyToEdit.reply); 
-        setIsEditingReply(true); 
+        setEditingPostId(postId);
+        setEditingCommentIndex(commentIndex);
+        setEditingReplyIndex(replyIndex);
+  
+        const replyContent = replyToEdit.reply;
+        const regex = /(@[a-zA-Z0-9._-]+)/;
+        const match = replyContent.match(regex);
+        const userName = match ? match[0] : "";
+        const content = replyContent.replace(userName, "");
+  
+        setEditContentReply(content);
+        setRepliedToUserId(userName);
+        setIsEditingReply(true);
       }
     }
   };
@@ -782,7 +817,7 @@ const PostViewPage = () => {
   const handleSaveReply = async () => {
     if (editingPostId === null || editingCommentIndex === null || editingReplyIndex === null) return;
   
-    setIsSaving(true); 
+    setIsSaving(true);
   
     const userId = auth.currentUser?.uid;
     if (!userId) return;
@@ -791,33 +826,31 @@ const PostViewPage = () => {
     const postToUpdate = await getDoc(postRef);
     const postData = postToUpdate.data() as Post;
   
-    
     const commentToUpdate = postData.comments[editingCommentIndex];
     const replyToUpdate = commentToUpdate.replies?.[editingReplyIndex];
   
     if (replyToUpdate) {
-      
+      const finalReply = repliedToUserId + ' ' + editContentReply;
       postData.comments[editingCommentIndex].replies[editingReplyIndex] = {
         ...replyToUpdate,
-        reply: editContentReply,  
+        reply: finalReply,
         updatedAt: new Date(),
       };
   
-      
       try {
         await updateDoc(postRef, {
           comments: postData.comments,
         });
-        
+  
         setIsEditingReply(false);
         setEditContentReply('');
         setEditingPostId(null);
         setEditingCommentIndex(null);
-        setEditingReplyIndex(null); 
+        setEditingReplyIndex(null);
       } catch (error) {
         console.error("Error saving reply:", error);
       } finally {
-        setIsSaving(false); 
+        setIsSaving(false);
       }
     }
   };
@@ -1750,12 +1783,21 @@ const PostViewPage = () => {
                                             {isEditingReply && (
                                               <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
                                                 <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                                                  {/* Display @name separately, uneditable */}
+                                                  {repliedToUserId && (
+                                                    <div className="text-sm text-blue-500 mb-4">
+                                                      Replied to: {repliedToUserId} {/* Just show @name as plain text */}
+                                                    </div>
+                                                  )}
+
+                                                  {/* Editable text area for the reply */}
                                                   <textarea
                                                     value={editContentReply}
                                                     onChange={(e) => setEditContentReply(e.target.value)}
                                                     className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
                                                     rows={5}
                                                   />
+
                                                   <div className="mt-4 flex justify-end space-x-2">
                                                     <button
                                                       onClick={() => setIsEditingReply(false)}
@@ -1766,9 +1808,9 @@ const PostViewPage = () => {
                                                     <button
                                                       onClick={handleSaveReply}
                                                       className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
-                                                      disabled={isSaving} 
+                                                      disabled={isSaving}
                                                     >
-                                                      {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
+                                                      {isSaving ? "Saving..." : "Save"}
                                                     </button>
                                                   </div>
                                                 </div>
