@@ -54,6 +54,8 @@ const EducationalInfoAdmin = () => {
     const currentUser = auth.currentUser;
     const imageInputRef = useRef<HTMLInputElement>(null);
     const videoInputRef = useRef<HTMLInputElement>(null);
+    const [deleteTipPrompt, setDeleteTipPrompt] = useState(false);
+    const [tipIdToDelete, setTipIdToDelete] = useState<string | null>(null);
 
     useEffect(() => {
     
@@ -387,9 +389,12 @@ const EducationalInfoAdmin = () => {
             videoUrl: '',
             imageUrl: '',
         }));
-    
+        
+        setPendingImageDelete(false);
+        setPendingVideoDelete(false);
         setEditImageFile(null);
         setEditVideoFile(null);
+        setEditingTip(null);
     
         if (imageInputRef.current) imageInputRef.current.value = '';
         if (videoInputRef.current) videoInputRef.current.value = '';
@@ -407,18 +412,34 @@ const EducationalInfoAdmin = () => {
         if (videoInputRef.current) videoInputRef.current.value = '';
     };
     
-    const handleDelete = async (tipId: string) => {
-        try {
-          await deleteDoc(doc(firestore, 'educationalInfo', tipId));
-    
-          
-          setTips((prevTips) => prevTips.filter((tip) => tip.id !== tipId));
-    
-          alert('Tip deleted successfully!');
-        } catch (error) {
-          console.error('Error deleting tip:', error);
-          alert('Error deleting tip.');
+    const handleDeleteTip = async (tipId: string) => {
+      // Trigger the confirmation modal
+      setTipIdToDelete(tipId);
+      setDeleteTipPrompt(true);
+    };
+  
+    const confirmDeleteTip = async () => {
+      try {
+        if (!tipIdToDelete) return;
+        
+        // Proceed with the deletion
+        await deleteDoc(doc(firestore, 'educationalInfo', tipIdToDelete));
+        
+        // Update your local state to reflect the deletion
+        setTips((prevTips) => prevTips.filter((tip) => tip.id !== tipIdToDelete));
+  
+        // Close the modal
+        setDeleteTipPrompt(false);
+  
+        alert("Tip deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting tip:", error);
+        alert("Error deleting tip.");
       }
+    };
+  
+    const cancelDeleteTip = () => {
+      setDeleteTipPrompt(false); // Close the modal without deleting
     };
 
     const renderLink = (match: string, key: number) => (
@@ -568,11 +589,7 @@ const EducationalInfoAdmin = () => {
                                 {editingTip.videoUrl && !editVideoFile && !pendingVideoDelete && (
                                     <div className="flex flex-col items-center space-x-4">
                                         <button
-                                            type="button"
-                                            onClick={() => {
-                                                setEditVideoFile(null);
-                                                if (videoInputRef.current) videoInputRef.current.value = ''; 
-                                            }}
+                                            onClick={() => handleDeleteMedia('video')}
                                             className="text-red-500 hover:text-red-600 flex items-center text-md pb-2"
                                         >
                                             <FaTrash className="mr-2" /> Remove Video
@@ -654,7 +671,7 @@ const EducationalInfoAdmin = () => {
                                       {/* Delete Button */}
                                       <div className="relative group inline-flex items-center">
                                         <button
-                                            onClick={() => handleDelete(tip.id)}
+                                            onClick={() => handleDeleteTip(tip.id)}
                                             className="text-red-500 hover:text-red-600"
                                         >
                                             <FaTrash />
@@ -688,6 +705,28 @@ const EducationalInfoAdmin = () => {
                             ))
                         )}
                     </div>
+                    
+                    {deleteTipPrompt && (
+                      <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                        <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                          <p>Are you sure you want to delete this tip? This cannot be undone!</p>
+                          <div className="mt-4 flex justify-center gap-4">
+                            <button
+                              onClick={confirmDeleteTip}
+                              className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={cancelDeleteTip}
+                              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                 </div>
             </div>
         </Layout>

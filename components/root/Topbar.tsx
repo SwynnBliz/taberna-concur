@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { getAuth, signOut } from "firebase/auth"; 
 import { FaSpinner, FaBell, FaCheck, FaTrash } from "react-icons/fa";
 import { getFirestore, collection, query, where, onSnapshot, getDoc, getDocs, writeBatch, updateDoc, deleteDoc, doc, orderBy } from "firebase/firestore";
+import { formatDistanceToNow } from 'date-fns';
 
 interface Notification {
   id: string;
@@ -28,6 +29,8 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   const pathname = usePathname();  
   const firestore = getFirestore();
   const isOnAdminPage = pathname.includes("/admin");
+  const [deleteNotificationPrompt, setDeleteNotificationPrompt] = useState(false);
+  const [notificationIdToDelete, setNotificationIdToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchNotifications = () => {
@@ -210,17 +213,37 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   };
 
   const handleDeleteNotification = async (notificationId: string) => {
+    setNotificationIdToDelete(notificationId);
+    setDeleteNotificationPrompt(true);
+  };
+
+  const confirmDeleteNotification = async () => {
     try {
-      // Delete the notification from Firestore
-      await deleteDoc(doc(firestore, "notifications", notificationId));
-  
-      // Optionally update the state to remove the notification locally
+      if (!notificationIdToDelete) return;
+      
+      await deleteDoc(doc(firestore, "notifications", notificationIdToDelete));
+      
       setNotifications((prevNotifications) =>
-        prevNotifications.filter((notif) => notif.id !== notificationId)
+        prevNotifications.filter((notif) => notif.id !== notificationIdToDelete)
       );
+
+      setDeleteNotificationPrompt(false);
+
+      alert("Notification deleted successfully!");
     } catch (error) {
-      console.error('Error deleting notification:', error);
+      console.error("Error deleting notification:", error);
+      alert("Error deleting notification.");
     }
+  };
+
+  const cancelDeleteNotification = () => {
+    setDeleteNotificationPrompt(false);
+  };
+
+  const formatTimestamp = (timestamp: any) => {
+    return timestamp && timestamp.seconds
+      ? formatDistanceToNow(new Date(timestamp.seconds * 1000), { addSuffix: true })
+      : 'Invalid date';
   };
 
   return (
@@ -292,7 +315,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
                     {!notification.read && (
                       <button
                         onClick={(e) => {
-                          e.stopPropagation(); // Prevent navigating to the notification page
+                          e.stopPropagation();
                           handleMarkNotificationAsRead(notification.id);
                         }}
                         className="text-white hover:text-yellow-500 ml-2"
@@ -303,7 +326,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
                     {/* Delete notification button */}
                     <button
                       onClick={(e) => {
-                        e.stopPropagation(); // Prevent navigating to the notification page
+                        e.stopPropagation();
                         handleDeleteNotification(notification.id);
                       }}
                       className="text-white hover:text-red-500 ml-2"
@@ -312,7 +335,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
                     </button>
                   </div>
                   <div className="text-xs text-gray-100 mt-1">
-                    {notification.timestamp ? new Date(notification.timestamp.seconds * 1000).toLocaleString() : "Unknown time"}
+                    {notification.timestamp ? formatTimestamp(notification.timestamp) : "Unknown time"}
                   </div>
                 </div>
               ))
@@ -320,6 +343,28 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
           </div>
         )}
       </div>
+
+      {deleteNotificationPrompt && (
+        <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+          <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+            <p>Are you sure you want to delete this notification? This cannot be undone!</p>
+            <div className="mt-4 flex justify-center gap-4">
+              <button
+                onClick={confirmDeleteNotification}
+                className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+              >
+                Confirm
+              </button>
+              <button
+                onClick={cancelDeleteNotification}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="relative group">
         <button
