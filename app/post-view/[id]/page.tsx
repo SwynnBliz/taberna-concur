@@ -92,7 +92,7 @@ const PostViewPage = () => {
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
   const [userDetails, setUserDetails] = useState(new Map());
-
+  const [loadingFilter, setLoadingFilter] = useState(true);
   
   useEffect(() => {
 
@@ -141,6 +141,7 @@ const PostViewPage = () => {
     );
   
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
+      setLoadingFilter(true);
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -152,17 +153,16 @@ const PostViewPage = () => {
         message: filterBannedWords(post.message) 
       }));
   
-      setPosts(filteredPostsData); 
-  
-      
-      filterPosts(filteredPostsData); 
+      setPosts(filteredPostsData);
+      filterPosts(filteredPostsData);
+      setLoadingFilter(false);
     });
   
     return () => {
       
       unsubscribe();
     };
-  }, [bannedWords]); 
+  }, [bannedWords, id]); 
 
   useEffect(() => {
     filteredPosts.forEach((post) => {
@@ -196,6 +196,7 @@ const PostViewPage = () => {
       filteredMessage = filteredMessage.replace(regex, replacement); 
     });
     
+    setLoadingFilter(false);
     return filteredMessage;
   };
 
@@ -855,60 +856,90 @@ const PostViewPage = () => {
     }
   };
 
-  const handleAddReply = async (postId: string, commentIndex: number, reply: string, repliedToUserId: string | null) => {
+  const handleAddReply = async (
+    postId: string,
+    commentIndex: number,
+    reply: string,
+    repliedToUserId: string | null
+  ) => {
     const userId = auth.currentUser?.uid;
     if (!userId || !reply.trim()) return;
   
-    
-    const userRef = doc(firestore, 'users', userId);
+    const userRef = doc(firestore, "users", userId);
     const userDoc = await getDoc(userRef);
   
     if (!userDoc.exists()) {
-      console.error('User not found in Firestore');
+      console.error("User not found in Firestore");
       return;
     }
   
     const userData = userDoc.data();
-    const username = userData?.username || 'Anonymous'; 
+    const username = userData?.username || "Anonymous";
   
-    
-    const postRef = doc(firestore, 'posts', postId);
+    const postRef = doc(firestore, "posts", postId);
     const postDoc = await getDoc(postRef);
   
-    if (postDoc.exists()) {
-      const postData = postDoc.data() as Post; 
-  
-      
-      const updatedComments = postData.comments.map((comment, index) => {
-        if (index === commentIndex) {
-          return {
-            ...comment,
-            replies: [
-              ...comment.replies,
-              {
-                reply,
-                createdAt: new Date(),
-                userId,
-                username, 
-                likedBy: [],
-                dislikedBy: [],
-                likes: 0,
-                dislikes: 0,
-                repliedToUserId: repliedToUserId, 
-              }
-            ],
-          };
-        }
-        return comment;
-      });
-  
-      
-      await updateDoc(postRef, {
-        comments: updatedComments,
-      });
+    if (!postDoc.exists()) {
+      console.error("Post does not exist.");
+      return;
     }
-  };  
-
+  
+    const postData = postDoc.data() as Post;
+  
+    // Get the original comment creator's ID
+    const commentCreatorId = postData.comments[commentIndex]?.userId || null;
+  
+    console.log("Original comment creator ID:", commentCreatorId);
+  
+    // Handle the reply logic: you only notify if repliedToUserId is not null
+    const updatedComments = postData.comments.map((comment, index) => {
+      if (index === commentIndex) {
+        return {
+          ...comment,
+          replies: [
+            ...comment.replies,
+            {
+              reply,
+              createdAt: new Date(),
+              userId,
+              username,
+              likedBy: [],
+              dislikedBy: [],
+              likes: 0,
+              dislikes: 0,
+              repliedToUserId,  // Only set if it was a reply to someone
+            },
+          ],
+        };
+      }
+      return comment;
+    });
+  
+    await updateDoc(postRef, { comments: updatedComments });
+  
+    try {
+      const response = await fetch("/api/admin/notifications-reply", {
+        method: "POST",
+        body: JSON.stringify({
+          postId,
+          reply,
+          replyUserId: userId,
+          replyUsername: username,
+          commentCreatorId,
+          repliedToUserId,  // Pass the actual user ID for notification
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+  
+      if (!response.ok) {
+        console.error("Failed to send reply notification");
+      } else {
+        console.log("Reply notification sent!");
+      }
+    } catch (error) {
+      console.error("Error while sending reply notification:", error);
+    }
+  };
   
   const handleDeleteReply = (postId: string, commentIndex: number, replyIndex: number) => {
     setReplyToDelete({ postId, commentIndex, replyIndex });
@@ -949,23 +980,31 @@ const PostViewPage = () => {
     }
   };
 
-  
-  const renderReplyText = (text: string, userId: string) => {
-    const regex = /@([a-zA-Z0-9._-]+)/g; 
+  const renderReplyText = (text: string, userId: string | null) => {
+    const regex = /@([a-zA-Z0-9._-]+)/g;
+    let isFirstMention = true;
     
     return text.split(regex).map((part, index) => {
+      // If the part matches @username (odd index) and there's a valid repliedToUserId, wrap it in a Link
       if (index % 2 === 1) {
-        
-        return (
-          <Link key={index} href={`/profile-view/${userId}`} className="text-blue-500 hover:text-yellow-500">
-            @{part}
-          </Link>
-        );
+        // Only the first mention will be linked
+        if (isFirstMention) {
+          if (userId) {
+            isFirstMention = false;
+            return (
+              <Link key={index} href={`/profile-view/${userId}`} className="text-blue-500 hover:text-yellow-500">
+                @{part}
+              </Link>
+            );
+          }
+        }
+        // If no userId, just show the @username as plain text
+        return `@${part}`; 
       }
-      return part; 
+      // If it's a part of the text that doesn't match @username, just return it as is
+      return part;
     });
   };
-
   
   const handleBookmarkPost = async (postId: string) => {
     const currentUserId = auth.currentUser?.uid;
@@ -1099,7 +1138,9 @@ const PostViewPage = () => {
         {/* Contains the Posts and Comments Sections*/}
         <div>
           <div className="p-3 w-9/12 bg-[#484242] mx-auto">
-            {filteredPosts.length === 0 ? (
+            {loadingFilter ? (
+              <p className="text-center text-white w-full">Loading post...</p>
+            ) : filteredPosts.length === 0 ? (
               <p className="text-center text-white w-full">There are no posts matching your search query.</p>
             ) : (
               filteredPosts.map((post) => (
@@ -1862,7 +1903,7 @@ const PostViewPage = () => {
                                                 <button
                                                   onClick={() => {
                                                     const usernameWithSpaces = usernames.get(reply.userId);
-                                                    const usernameWithDashes = usernameWithSpaces?.replace(/ /g, "-"); 
+                                                    const usernameWithDashes = usernameWithSpaces?.replace(/ /g, "-");
                                                     setReplyText(`@${usernameWithDashes} `); 
                                                     setRepliedToUserId(reply.userId);
                                                   }}
@@ -1884,12 +1925,32 @@ const PostViewPage = () => {
                                       type="text"
                                       placeholder={"Add a reply..."}
                                       className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
-                                      value={replyText} 
-                                      onChange={(e) => setReplyText(e.target.value)} 
+                                      value={replyText}
+                                      onChange={(e) => {
+                                        const newText = e.target.value;
+                                        setReplyText(newText);
+
+                                        // Check if the @username mention is still in the text
+                                        if (!newText.startsWith('@')) {
+                                          setRepliedToUserId(null);
+                                        }
+                                      }}
                                       onKeyDown={(e) => {
+                                        if (e.key === "Backspace" && replyText.startsWith('@')) {
+                                          const usernamePart = replyText.slice(1).split(" ")[0];
+                                          const usernameLength = usernamePart.length;
+                                          const inputElement = e.target as HTMLInputElement;
+                                          const caretPosition = inputElement.selectionStart;
+
+                                          if (caretPosition !== null && caretPosition <= usernameLength + 2) { 
+                                            setReplyText(replyText.slice(0, 1));
+                                          }
+                                        }
+
                                         if (e.key === "Enter" && replyText.trim()) {
-                                          handleAddReply(post.id, index, replyText, repliedToUserId || null); 
-                                          setReplyText(''); 
+                                          handleAddReply(post.id, index, replyText, repliedToUserId || null);
+                                          setReplyText('');
+                                          setRepliedToUserId(null);
                                         }
                                       }}
                                     />
@@ -1921,6 +1982,7 @@ const PostViewPage = () => {
           )}
         </div>
       </div>
+      
         {/* Notification */}
         {notification && (
           <div

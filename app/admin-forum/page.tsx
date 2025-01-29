@@ -7,7 +7,7 @@ import { app } from '../firebase/config';
 import PostForum from '../../components/forum/PostForum';
 import { formatDistanceToNow } from 'date-fns';
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; 
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare, FaAngleLeft, FaAngleRight, FaFastBackward, FaFastForward } from 'react-icons/fa'; 
 import Link from 'next/link';
 import useBannedWords from '../../components/forum/hooks/useBannedWords';
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
@@ -106,6 +106,13 @@ const AdminForumPage = () => {
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
   const [userDetails, setUserDetails] = useState(new Map());
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 10;
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const [loadingFilter, setLoadingFilter] = useState(true);
 
   useEffect(() => {
     const checkAdminRole = async (authUser: FirebaseUser | null) => {
@@ -197,9 +204,10 @@ const AdminForumPage = () => {
   const filterBannedWords = (message: string): string => {
     if (!bannedWords || bannedWords.length === 0) return message;
 
+    setLoadingFilter(false);
     return bannedWords.reduce((acc, word) => {
       const regex = new RegExp(`\\b${word}\\b`, 'gi');
-      return acc.replace(regex, (match) => `(**${match}**)`);
+      return acc.replace(regex, (match) => `🚫${match}🚫`);
     }, message);
   };
 
@@ -223,22 +231,23 @@ const AdminForumPage = () => {
 
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
-  
+
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
-      const postsData: Post[] = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Post[];
-  
-      const filteredPostsData = postsData.map((post) => ({
-        ...post,
-        message: filterBannedWords(post.message),
-      }));
-  
-      setPosts(filteredPostsData);
-      filterPosts(filteredPostsData);
+
+        const postsData: Post[] = querySnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        })) as Post[];
+
+        const filteredPostsData = postsData.map((post) => ({
+            ...post,
+            message: filterBannedWords(post.message), 
+        }));
+
+        setPosts(filteredPostsData);
+        filterPosts(filteredPostsData);
     });
-  
+
     return () => unsubscribe();
   }, [bannedWords]);
 
@@ -873,54 +882,88 @@ const AdminForumPage = () => {
     }
   };
 
-  const handleAddReply = async (postId: string, commentIndex: number, reply: string, repliedToUserId: string | null) => {
+  const handleAddReply = async (
+    postId: string,
+    commentIndex: number,
+    reply: string,
+    repliedToUserId: string | null
+  ) => {
     const userId = auth.currentUser?.uid;
     if (!userId || !reply.trim()) return;
-
-    const userRef = doc(firestore, 'users', userId);
+  
+    const userRef = doc(firestore, "users", userId);
     const userDoc = await getDoc(userRef);
   
     if (!userDoc.exists()) {
-      console.error('User not found in Firestore');
+      console.error("User not found in Firestore");
       return;
     }
   
     const userData = userDoc.data();
-    const username = userData?.username || 'Anonymous';
+    const username = userData?.username || "Anonymous";
   
-    
-    const postRef = doc(firestore, 'posts', postId);
+    const postRef = doc(firestore, "posts", postId);
     const postDoc = await getDoc(postRef);
   
-    if (postDoc.exists()) {
-      const postData = postDoc.data() as Post;
+    if (!postDoc.exists()) {
+      console.error("Post does not exist.");
+      return;
+    }
   
-      const updatedComments = postData.comments.map((comment, index) => {
-        if (index === commentIndex) {
-          return {
-            ...comment,
-            replies: [
-              ...comment.replies,
-              {
-                reply,
-                createdAt: new Date(),
-                userId,
-                username,
-                likedBy: [],
-                dislikedBy: [],
-                likes: 0,
-                dislikes: 0,
-                repliedToUserId: repliedToUserId,
-              }
-            ],
-          };
-        }
-        return comment;
+    const postData = postDoc.data() as Post;
+  
+    // Get the original comment creator's ID
+    const commentCreatorId = postData.comments[commentIndex]?.userId || null;
+  
+    console.log("Original comment creator ID:", commentCreatorId);
+  
+    // Handle the reply logic: you only notify if repliedToUserId is not null
+    const updatedComments = postData.comments.map((comment, index) => {
+      if (index === commentIndex) {
+        return {
+          ...comment,
+          replies: [
+            ...comment.replies,
+            {
+              reply,
+              createdAt: new Date(),
+              userId,
+              username,
+              likedBy: [],
+              dislikedBy: [],
+              likes: 0,
+              dislikes: 0,
+              repliedToUserId,  // Only set if it was a reply to someone
+            },
+          ],
+        };
+      }
+      return comment;
+    });
+  
+    await updateDoc(postRef, { comments: updatedComments });
+  
+    try {
+      const response = await fetch("/api/admin/notifications-reply", {
+        method: "POST",
+        body: JSON.stringify({
+          postId,
+          reply,
+          replyUserId: userId,
+          replyUsername: username,
+          commentCreatorId,
+          repliedToUserId,  // Pass the actual user ID for notification
+        }),
+        headers: { "Content-Type": "application/json" },
       });
   
-      await updateDoc(postRef, {
-        comments: updatedComments,
-      });
+      if (!response.ok) {
+        console.error("Failed to send reply notification");
+      } else {
+        console.log("Reply notification sent!");
+      }
+    } catch (error) {
+      console.error("Error while sending reply notification:", error);
     }
   };
 
@@ -960,17 +1003,28 @@ const AdminForumPage = () => {
     }
   };
 
-  const renderReplyText = (text: string, userId: string) => {
+  const renderReplyText = (text: string, userId: string | null) => {
     const regex = /@([a-zA-Z0-9._-]+)/g;
+    let isFirstMention = true;
     
     return text.split(regex).map((part, index) => {
+      // If the part matches @username (odd index) and there's a valid repliedToUserId, wrap it in a Link
       if (index % 2 === 1) {
-        return (
-          <Link key={index} href={`/profile-view/${userId}`} className="text-blue-500 hover:text-yellow-500">
-            @{part}
-          </Link>
-        );
+        // Only the first mention will be linked
+        if (isFirstMention) {
+          if (userId) {
+            isFirstMention = false;
+            return (
+              <Link key={index} href={`/profile-view/${userId}`} className="text-blue-500 hover:text-yellow-500">
+                @{part}
+              </Link>
+            );
+          }
+        }
+        // If no userId, just show the @username as plain text
+        return `@${part}`; 
       }
+      // If it's a part of the text that doesn't match @username, just return it as is
       return part;
     });
   };
@@ -1161,13 +1215,88 @@ const AdminForumPage = () => {
                 </div>
             )}
 
+            {/* Pagination at the top */}
+            {!loadingFilter && totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 py-4">
+                {/* First Page Button */}
+                {currentPage > 1 && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(1);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaFastBackward size={20} />
+                  </button>
+                )}
+
+                {/* Back Button */}
+                {currentPage > 1 && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(currentPage - 1);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaAngleLeft size={20} />
+                  </button>
+                )}
+
+                {/* Page Numbers (5 at a time) */}
+                {Array.from({ length: totalPages }, (_, index) => index + 1)
+                  .slice(
+                    Math.max(0, currentPage - 3),
+                    Math.min(totalPages, currentPage + 2)
+                  )
+                  .map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setCurrentPage(page);
+                      }}
+                      className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
+                        ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
+                        transition-colors duration-300`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                {/* Next Button */}
+                {currentPage < totalPages && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(currentPage + 1);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaAngleRight size={20} />
+                  </button>
+                )}
+
+                {/* Last Page Button */}
+                {currentPage < totalPages && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(totalPages);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaFastForward size={20} />
+                  </button>
+                )}
+              </div>
+            )}
+
             {/* Contains the Posts and Comments Sections*/}
-            <div>
+              <div>
                 <div className="p-3 w-9/12 bg-[#484242] mx-auto">
-                {filteredPosts.length === 0 ? (
-                    <p className="text-center text-white w-full">There are no posts matching your search query.</p>
-                ) : (
-                    filteredPosts.map((post) => (
+                  {loadingFilter ? (
+                    <p className="text-center text-white w-full">Loading posts...</p>
+                  ) : filteredPosts.length === 0 ? (
+                      <p className="text-center text-white w-full">There are no posts matching your search query.</p>
+                  ) : (
+                    currentPosts.map((post) => (
                     <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383434] p-6">
                         <div className="flex items-center justify-between mb-4">
                         {/* Left Section: Image, Username, and Timestamp */}
@@ -1739,7 +1868,7 @@ const AdminForumPage = () => {
                                         {showReplies[post.id]?.[index] && (
                                         <div className="ml-6 mt-4">
                                             {comment.replies && comment.replies.length > 0 ? (
-                                            comment.replies.map((reply, replyIndex) => (
+                                              comment.replies.map((reply, replyIndex) => (
                                                 <div key={replyIndex} className="flex items-start mb-2">
                                                 <Link href={`/profile-view/${reply.userId}`}>
                                                     <img
@@ -1917,21 +2046,21 @@ const AdminForumPage = () => {
 
                                                     {/* Add Username Reply Button */}
                                                     <div className="relative group inline-flex items-center">
-                                                        <button
+                                                      <button
                                                         onClick={() => {
-                                                            const usernameWithSpaces = usernames.get(reply.userId);
-                                                            const usernameWithDashes = usernameWithSpaces?.replace(/ /g, "-");
-                                                            setReplyText(`@${usernameWithDashes} `);
-                                                            setRepliedToUserId(reply.userId);
+                                                          const usernameWithSpaces = usernames.get(reply.userId);
+                                                          const usernameWithDashes = usernameWithSpaces?.replace(/ /g, "-");
+                                                          setReplyText(`@${usernameWithDashes} `); 
+                                                          setRepliedToUserId(reply.userId);
                                                         }}
                                                         className="hover:text-yellow-500 text-sm text-gray-400"
-                                                        >
+                                                      >
                                                         Reply
-                                                        </button>
+                                                      </button>
                                                     </div>
-                                                    </div>
+                                                  </div>
                                                 </div>
-                                                </div>
+                                              </div>
                                             ))
                                             ) : (
                                             <p className="text-sm text-gray-400">No replies yet</p>
@@ -1939,31 +2068,51 @@ const AdminForumPage = () => {
 
                                             {/* Input Field for Adding Reply */}
                                             <input
-                                            type="text"
-                                            placeholder={"Add a reply..."}
-                                            className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
-                                            value={replyText}
-                                            onChange={(e) => setReplyText(e.target.value)}
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter" && replyText.trim()) {
-                                                handleAddReply(post.id, index, replyText, repliedToUserId || null); 
-                                                setReplyText('');
+                                              type="text"
+                                              placeholder={"Add a reply..."}
+                                              className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
+                                              value={replyText}
+                                              onChange={(e) => {
+                                                const newText = e.target.value;
+                                                setReplyText(newText);
+
+                                                // Check if the @username mention is still in the text
+                                                if (!newText.startsWith('@')) {
+                                                  setRepliedToUserId(null);
                                                 }
-                                            }}
+                                              }}
+                                              onKeyDown={(e) => {
+                                                if (e.key === "Backspace" && replyText.startsWith('@')) {
+                                                  const usernamePart = replyText.slice(1).split(" ")[0];
+                                                  const usernameLength = usernamePart.length;
+                                                  const inputElement = e.target as HTMLInputElement;
+                                                  const caretPosition = inputElement.selectionStart;
+
+                                                  if (caretPosition !== null && caretPosition <= usernameLength + 2) { 
+                                                    setReplyText(replyText.slice(0, 1));
+                                                  }
+                                                }
+
+                                                if (e.key === "Enter" && replyText.trim()) {
+                                                  handleAddReply(post.id, index, replyText, repliedToUserId || null);
+                                                  setReplyText('');
+                                                  setRepliedToUserId(null);
+                                                }
+                                              }}
                                             />
-                                        </div>
+                                          </div>
                                         )}
                                     </div>
-                                    </div>
+                                  </div>
                                 </div>
-                                ))
+                              ))
                             ) : (
-                                <p className="pl-2 mb-2">No comments yet</p>
+                              <p className="pl-2 mb-2">No comments yet</p>
                             )}
-                            </div>
+                          </div>
                         </div>
-                        )}
-                        <input
+                      )}
+                      <input
                         type="text"
                         placeholder="Add a comment..."
                         className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none"
@@ -1972,22 +2121,100 @@ const AdminForumPage = () => {
                             handleAddComment(post.id, e.currentTarget.value);
                             e.currentTarget.value = "";
                             }
-                        }}
-                        />
-                    </div>
-                    ))
-                )}
-                </div>
-            </div>
-            {/* Notification */}
-            {notification && (
-                <div
-                    className="fixed bottom-4 left-4 bg-[#2c2c2c] text-white text-lg p-4 rounded-md shadow-lg max-w-xs"
-                    style={{ transition: 'opacity 0.3s ease-in-out' }}
+                    }}
+                    />
+                  </div>
+                ))
+              )}
+
+              {/* Pagination at the bottom */}
+              {!loadingFilter && totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 py-4">
+                  {/* First Page Button */}
+                  {currentPage > 1 && (
+                    <button
+                      onClick={() => {
+                        setCurrentPage(1);
+                        window.scrollTo(0, 0);
+                      }}
+                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
                     >
-                    {notification}
+                      <FaFastBackward size={20} />
+                    </button>
+                  )}
+
+                  {/* Back Button */}
+                  {currentPage > 1 && (
+                    <button
+                      onClick={() => {
+                        setCurrentPage(currentPage - 1);
+                        window.scrollTo(0, 0);
+                      }}
+                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                    >
+                      <FaAngleLeft size={20} />
+                    </button>
+                  )}
+
+                  {/* Page Numbers (5 at a time) */}
+                  {Array.from({ length: totalPages }, (_, index) => index + 1)
+                    .slice(
+                      Math.max(0, currentPage - 3),
+                      Math.min(totalPages, currentPage + 2)
+                    )
+                    .map((page) => (
+                      <button
+                        key={page}
+                        onClick={() => {
+                          setCurrentPage(page);
+                          window.scrollTo(0, 0);
+                        }}
+                        className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
+                          ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
+                          transition-colors duration-300`}
+                      >
+                        {page}
+                      </button>
+                    ))}
+
+                  {/* Next Button */}
+                  {currentPage < totalPages && (
+                    <button
+                      onClick={() => {
+                        setCurrentPage(currentPage + 1);
+                        window.scrollTo(0, 0);
+                      }}
+                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                    >
+                      <FaAngleRight size={20} />
+                    </button>
+                  )}
+
+                  {/* Last Page Button */}
+                  {currentPage < totalPages && (
+                    <button
+                      onClick={() => {
+                        setCurrentPage(totalPages);
+                        window.scrollTo(0, 0);
+                      }}
+                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                    >
+                      <FaFastForward size={20} />
+                    </button>
+                  )}
                 </div>
-            )}
+              )}
+            </div>
+          </div>
+          {/* Notification */}
+          {notification && (
+            <div
+                className="fixed bottom-4 left-4 bg-[#2c2c2c] text-white text-lg p-4 rounded-md shadow-lg max-w-xs"
+                style={{ transition: 'opacity 0.3s ease-in-out' }}
+                >
+                {notification}
+            </div>
+          )}
         </div>
     </Layout>
   );

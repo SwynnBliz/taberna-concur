@@ -9,7 +9,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import useBannedWords from '../../../components/forum/hooks/useBannedWords';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; 
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare, FaTimes, FaRegEnvelope } from 'react-icons/fa'; 
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare, FaTimes, FaRegEnvelope, FaAngleLeft, FaAngleRight, FaFastBackward, FaFastForward } from 'react-icons/fa'; 
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
 import { AiOutlineClose } from 'react-icons/ai'; 
 import { LinkIt } from 'react-linkify-it';
@@ -89,6 +89,13 @@ const ProfileViewPage = () => {
   const [userDetails, setUserDetails] = useState(new Map());
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [showWarningsModal, setShowWarningsModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 10;
+  const indexOfLastPost = currentPage * postsPerPage;
+  const indexOfFirstPost = indexOfLastPost - postsPerPage;
+  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const [loadingFilter, setLoadingFilter] = useState(true);
   
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
@@ -194,8 +201,6 @@ const ProfileViewPage = () => {
       }));
   
       setPosts(filteredPostsData); 
-  
-      
       filterPosts(filteredPostsData); 
     });
   
@@ -268,6 +273,7 @@ const ProfileViewPage = () => {
       filteredMessage = filteredMessage.replace(regex, replacement); 
     });
     
+    setLoadingFilter(false);
     return filteredMessage;
   };
 
@@ -832,18 +838,92 @@ const ProfileViewPage = () => {
                 <p className="text-white text-xl">Posts</p>
               </div>
             </div>
+
+            {/* Pagination at the top */}
+            {!loadingFilter && totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 py-4">
+                {/* First Page Button */}
+                {currentPage > 1 && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(1);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaFastBackward size={20} />
+                  </button>
+                )}
+
+                {/* Back Button */}
+                {currentPage > 1 && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(currentPage - 1);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaAngleLeft size={20} />
+                  </button>
+                )}
+
+                {/* Page Numbers (5 at a time) */}
+                {Array.from({ length: totalPages }, (_, index) => index + 1)
+                  .slice(
+                    Math.max(0, currentPage - 3),
+                    Math.min(totalPages, currentPage + 2)
+                  )
+                  .map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => {
+                        setCurrentPage(page);
+                      }}
+                      className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
+                        ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
+                        transition-colors duration-300`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+
+                {/* Next Button */}
+                {currentPage < totalPages && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(currentPage + 1);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaAngleRight size={20} />
+                  </button>
+                )}
+
+                {/* Last Page Button */}
+                {currentPage < totalPages && (
+                  <button
+                    onClick={() => {
+                      setCurrentPage(totalPages);
+                    }}
+                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                  >
+                    <FaFastForward size={20} />
+                  </button>
+                )}
+              </div>
+            )}
     
             {/* Contains the Posts and Comments Sections */}
             <div>
               <div className="p-3 w-full bg-[#383434] mx-auto">
                 {!isProfilePublic && currentUserId !== id ? (
-                  
                   <p className="text-center text-yellow-500 w-full">This post is set to private.</p>
+                ) : 
+                loadingFilter ? (
+                  <p className="text-center text-white w-full">Loading posts...</p>
                 ) : filteredPosts.length === 0 ? (
-                  
                   <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                 ) : (
-                  filteredPosts.map((post) => (
+                  currentPosts.map((post) => (
                     <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#424242] p-6">
                       
                       <div className="flex items-center justify-between mb-4">
@@ -1218,6 +1298,84 @@ const ProfileViewPage = () => {
               </div>
             </div>
           </div>
+
+          {/* Pagination at the bottom */}
+          {!loadingFilter && totalPages > 1 && (
+            <div className="flex justify-center items-center gap-2 py-4">
+              {/* First Page Button */}
+              {currentPage > 1 && (
+                <button
+                  onClick={() => {
+                    setCurrentPage(1);
+                    window.scrollTo(0, 0);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                >
+                  <FaFastBackward size={20} />
+                </button>
+              )}
+
+              {/* Back Button */}
+              {currentPage > 1 && (
+                <button
+                  onClick={() => {
+                    setCurrentPage(currentPage - 1);
+                    window.scrollTo(0, 0);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                >
+                  <FaAngleLeft size={20} />
+                </button>
+              )}
+
+              {/* Page Numbers (5 at a time) */}
+              {Array.from({ length: totalPages }, (_, index) => index + 1)
+                .slice(
+                  Math.max(0, currentPage - 3),
+                  Math.min(totalPages, currentPage + 2)
+                )
+                .map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => {
+                      setCurrentPage(page);
+                      window.scrollTo(0, 0);
+                    }}
+                    className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
+                      ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
+                      transition-colors duration-300`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+              {/* Next Button */}
+              {currentPage < totalPages && (
+                <button
+                  onClick={() => {
+                    setCurrentPage(currentPage + 1);
+                    window.scrollTo(0, 0);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                >
+                  <FaAngleRight size={20} />
+                </button>
+              )}
+
+              {/* Last Page Button */}
+              {currentPage < totalPages && (
+                <button
+                  onClick={() => {
+                    setCurrentPage(totalPages);
+                    window.scrollTo(0, 0);
+                  }}
+                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
+                >
+                  <FaFastForward size={20} />
+                </button>
+              )}
+            </div>
+          )}
         </section>
         {/* Notification */}
         {notification && (

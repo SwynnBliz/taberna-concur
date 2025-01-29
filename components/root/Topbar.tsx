@@ -229,7 +229,6 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
 
       setDeleteNotificationPrompt(false);
 
-      alert("Notification deleted successfully!");
     } catch (error) {
       console.error("Error deleting notification:", error);
       alert("Error deleting notification.");

@@ -25,7 +25,8 @@ html, body {
   margin: 0;    
   color: var(--foreground);
   background: var(--background);
-  font-family: 'Inria Serif', serif; 
+  font-family: 'Inria Serif', serif;
+  scroll-behavior: smooth;
 }
 
 
