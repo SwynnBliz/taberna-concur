@@ -92,7 +92,6 @@ const PostViewPage = () => {
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
   const [userDetails, setUserDetails] = useState(new Map());
-  const [loadingFilter, setLoadingFilter] = useState(true);
   
   useEffect(() => {
 
@@ -141,7 +140,6 @@ const PostViewPage = () => {
     );
   
     const unsubscribe = onSnapshot(postsQuery, (querySnapshot) => {
-      setLoadingFilter(true);
       const postsData: Post[] = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -155,7 +153,6 @@ const PostViewPage = () => {
   
       setPosts(filteredPostsData);
       filterPosts(filteredPostsData);
-      setLoadingFilter(false);
     });
   
     return () => {
@@ -196,7 +193,6 @@ const PostViewPage = () => {
       filteredMessage = filteredMessage.replace(regex, replacement); 
     });
     
-    setLoadingFilter(false);
     return filteredMessage;
   };
 
@@ -1138,9 +1134,7 @@ const PostViewPage = () => {
         {/* Contains the Posts and Comments Sections*/}
         <div>
           <div className="p-3 w-9/12 bg-[#484242] mx-auto">
-            {loadingFilter ? (
-              <p className="text-center text-white w-full">Loading post...</p>
-            ) : filteredPosts.length === 0 ? (
+            {filteredPosts.length === 0 ? (
               <p className="text-center text-white w-full">There are no posts matching your search query.</p>
             ) : (
               filteredPosts.map((post) => (

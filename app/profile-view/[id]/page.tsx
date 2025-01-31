@@ -95,7 +95,6 @@ const ProfileViewPage = () => {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const [loadingFilter, setLoadingFilter] = useState(true);
   
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
@@ -273,7 +272,6 @@ const ProfileViewPage = () => {
       filteredMessage = filteredMessage.replace(regex, replacement); 
     });
     
-    setLoadingFilter(false);
     return filteredMessage;
   };
 
@@ -840,7 +838,7 @@ const ProfileViewPage = () => {
             </div>
 
             {/* Pagination at the top */}
-            {!loadingFilter && totalPages > 1 && (
+            {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 py-4">
                 {/* First Page Button */}
                 {currentPage > 1 && (
@@ -918,9 +916,7 @@ const ProfileViewPage = () => {
                 {!isProfilePublic && currentUserId !== id ? (
                   <p className="text-center text-yellow-500 w-full">This post is set to private.</p>
                 ) : 
-                loadingFilter ? (
-                  <p className="text-center text-white w-full">Loading posts...</p>
-                ) : filteredPosts.length === 0 ? (
+                filteredPosts.length === 0 ? (
                   <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                 ) : (
                   currentPosts.map((post) => (
@@ -1300,7 +1296,7 @@ const ProfileViewPage = () => {
           </div>
 
           {/* Pagination at the bottom */}
-          {!loadingFilter && totalPages > 1 && (
+          {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 py-4">
               {/* First Page Button */}
               {currentPage > 1 && (

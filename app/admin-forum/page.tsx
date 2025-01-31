@@ -112,7 +112,6 @@ const AdminForumPage = () => {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const [loadingFilter, setLoadingFilter] = useState(true);
 
   useEffect(() => {
     const checkAdminRole = async (authUser: FirebaseUser | null) => {
@@ -204,7 +203,6 @@ const AdminForumPage = () => {
   const filterBannedWords = (message: string): string => {
     if (!bannedWords || bannedWords.length === 0) return message;
 
-    setLoadingFilter(false);
     return bannedWords.reduce((acc, word) => {
       const regex = new RegExp(`\\b${word}\\b`, 'gi');
       return acc.replace(regex, (match) => `🚫${match}🚫`);
@@ -1216,7 +1214,7 @@ const AdminForumPage = () => {
             )}
 
             {/* Pagination at the top */}
-            {!loadingFilter && totalPages > 1 && (
+            {totalPages > 1 && (
               <div className="flex justify-center items-center gap-2 py-4">
                 {/* First Page Button */}
                 {currentPage > 1 && (
@@ -1291,9 +1289,7 @@ const AdminForumPage = () => {
             {/* Contains the Posts and Comments Sections*/}
               <div>
                 <div className="p-3 w-9/12 bg-[#484242] mx-auto">
-                  {loadingFilter ? (
-                    <p className="text-center text-white w-full">Loading posts...</p>
-                  ) : filteredPosts.length === 0 ? (
+                  {filteredPosts.length === 0 ? (
                       <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                   ) : (
                     currentPosts.map((post) => (
@@ -2128,7 +2124,7 @@ const AdminForumPage = () => {
               )}
 
               {/* Pagination at the bottom */}
-              {!loadingFilter && totalPages > 1 && (
+              {totalPages > 1 && (
                 <div className="flex justify-center items-center gap-2 py-4">
                   {/* First Page Button */}
                   {currentPage > 1 && (

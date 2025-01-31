@@ -98,7 +98,6 @@ const Forum = () => {
   const indexOfFirstPost = indexOfLastPost - postsPerPage;
   const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const [loadingFilter, setLoadingFilter] = useState(true);
   
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -162,7 +161,6 @@ const Forum = () => {
       filteredMessage = filteredMessage.replace(regex, replacement); 
     });
     
-    setLoadingFilter(false);
     return filteredMessage;
   };
 
@@ -1202,7 +1200,7 @@ const Forum = () => {
       )}
 
       {/* Pagination at the top */}
-      {!loadingFilter && totalPages > 1 && (
+      {totalPages > 1 && (
         <div className="flex justify-center items-center gap-2 py-4">
           {/* First Page Button */}
           {currentPage > 1 && (
@@ -1277,10 +1275,7 @@ const Forum = () => {
       {/* Contains the Posts and Comments Sections*/}
       <div>
         <div className="p-3 w-9/12 bg-[#484242] mx-auto">
-          {loadingFilter ? (
-            <p className="text-center text-white w-full">Loading posts...</p>
-          ) : (
-            filteredPosts.length === 0 ? (
+          {filteredPosts.length === 0 ? (
               <p className="text-center text-white w-full">There are no posts matching your search query.</p>
           ) : (
             currentPosts.map((post) => (
@@ -2119,10 +2114,10 @@ const Forum = () => {
                 />
               </div>
             ))
-          ))}
+          )}
 
           {/* Pagination at the bottom */}
-          {!loadingFilter && totalPages > 1 && (
+          {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 py-4">
               {/* First Page Button */}
               {currentPage > 1 && (
