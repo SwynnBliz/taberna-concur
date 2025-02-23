@@ -89,12 +89,6 @@ const ProfileViewPage = () => {
   const [userDetails, setUserDetails] = useState(new Map());
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [showWarningsModal, setShowWarningsModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
-  const indexOfLastPost = currentPage * postsPerPage;
-  const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
@@ -225,7 +219,7 @@ const ProfileViewPage = () => {
         const fetchedWarnings = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as Warning[]; // Cast to Warning[] to match the state type
+        })) as Warning[];
   
         setWarnings(fetchedWarnings);
       } catch (error) {
@@ -247,7 +241,7 @@ const ProfileViewPage = () => {
   };
 
   const fetchUserDetails = async (userId: string): Promise<void> => {
-    if (userDetails.has(userId)) return; // Avoid redundant fetches
+    if (userDetails.has(userId)) return;
   
     try {
       const userDoc = await getDoc(doc(firestore, "users", userId));
@@ -836,79 +830,6 @@ const ProfileViewPage = () => {
                 <p className="text-white text-xl">Posts</p>
               </div>
             </div>
-
-            {/* Pagination at the top */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 py-4">
-                {/* First Page Button */}
-                {currentPage > 1 && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(1);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaFastBackward size={20} />
-                  </button>
-                )}
-
-                {/* Back Button */}
-                {currentPage > 1 && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(currentPage - 1);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaAngleLeft size={20} />
-                  </button>
-                )}
-
-                {/* Page Numbers (5 at a time) */}
-                {Array.from({ length: totalPages }, (_, index) => index + 1)
-                  .slice(
-                    Math.max(0, currentPage - 3),
-                    Math.min(totalPages, currentPage + 2)
-                  )
-                  .map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                      }}
-                      className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
-                        ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
-                        transition-colors duration-300`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                {/* Next Button */}
-                {currentPage < totalPages && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(currentPage + 1);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaAngleRight size={20} />
-                  </button>
-                )}
-
-                {/* Last Page Button */}
-                {currentPage < totalPages && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(totalPages);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaFastForward size={20} />
-                  </button>
-                )}
-              </div>
-            )}
     
             {/* Contains the Posts and Comments Sections */}
             <div>
@@ -919,7 +840,7 @@ const ProfileViewPage = () => {
                 filteredPosts.length === 0 ? (
                   <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                 ) : (
-                  currentPosts.map((post) => (
+                  filteredPosts.map((post) => (
                     <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#424242] p-6">
                       
                       <div className="flex items-center justify-between mb-4">
@@ -1210,7 +1131,7 @@ const ProfileViewPage = () => {
                                 className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
                                 disabled={isSaving} 
                               >
-                                {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
+                                {isSaving ? "Saving..." : "Save"}
                               </button>
                             </div>
                           </div>
@@ -1232,7 +1153,7 @@ const ProfileViewPage = () => {
                             className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                           >
                             <FaThumbsUp className="w-4 h-4" />
-                            <span>{formatNumberIntl(post.likes)}</span> {/* Format the likes */}
+                            <span>{formatNumberIntl(post.likes)}</span>
                           </button>
                           {/* Tooltip for Like Button */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1247,7 +1168,7 @@ const ProfileViewPage = () => {
                             className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                           >
                             <FaThumbsDown className="w-4 h-4" />
-                            <span>{formatNumberIntl(post.dislikes)}</span> {/* Format the dislikes */}
+                            <span>{formatNumberIntl(post.dislikes)}</span>
                           </button>
                           {/* Tooltip for Dislike Button */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1263,7 +1184,7 @@ const ProfileViewPage = () => {
                           className="relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto text-gray-400"
                         >
                           <FaComment className="w-4 h-4" />
-                          <span>{formatNumberIntl(post.comments.length)}</span> {/* Format the comments */}
+                          <span>{formatNumberIntl(post.comments.length)}</span>
 
                           {/* Tooltip for "View Post to Comment" */}
                           <div
@@ -1295,83 +1216,6 @@ const ProfileViewPage = () => {
             </div>
           </div>
 
-          {/* Pagination at the bottom */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 py-4">
-              {/* First Page Button */}
-              {currentPage > 1 && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(1);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaFastBackward size={20} />
-                </button>
-              )}
-
-              {/* Back Button */}
-              {currentPage > 1 && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(currentPage - 1);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaAngleLeft size={20} />
-                </button>
-              )}
-
-              {/* Page Numbers (5 at a time) */}
-              {Array.from({ length: totalPages }, (_, index) => index + 1)
-                .slice(
-                  Math.max(0, currentPage - 3),
-                  Math.min(totalPages, currentPage + 2)
-                )
-                .map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => {
-                      setCurrentPage(page);
-                      window.scrollTo(0, 0);
-                    }}
-                    className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
-                      ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
-                      transition-colors duration-300`}
-                  >
-                    {page}
-                  </button>
-                ))}
-
-              {/* Next Button */}
-              {currentPage < totalPages && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(currentPage + 1);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaAngleRight size={20} />
-                </button>
-              )}
-
-              {/* Last Page Button */}
-              {currentPage < totalPages && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(totalPages);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaFastForward size={20} />
-                </button>
-              )}
-            </div>
-          )}
         </section>
         {/* Notification */}
         {notification && (

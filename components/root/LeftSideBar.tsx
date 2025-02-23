@@ -1,4 +1,4 @@
-// components/root/LeftSidebar.tsx
+// components/root/LeftSidebar.tsx (Leftside Bar Component)
 import { useRouter } from 'next/navigation';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useState, useEffect } from 'react';
@@ -138,6 +138,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                   onClick={() => handleNavigate('/admin-educational')}
                 >
                   Manage Tips
+                </button>
+              </li>
+              <li>
+                <button
+                  className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                  onClick={() => handleNavigate('/admin-drink')}
+                >
+                  Manage Drinks
                 </button>
               </li>
               <li>

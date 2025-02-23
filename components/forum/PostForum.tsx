@@ -1,28 +1,20 @@
-// components/forum/PostForum.tsx
+// components/forum/PostForum.tsx (Forum Posting Function)
 'use client';
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { getFirestore, addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
-import { Cloudinary } from 'cloudinary-core';
 import { HiPaperClip } from 'react-icons/hi'; 
 import { AiOutlineClose } from 'react-icons/ai'; 
 
 const PostForum = () => {
-  const router = useRouter();
   const firestore = getFirestore();
   const auth = getAuth();
-  
   const [message, setMessage] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
-
-  
-  const cloudinary = new Cloudinary({ cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME });
-
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];

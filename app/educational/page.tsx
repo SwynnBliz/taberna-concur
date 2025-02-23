@@ -1,21 +1,12 @@
+// app/educational/page.tsx (Educational Tip Page)
 'use client'
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { firestore } from '../firebase/config'; 
 import { collection, serverTimestamp, getDocs, query, orderBy } from 'firebase/firestore';
 import { FaSearch } from 'react-icons/fa'; 
 import Layout from '../../components/root/Layout';
-import { getAuth } from 'firebase/auth';
 import { LinkIt } from 'react-linkify-it';
-
-interface User {
-    id: string;
-    profilePhoto: string;
-    username: string;
-    bio: string;
-    contactNumber: string;
-    visibility: 'public' | 'private';
-    role: 'admin' | 'user';
-}
+import { useRouter } from 'next/navigation';
 
 interface Tip {
   id: string;
@@ -31,27 +22,10 @@ interface Tip {
 }
 
 const EducationalInfo = () => {
-    const auth = getAuth();
-    const [formData, setFormData] = useState({
-        title: '',
-        category: '',
-        content: '',
-        videoUrl: '',
-        imageUrl: '',
-        showForm: false,
-    });
-    const [editImageFile, setEditImageFile] = useState<File | null>(null);
-    const [editVideoFile, setEditVideoFile] = useState<File | null>(null);
-    const [loading, setLoading] = useState(false);
+    const router = useRouter();
     const [searchTerm, setSearchTerm] = useState('');
     const [filteredTips, setFilteredTips] = useState<Tip[]>([]);
-    const [editingTip, setEditingTip] = useState<Tip | null>(null);
-    const [pendingImageDelete, setPendingImageDelete] = useState(false);
-    const [pendingVideoDelete, setPendingVideoDelete] = useState(false);
     const [tips, setTips] = useState<Tip[]>([]);
-    const currentUser = auth.currentUser;
-    const imageInputRef = useRef<HTMLInputElement>(null);
-    const videoInputRef = useRef<HTMLInputElement>(null);
 
     const handleSearch = () => {
         const searchTermLower = searchTerm.trim().toLowerCase(); 
@@ -126,7 +100,11 @@ const EducationalInfo = () => {
       </a>
     );
   
-    const urlRegex = /(https?:\/\/[^\s]+)/g; 
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    const handleNavigate = (path: string) => {
+      router.push(path);
+    };
 
     return (
         <Layout>

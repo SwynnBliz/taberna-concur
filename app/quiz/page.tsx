@@ -1,5 +1,5 @@
-'use client'; // Add this line at the top
-
+// app/quiz/page.tsx (TESDA Home Page)
+'use client';
 import Link from 'next/link';
 import Layout from '../../components/root/Layout';
 import { useEffect, useState } from 'react';
@@ -7,7 +7,6 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { app } from '../firebase/config';
 
-// Fetch user status
 const fetchUserStatus = async () => {
   try {
     const auth = getAuth(app);

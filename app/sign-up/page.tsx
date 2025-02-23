@@ -1,3 +1,4 @@
+// app/sign-up/page.tsx (Sign Up Page)
 'use client';
 import { useState, useEffect } from "react";
 import { useCreateUserWithEmailAndPassword } from "react-firebase-hooks/auth";
@@ -201,9 +202,9 @@ const SignUpPage = () => {
               <span
                 className="text-yellow-500 hover:text-yellow-600 cursor-pointer underline"
                 onClick={(e) => {
-                  e.preventDefault();  // Prevent the checkbox change
-                  e.stopPropagation();  // Prevent event propagation to the parent (checkbox)
-                  openModal();  // Open the modal
+                  e.preventDefault(); 
+                  e.stopPropagation();
+                  openModal();
                 }}
               >
                 Terms and Conditions

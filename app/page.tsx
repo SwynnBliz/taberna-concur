@@ -1,6 +1,5 @@
 // app/page.tsx (Age Verification Page)
 "use client"; 
-
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 

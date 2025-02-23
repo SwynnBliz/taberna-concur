@@ -1,3 +1,4 @@
+// app/admin/notifications/route.ts (Notify User Post/Comment, Server Side API Route Call)
 import { firestore } from "../../../firebase/config";
 import { doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
@@ -9,7 +10,6 @@ export async function POST(req: Request) {
 
     console.log("Received data in API:", { postId, comment, commentUserId });
 
-    // Fetch the post to get the owner
     const postDocRef = doc(firestore, "posts", postId);
     const postDoc = await getDoc(postDocRef);
 
@@ -21,7 +21,6 @@ export async function POST(req: Request) {
     const postOwnerId = postDoc.data()?.userId;
     console.log("Post owner ID:", postOwnerId);
 
-    // Fetch the commenter's username
     const userDocRef = doc(firestore, "users", commentUserId);
     const userDoc = await getDoc(userDocRef);
 
@@ -33,7 +32,6 @@ export async function POST(req: Request) {
     const username = userDoc.data()?.username || "Anonymous";
     console.log("Commenter username:", username);
 
-    // Create a notification for the post owner
     if (postOwnerId) {
       await addDoc(collection(firestore, "notifications"), {
         userId: postOwnerId,

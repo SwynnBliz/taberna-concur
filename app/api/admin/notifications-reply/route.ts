@@ -1,5 +1,6 @@
+// app/admin/notifications-reply/route.ts (Notify User Reply, Server Side API Route Call)
 import { firestore } from "../../../firebase/config";
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -11,12 +12,9 @@ export async function POST(req: Request) {
 
     const notifications = [];
 
-    // Check if the comment creator is mentioned in the reply
     const isCommentCreatorMentioned = repliedToUserId === commentCreatorId;
 
-    // Notify the original comment creator (only if the replier isn't the same user)
     if (commentCreatorId && commentCreatorId !== replyUserId) {
-      // If the comment creator is not mentioned in the reply
       if (!isCommentCreatorMentioned) {
         notifications.push({
           userId: commentCreatorId,
@@ -28,9 +26,7 @@ export async function POST(req: Request) {
         });
       }
     }
-
-    // If the comment creator is mentioned, send a "mention" notification instead
-    // Notify the user being replied to (using repliedToUserId)
+    
     if (repliedToUserId && repliedToUserId !== replyUserId) {
       notifications.push({
         userId: repliedToUserId,
@@ -42,7 +38,6 @@ export async function POST(req: Request) {
       });
     }
 
-    // Store notifications in Firestore
     if (notifications.length > 0) {
       for (const notification of notifications) {
         await addDoc(collection(firestore, "notifications"), notification);

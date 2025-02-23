@@ -106,7 +106,7 @@ const ProfileManagePage = () => {
       return;
     }
 
-    const contactNumberRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/; // Example: +63 956 964 7481
+    const contactNumberRegex = /^\+63\s\d{3}\s\d{3}\s\d{4}$/; 
     if (userData.contactNumber && !contactNumberRegex.test(userData.contactNumber)) {
       setErrorMessage(
         'Contact number is invalid. It should be in the format: +63 123 456 7890'
@@ -114,10 +114,7 @@ const ProfileManagePage = () => {
       return;
     }
   
-    if (
-      (oldPassword || newPassword || confirmPassword) &&
-      (oldPassword === '' || newPassword === '' || confirmPassword === '')
-    ) {
+    if ((oldPassword || newPassword || confirmPassword) && (!oldPassword || !newPassword || !confirmPassword)) {
       setErrorMessage('Please fill in all the password fields if you want to change your password.');
       return;
     }
@@ -127,7 +124,7 @@ const ProfileManagePage = () => {
       return;
     }
 
-    if (!isPasswordStrong) {
+    if (newPassword && !isPasswordStrong) {
       setErrorMessage("Password is not strong enough.");
       return;
     }

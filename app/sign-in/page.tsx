@@ -1,6 +1,5 @@
 // app/sign-in/page.tsx (Sign In Page)
 'use client';
-
 import { useState, useEffect } from "react";
 import { useSignInWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { useRouter } from 'next/navigation';
@@ -10,7 +9,7 @@ import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
 import { FcGoogle } from "react-icons/fc";
 import { FirebaseError } from 'firebase/app';
 import { query, where, getDocs, collection } from 'firebase/firestore'; 
-import { User } from 'firebase/auth'; // Import User type
+import { User } from 'firebase/auth';
 
 const SignInPage = () => {
   const [email, setEmail] = useState("");
@@ -85,8 +84,8 @@ const SignInPage = () => {
   
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user as User; // Explicitly cast result.user to the User type
-      const userRef = doc(firestore, "users", user.uid); // Use user.uid directly
+      const user = result.user as User;
+      const userRef = doc(firestore, "users", user.uid);
   
       const userDoc = await getDoc(userRef);
   
@@ -111,11 +110,9 @@ const SignInPage = () => {
             </div>
           );
         } else {
-          // If no ban message, proceed to the forum
           router.push('/forum');
         }
       } else {
-        // If the user document does not exist, create a new one
         const defaultUsername = user.email?.split('@')[0];
         await setDoc(userRef, {
           email: user.email,
@@ -129,11 +126,9 @@ const SignInPage = () => {
     } catch (e) {
       if (e instanceof FirebaseError) {
         if (e.code === 'auth/user-disabled') {
-          // Handle user-disabled case
           const email = e.customData?.email;
   
           if (email) {
-            // Query Firestore for the user using their email
             const usersQuery = query(
               collection(firestore, "users"),
               where("email", "==", email)

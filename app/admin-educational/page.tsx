@@ -1,3 +1,4 @@
+// app/admin-educational/page.tsx (Admin Educational Page)
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import { firestore } from '../firebase/config'; 
@@ -413,7 +414,6 @@ const EducationalInfoAdmin = () => {
     };
     
     const handleDeleteTip = async (tipId: string) => {
-      // Trigger the confirmation modal
       setTipIdToDelete(tipId);
       setDeleteTipPrompt(true);
     };
@@ -422,13 +422,10 @@ const EducationalInfoAdmin = () => {
       try {
         if (!tipIdToDelete) return;
         
-        // Proceed with the deletion
         await deleteDoc(doc(firestore, 'educationalInfo', tipIdToDelete));
         
-        // Update your local state to reflect the deletion
         setTips((prevTips) => prevTips.filter((tip) => tip.id !== tipIdToDelete));
   
-        // Close the modal
         setDeleteTipPrompt(false);
   
         alert("Tip deleted successfully!");
@@ -439,7 +436,7 @@ const EducationalInfoAdmin = () => {
     };
   
     const cancelDeleteTip = () => {
-      setDeleteTipPrompt(false); // Close the modal without deleting
+      setDeleteTipPrompt(false);
     };
 
     const renderLink = (match: string, key: number) => (

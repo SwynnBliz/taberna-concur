@@ -1,4 +1,4 @@
-// components/forum/Forum.tsx
+// components/forum/Forum.tsx (Forum Module)
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, deleteField } from 'firebase/firestore';
@@ -92,12 +92,6 @@ const Forum = () => {
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
   const [userDetails, setUserDetails] = useState(new Map());
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
-  const indexOfLastPost = currentPage * postsPerPage;
-  const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
   
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -882,12 +876,10 @@ const Forum = () => {
   
     const postData = postDoc.data() as Post;
   
-    // Get the original comment creator's ID
     const commentCreatorId = postData.comments[commentIndex]?.userId || null;
   
     console.log("Original comment creator ID:", commentCreatorId);
   
-    // Handle the reply logic: you only notify if repliedToUserId is not null
     const updatedComments = postData.comments.map((comment, index) => {
       if (index === commentIndex) {
         return {
@@ -903,7 +895,7 @@ const Forum = () => {
               dislikedBy: [],
               likes: 0,
               dislikes: 0,
-              repliedToUserId,  // Only set if it was a reply to someone
+              repliedToUserId,
             },
           ],
         };
@@ -922,7 +914,7 @@ const Forum = () => {
           replyUserId: userId,
           replyUsername: username,
           commentCreatorId,
-          repliedToUserId,  // Pass the actual user ID for notification
+          repliedToUserId,
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -980,9 +972,7 @@ const Forum = () => {
     let isFirstMention = true;
     
     return text.split(regex).map((part, index) => {
-      // If the part matches @username (odd index) and there's a valid repliedToUserId, wrap it in a Link
       if (index % 2 === 1) {
-        // Only the first mention will be linked
         if (isFirstMention) {
           if (userId) {
             isFirstMention = false;
@@ -993,10 +983,8 @@ const Forum = () => {
             );
           }
         }
-        // If no userId, just show the @username as plain text
         return `@${part}`; 
       }
-      // If it's a part of the text that doesn't match @username, just return it as is
       return part;
     });
   };
@@ -1199,86 +1187,13 @@ const Forum = () => {
         </div>
       )}
 
-      {/* Pagination at the top */}
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 py-4">
-          {/* First Page Button */}
-          {currentPage > 1 && (
-            <button
-              onClick={() => {
-                setCurrentPage(1);
-              }}
-              className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-            >
-              <FaFastBackward size={20} />
-            </button>
-          )}
-
-          {/* Back Button */}
-          {currentPage > 1 && (
-            <button
-              onClick={() => {
-                setCurrentPage(currentPage - 1);
-              }}
-              className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-            >
-              <FaAngleLeft size={20} />
-            </button>
-          )}
-
-          {/* Page Numbers (5 at a time) */}
-          {Array.from({ length: totalPages }, (_, index) => index + 1)
-            .slice(
-              Math.max(0, currentPage - 3),
-              Math.min(totalPages, currentPage + 2)
-            )
-            .map((page) => (
-              <button
-                key={page}
-                onClick={() => {
-                  setCurrentPage(page);
-                }}
-                className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
-                  ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
-                  transition-colors duration-300`}
-              >
-                {page}
-              </button>
-            ))}
-
-          {/* Next Button */}
-          {currentPage < totalPages && (
-            <button
-              onClick={() => {
-                setCurrentPage(currentPage + 1);
-              }}
-              className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-            >
-              <FaAngleRight size={20} />
-            </button>
-          )}
-
-          {/* Last Page Button */}
-          {currentPage < totalPages && (
-            <button
-              onClick={() => {
-                setCurrentPage(totalPages);
-              }}
-              className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-            >
-              <FaFastForward size={20} />
-            </button>
-          )}
-        </div>
-      )}
-
       {/* Contains the Posts and Comments Sections*/}
       <div>
         <div className="p-3 w-9/12 bg-[#484242] mx-auto">
           {filteredPosts.length === 0 ? (
               <p className="text-center text-white w-full">There are no posts matching your search query.</p>
           ) : (
-            currentPosts.map((post) => (
+            filteredPosts.map((post) => (
               <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383434] p-6">
                 <div className="flex items-center justify-between mb-4">
                   {/* Left Section: Image, Username, and Timestamp */}
@@ -1568,7 +1483,7 @@ const Forum = () => {
                           className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
                           disabled={isSaving} 
                         >
-                          {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
+                          {isSaving ? "Saving..." : "Save"}
                         </button>
                       </div>
                     </div>
@@ -1591,7 +1506,7 @@ const Forum = () => {
                       className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
                       <FaThumbsUp className="w-4 h-4" />
-                      <span>{formatNumberIntl(post.likes)}</span> {/* Format the likes */}
+                      <span>{formatNumberIntl(post.likes)}</span>
                     </button>
                     {/* Tooltip for Like Button */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1606,7 +1521,7 @@ const Forum = () => {
                       className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
                       <FaThumbsDown className="w-4 h-4" />
-                      <span>{formatNumberIntl(post.dislikes)}</span> {/* Format the dislikes */}
+                      <span>{formatNumberIntl(post.dislikes)}</span>
                     </button>
                     {/* Tooltip for Dislike Button */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1625,7 +1540,7 @@ const Forum = () => {
                     className={`relative group flex items-center justify-between bg-[#2c2c2c] hover:text-yellow-500 p-2 rounded-full space-x-2 ml-auto ${showComments[post.id] ? 'text-yellow-500' : 'text-gray-400'}`}
                   >
                     <FaComment className="w-4 h-4" />
-                    <span>{formatNumberIntl(post.comments.length)}</span> {/* Format the comments */}
+                    <span>{formatNumberIntl(post.comments.length)}</span>
 
                     {/* Tooltip for Show Comments */}
                     <div
@@ -1792,7 +1707,7 @@ const Forum = () => {
                                         className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
                                         disabled={isSaving} 
                                       >
-                                        {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
+                                        {isSaving ? "Saving..." : "Save"}
                                       </button>
                                     </div>
                                   </div>
@@ -1815,7 +1730,7 @@ const Forum = () => {
                                     }`}
                                   >
                                     <FaThumbsUp className="w-3 h-3" />
-                                    <span>{formatNumberIntl(comment.likes)}</span> {/* Format the likes */}
+                                    <span>{formatNumberIntl(comment.likes)}</span>
                                   </button>
                                   {/* Tooltip for Like Button (Comment) */}
                                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1833,7 +1748,7 @@ const Forum = () => {
                                     }`}
                                   >
                                     <FaThumbsDown className="w-3 h-3" />
-                                    <span>{formatNumberIntl(comment.dislikes)}</span> {/* Format the dislikes */}
+                                    <span>{formatNumberIntl(comment.dislikes)}</span>
                                   </button>
                                   {/* Tooltip for Dislike Button (Comment) */}
                                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1962,7 +1877,7 @@ const Forum = () => {
                                                   {/* Display @name separately, uneditable */}
                                                   {repliedToUserId && (
                                                     <div className="text-sm text-blue-500 mb-4">
-                                                      Replied to: {repliedToUserId} {/* Just show @name as plain text */}
+                                                      Replied to: {repliedToUserId}
                                                     </div>
                                                   )}
 
@@ -2065,7 +1980,6 @@ const Forum = () => {
                                         const newText = e.target.value;
                                         setReplyText(newText);
 
-                                        // Check if the @username mention is still in the text
                                         if (!newText.startsWith('@')) {
                                           setRepliedToUserId(null);
                                         }
@@ -2114,84 +2028,6 @@ const Forum = () => {
                 />
               </div>
             ))
-          )}
-
-          {/* Pagination at the bottom */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-2 py-4">
-              {/* First Page Button */}
-              {currentPage > 1 && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(1);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaFastBackward size={20} />
-                </button>
-              )}
-
-              {/* Back Button */}
-              {currentPage > 1 && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(currentPage - 1);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaAngleLeft size={20} />
-                </button>
-              )}
-
-              {/* Page Numbers (5 at a time) */}
-              {Array.from({ length: totalPages }, (_, index) => index + 1)
-                .slice(
-                  Math.max(0, currentPage - 3),
-                  Math.min(totalPages, currentPage + 2)
-                )
-                .map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => {
-                      setCurrentPage(page);
-                      window.scrollTo(0, 0);
-                    }}
-                    className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
-                      ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
-                      transition-colors duration-300`}
-                  >
-                    {page}
-                  </button>
-                ))}
-
-              {/* Next Button */}
-              {currentPage < totalPages && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(currentPage + 1);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaAngleRight size={20} />
-                </button>
-              )}
-
-              {/* Last Page Button */}
-              {currentPage < totalPages && (
-                <button
-                  onClick={() => {
-                    setCurrentPage(totalPages);
-                    window.scrollTo(0, 0);
-                  }}
-                  className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                >
-                  <FaFastForward size={20} />
-                </button>
-              )}
-            </div>
           )}
         </div>
       </div>

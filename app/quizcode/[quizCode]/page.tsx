@@ -1,5 +1,5 @@
+// app/quizcode/page.tsx (TESDA Take Page)
 'use client';
-
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { firestore, auth } from './../../../app/firebase/config';
@@ -102,7 +102,7 @@ const QuizPage = () => {
 
   const handleFillInAnswer = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedAnswers = [...answers];
-    updatedAnswers[currentQuestionIndex] = e.target.value; // Keep spaces as the user types
+    updatedAnswers[currentQuestionIndex] = e.target.value;
     setAnswers(updatedAnswers);
   };
 

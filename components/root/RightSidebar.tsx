@@ -1,4 +1,4 @@
-// components/root/RightSidebar.tsx
+// components/root/RightSidebar.tsx (Rightside Bar Component)
 'use client';
 import { useState, useEffect, useMemo } from "react";
 import { firestore } from "../../app/firebase/config";
@@ -13,8 +13,6 @@ const RightSidebar = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const { currentUser } = getAuth();
   const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
-
-  
   const bannedWordsMemo = useMemo(() => bannedWords, [bannedWords]);
 
   useEffect(() => {

@@ -1,5 +1,5 @@
+// app/join/page.tsx (TESDA Join Page)
 'use client';
-
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Layout from '../../components/root/Layout';

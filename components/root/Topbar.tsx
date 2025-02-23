@@ -1,3 +1,4 @@
+// components/root/Topbar.tsx (Top Bar Component)
 'use client';
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -24,7 +25,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   const [isAdmin, setIsAdmin] = useState(false); 
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false); // Track if notifications are open
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();  
   const firestore = getFirestore();
@@ -39,9 +40,8 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         const q = query(
           collection(firestore, "notifications"),
           where("userId", "==", user.uid),
-          orderBy("timestamp", "desc") // Sorting by timestamp, latest first
+          orderBy("timestamp", "desc")
         );
-        // Listen for real-time updates
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
           const notificationsData: any[] = [];
           querySnapshot.forEach((doc) => {
@@ -75,10 +75,8 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
       const notificationRef = doc(firestore, "notifications", notificationId);
       await updateDoc(notificationRef, { read: true });
   
-      // Directly update unread count without re-fetching
       setUnreadCount((prevCount) => prevCount - 1);
   
-      // Navigate to the associated link
       router.push(link);
     } catch (error) {
       console.error('Error handling notification click:', error);
@@ -173,11 +171,9 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     try {
       const notificationRef = doc(firestore, "notifications", notificationId);
       await updateDoc(notificationRef, { read: true });
-  
-      // Update the unread count locally
+
       setUnreadCount((prevCount) => prevCount - 1);
-  
-      // Optionally update the notifications array locally to reflect the read status
+
       setNotifications((prevNotifications) =>
         prevNotifications.map((notif) =>
           notif.id === notificationId ? { ...notif, read: true } : notif
@@ -192,20 +188,19 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
     try {
       const user = getAuth().currentUser;
       if (user) {
-        // Update all notifications to 'read' for the current user
         const notificationsRef = collection(firestore, "notifications");
         const q = query(
           notificationsRef,
           where("userId", "==", user.uid),
-          where("read", "==", false) // Only update unread notifications
+          where("read", "==", false)
         );
         const querySnapshot = await getDocs(q);
-        const batch = writeBatch(firestore); // Use batch to update multiple notifications at once
+        const batch = writeBatch(firestore);
         querySnapshot.forEach((doc) => {
           batch.update(doc.ref, { read: true });
         });
         await batch.commit();
-        setUnreadCount(0); // Reset the unread count
+        setUnreadCount(0);
       }
     } catch (error) {
       console.error("Error marking all as read:", error);

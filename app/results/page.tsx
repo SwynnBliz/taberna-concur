@@ -1,5 +1,5 @@
+// app/results/page.tsx (TESDA Results Page)
 'use client';
-
 import { useEffect, useState } from 'react';
 import { firestore, auth } from './../../app/firebase/config'; 
 import { collection, getDocs, query, where } from 'firebase/firestore';

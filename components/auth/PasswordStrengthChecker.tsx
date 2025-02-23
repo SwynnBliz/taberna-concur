@@ -1,3 +1,4 @@
+// components/auth/PasswordStrengthChecker.tsx (Password Strength Checker Function)
 import { useState, useEffect } from "react";
 
 type PasswordStrengthCheckerProps = {

@@ -1,4 +1,4 @@
-// components/root/Layout.tsx
+// components/root/Layout.tsx (Root Layout File)
 'use client';
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation"; 
@@ -12,25 +12,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const pathname = usePathname(); 
   const auth = getAuth(app);
-
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false);
 
   const handleLeftSidebarToggle = () => {
     setIsLeftSidebarVisible(!isLeftSidebarVisible);
   };
 
-  
   const isForum = pathname === '/forum';
-
-  
   const isProfileView = pathname.startsWith('/profile-view/');
-
-  
   const isPostView = pathname.startsWith('/post-view/');
-
-  
   const isAdmin = pathname.includes("/admin");
-
   const isEducational = pathname.includes("educational");
 
   useEffect(() => {

@@ -168,7 +168,7 @@ const PostViewPage = () => {
   }, [filteredPosts]);
 
   const fetchUserDetails = async (userId: string): Promise<void> => {
-    if (userDetails.has(userId)) return; // Avoid redundant fetches
+    if (userDetails.has(userId)) return;
   
     try {
       const userDoc = await getDoc(doc(firestore, "users", userId));
@@ -981,9 +981,7 @@ const PostViewPage = () => {
     let isFirstMention = true;
     
     return text.split(regex).map((part, index) => {
-      // If the part matches @username (odd index) and there's a valid repliedToUserId, wrap it in a Link
       if (index % 2 === 1) {
-        // Only the first mention will be linked
         if (isFirstMention) {
           if (userId) {
             isFirstMention = false;
@@ -994,10 +992,8 @@ const PostViewPage = () => {
             );
           }
         }
-        // If no userId, just show the @username as plain text
         return `@${part}`; 
       }
-      // If it's a part of the text that doesn't match @username, just return it as is
       return part;
     });
   };
@@ -1450,7 +1446,7 @@ const PostViewPage = () => {
                         className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                       >
                         <FaThumbsUp className="w-4 h-4" />
-                        <span>{formatNumberIntl(post.likes)}</span> {/* Format the likes */}
+                        <span>{formatNumberIntl(post.likes)}</span>
                       </button>
                       {/* Tooltip for Like Button */}
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1465,7 +1461,7 @@ const PostViewPage = () => {
                         className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                       >
                         <FaThumbsDown className="w-4 h-4" />
-                        <span>{formatNumberIntl(post.dislikes)}</span> {/* Format the dislikes */}
+                        <span>{formatNumberIntl(post.dislikes)}</span>
                       </button>
                       {/* Tooltip for Dislike Button */}
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1484,7 +1480,7 @@ const PostViewPage = () => {
                       className={`relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto ${!hideComments[post.id] ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
                       <FaComment className="w-4 h-4" />
-                      <span>{formatNumberIntl(post.comments.length)}</span> {/* Format the comments */}
+                      <span>{formatNumberIntl(post.comments.length)}</span>
 
                       {/* Tooltip for Show Comments */}
                       <div
@@ -1651,7 +1647,7 @@ const PostViewPage = () => {
                                           className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
                                           disabled={isSaving} 
                                         >
-                                          {isSaving ? "Saving..." : "Save"} {/* Change text based on isSaving */}
+                                          {isSaving ? "Saving..." : "Save"}
                                         </button>
                                       </div>
                                     </div>
@@ -1674,7 +1670,7 @@ const PostViewPage = () => {
                                     }`}
                                   >
                                     <FaThumbsUp className="w-3 h-3" />
-                                    <span>{formatNumberIntl(comment.likes)}</span> {/* Format the likes */}
+                                    <span>{formatNumberIntl(comment.likes)}</span>
                                   </button>
                                   {/* Tooltip for Like Button (Comment) */}
                                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1692,7 +1688,7 @@ const PostViewPage = () => {
                                     }`}
                                   >
                                     <FaThumbsDown className="w-3 h-3" />
-                                    <span>{formatNumberIntl(comment.dislikes)}</span> {/* Format the dislikes */}
+                                    <span>{formatNumberIntl(comment.dislikes)}</span>
                                   </button>
                                   {/* Tooltip for Dislike Button (Comment) */}
                                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1818,10 +1814,9 @@ const PostViewPage = () => {
                                             {isEditingReply && (
                                               <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
                                                 <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
-                                                  {/* Display @name separately, uneditable */}
                                                   {repliedToUserId && (
                                                     <div className="text-sm text-blue-500 mb-4">
-                                                      Replied to: {repliedToUserId} {/* Just show @name as plain text */}
+                                                      Replied to: {repliedToUserId}
                                                     </div>
                                                   )}
 

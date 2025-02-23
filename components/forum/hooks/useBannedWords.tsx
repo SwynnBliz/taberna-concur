@@ -1,4 +1,4 @@
-// forum/hooks/useBannedWords.tsx
+// forum/hooks/useBannedWords.tsx (Banned Words Filter Function)
 import { useEffect, useState } from "react";
 import { firestore } from "../../../app/firebase/config"; 
 import { doc, getDoc } from "firebase/firestore";

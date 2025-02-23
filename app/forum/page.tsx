@@ -28,13 +28,12 @@ const ForumPage = () => {
   return (
     <Layout>
       <div className="bg-[#484242]">
-        <Forum /> {/* Use Forum component */}
-
-        {/* Popup (only shows once) */}
+        <Forum />
+        
         {showPopup && (
          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-[#2c2c2c] p-6 rounded-lg text-white w-3/4 md:w-1/2 relative">
-            {/* Close Button - Positioned top-right inside container */}
+            {/* Close Button */}
             <button
               onClick={handleClosePopup}
               className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"

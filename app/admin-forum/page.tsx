@@ -1,5 +1,5 @@
 // app/admin-forum/page.tsx (Admin Forum Page)
-'use client'; // Render page in client side
+'use client';
 import Layout from '../../components/root/Layout';
 import { useState, useEffect, useRef } from 'react'; 
 import { getFirestore, collection, query, orderBy, onSnapshot, updateDoc, doc, increment, getDoc, deleteDoc, deleteField } from 'firebase/firestore';
@@ -106,12 +106,6 @@ const AdminForumPage = () => {
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
   const [userDetails, setUserDetails] = useState(new Map());
-  const [currentPage, setCurrentPage] = useState(1);
-  const postsPerPage = 10;
-  const indexOfLastPost = currentPage * postsPerPage;
-  const indexOfFirstPost = indexOfLastPost - postsPerPage;
-  const currentPosts = filteredPosts.slice(indexOfFirstPost, indexOfLastPost);
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
 
   useEffect(() => {
     const checkAdminRole = async (authUser: FirebaseUser | null) => {
@@ -186,7 +180,7 @@ const AdminForumPage = () => {
   }, [filteredPosts]);
 
   const fetchUserDetails = async (userId: string): Promise<void> => {
-    if (userDetails.has(userId)) return; // Avoid redundant fetches
+    if (userDetails.has(userId)) return;
   
     try {
       const userDoc = await getDoc(doc(firestore, "users", userId));
@@ -909,13 +903,10 @@ const AdminForumPage = () => {
     }
   
     const postData = postDoc.data() as Post;
-  
-    // Get the original comment creator's ID
     const commentCreatorId = postData.comments[commentIndex]?.userId || null;
   
     console.log("Original comment creator ID:", commentCreatorId);
   
-    // Handle the reply logic: you only notify if repliedToUserId is not null
     const updatedComments = postData.comments.map((comment, index) => {
       if (index === commentIndex) {
         return {
@@ -931,7 +922,7 @@ const AdminForumPage = () => {
               dislikedBy: [],
               likes: 0,
               dislikes: 0,
-              repliedToUserId,  // Only set if it was a reply to someone
+              repliedToUserId,
             },
           ],
         };
@@ -950,7 +941,7 @@ const AdminForumPage = () => {
           replyUserId: userId,
           replyUsername: username,
           commentCreatorId,
-          repliedToUserId,  // Pass the actual user ID for notification
+          repliedToUserId,
         }),
         headers: { "Content-Type": "application/json" },
       });
@@ -1006,9 +997,7 @@ const AdminForumPage = () => {
     let isFirstMention = true;
     
     return text.split(regex).map((part, index) => {
-      // If the part matches @username (odd index) and there's a valid repliedToUserId, wrap it in a Link
       if (index % 2 === 1) {
-        // Only the first mention will be linked
         if (isFirstMention) {
           if (userId) {
             isFirstMention = false;
@@ -1019,10 +1008,8 @@ const AdminForumPage = () => {
             );
           }
         }
-        // If no userId, just show the @username as plain text
         return `@${part}`; 
       }
-      // If it's a part of the text that doesn't match @username, just return it as is
       return part;
     });
   };
@@ -1213,86 +1200,13 @@ const AdminForumPage = () => {
                 </div>
             )}
 
-            {/* Pagination at the top */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-2 py-4">
-                {/* First Page Button */}
-                {currentPage > 1 && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(1);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaFastBackward size={20} />
-                  </button>
-                )}
-
-                {/* Back Button */}
-                {currentPage > 1 && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(currentPage - 1);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaAngleLeft size={20} />
-                  </button>
-                )}
-
-                {/* Page Numbers (5 at a time) */}
-                {Array.from({ length: totalPages }, (_, index) => index + 1)
-                  .slice(
-                    Math.max(0, currentPage - 3),
-                    Math.min(totalPages, currentPage + 2)
-                  )
-                  .map((page) => (
-                    <button
-                      key={page}
-                      onClick={() => {
-                        setCurrentPage(page);
-                      }}
-                      className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
-                        ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
-                        transition-colors duration-300`}
-                    >
-                      {page}
-                    </button>
-                  ))}
-
-                {/* Next Button */}
-                {currentPage < totalPages && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(currentPage + 1);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaAngleRight size={20} />
-                  </button>
-                )}
-
-                {/* Last Page Button */}
-                {currentPage < totalPages && (
-                  <button
-                    onClick={() => {
-                      setCurrentPage(totalPages);
-                    }}
-                    className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                  >
-                    <FaFastForward size={20} />
-                  </button>
-                )}
-              </div>
-            )}
-
             {/* Contains the Posts and Comments Sections*/}
               <div>
                 <div className="p-3 w-9/12 bg-[#484242] mx-auto">
                   {filteredPosts.length === 0 ? (
                       <p className="text-center text-white w-full">There are no posts matching your search query.</p>
                   ) : (
-                    currentPosts.map((post) => (
+                    filteredPosts.map((post) => (
                     <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383434] p-6">
                         <div className="flex items-center justify-between mb-4">
                         {/* Left Section: Image, Username, and Timestamp */}
@@ -2123,83 +2037,6 @@ const AdminForumPage = () => {
                 ))
               )}
 
-              {/* Pagination at the bottom */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 py-4">
-                  {/* First Page Button */}
-                  {currentPage > 1 && (
-                    <button
-                      onClick={() => {
-                        setCurrentPage(1);
-                        window.scrollTo(0, 0);
-                      }}
-                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                    >
-                      <FaFastBackward size={20} />
-                    </button>
-                  )}
-
-                  {/* Back Button */}
-                  {currentPage > 1 && (
-                    <button
-                      onClick={() => {
-                        setCurrentPage(currentPage - 1);
-                        window.scrollTo(0, 0);
-                      }}
-                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                    >
-                      <FaAngleLeft size={20} />
-                    </button>
-                  )}
-
-                  {/* Page Numbers (5 at a time) */}
-                  {Array.from({ length: totalPages }, (_, index) => index + 1)
-                    .slice(
-                      Math.max(0, currentPage - 3),
-                      Math.min(totalPages, currentPage + 2)
-                    )
-                    .map((page) => (
-                      <button
-                        key={page}
-                        onClick={() => {
-                          setCurrentPage(page);
-                          window.scrollTo(0, 0);
-                        }}
-                        className={`w-10 h-10 px-2 py-1 flex items-center justify-center rounded-lg border border-gray-300 text-white 
-                          ${currentPage === page ? 'bg-yellow-500' : 'bg-[#383434] hover:bg-gray-500'} 
-                          transition-colors duration-300`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-
-                  {/* Next Button */}
-                  {currentPage < totalPages && (
-                    <button
-                      onClick={() => {
-                        setCurrentPage(currentPage + 1);
-                        window.scrollTo(0, 0);
-                      }}
-                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                    >
-                      <FaAngleRight size={20} />
-                    </button>
-                  )}
-
-                  {/* Last Page Button */}
-                  {currentPage < totalPages && (
-                    <button
-                      onClick={() => {
-                        setCurrentPage(totalPages);
-                        window.scrollTo(0, 0);
-                      }}
-                      className="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 text-white bg-[#383434] hover:bg-gray-500 transition-colors duration-300"
-                    >
-                      <FaFastForward size={20} />
-                    </button>
-                  )}
-                </div>
-              )}
             </div>
           </div>
           {/* Notification */}

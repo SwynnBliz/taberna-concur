@@ -1,8 +1,6 @@
-// lib/admin.ts
-// Import Firebase Admin SDK to use server-side functionality of Firebase services
+// lib/admin.ts (Firebase Admin SDK Initialization File)
 import admin from 'firebase-admin';
 
-// Initialize the Firebase app instance along with the account credential like projectId, email and privateKey
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert({
@@ -12,6 +10,6 @@ if (!admin.apps.length) {
     }),
   });
 }
-// Initialize and export the constant variable of Authentication of Firebase Admin to use its services on project
+
 const adminAuth = admin.auth();
 export { adminAuth };
