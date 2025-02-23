@@ -1,5 +1,6 @@
 // app/create/page.tsx (TESDA Create Page)
 'use client';
+
 import { useState, useEffect } from 'react';
 import { firestore } from './../../app/firebase/config';
 import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -33,8 +34,9 @@ const QuizCreatorPage = () => {
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null); 
   const [showQuestions, setShowQuestions] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null); // New state for file upload
 
-  
+
   useEffect(() => {
     const fetchQuizzes = async () => {
       const quizSnapshot = await getDocs(collection(firestore, 'quizzes'));
@@ -48,6 +50,51 @@ const QuizCreatorPage = () => {
 
     fetchQuizzes();
   }, []);
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      setFile(event.target.files[0]);
+    }
+  };
+
+  // Function to parse text file and add questions
+  const handleUploadFile = async () => {
+    if (!file) {
+      alert('Please upload a valid file.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const text = e.target?.result as string;
+      const parsedQuestions = parseQuestions(text);
+      setQuestions([...questions, ...parsedQuestions]); // Add parsed questions to existing questions
+      alert('Questions uploaded successfully!');
+    };
+    reader.readAsText(file);
+  };
+
+  // Function to parse questions from text file
+  const parseQuestions = (text: string): Question[] => {
+    const lines = text.split("\n").filter((line) => line.trim() !== "");
+    const questions: Question[] = [];
+    let currentQuestion: Question | null = null;
+
+    lines.forEach((line) => {
+      if (/^\d+\./.test(line)) {
+        if (currentQuestion) questions.push(currentQuestion);
+        currentQuestion = { question: line.replace(/^\d+\.\s*/, ""), type: "multiple-choice", options: [], correctAnswer: "" };
+      } else if (/^[A-D]\)/.test(line)) {
+        currentQuestion?.options?.push(line);
+      } else if (/^Correct Answer:/.test(line)) {
+        if (currentQuestion) {
+          currentQuestion.correctAnswer = line.replace(/^Correct Answer:\s*/, "");
+        }
+      }
+    });
+
+    if (currentQuestion) questions.push(currentQuestion);
+    return questions;
+  };
 
   const handleAddQuestion = () => {
     if (!currentQuestion.question.trim() || !currentQuestion.correctAnswer.trim()) {
@@ -66,6 +113,7 @@ const QuizCreatorPage = () => {
     setQuestions([...questions, currentQuestion]);
     setCurrentQuestion({ question: '', type: 'multiple-choice', options: [''], correctAnswer: '' });
   };
+  
 
   const handleCreateQuiz = async () => {
     if (!quizName.trim() || questions.length === 0) {
@@ -93,8 +141,6 @@ const QuizCreatorPage = () => {
         code,
         createdAt: new Date(),
       });
-
-      
       await Promise.all(
         questions.map(question =>
           addDoc(collection(firestore, 'questions'), { quizId: quizRef.id, ...question })
@@ -171,25 +217,25 @@ const QuizCreatorPage = () => {
 
   return (
     <Layout>
-      <div className="flex items-center justify-center min-h-screen bg-gray-800 text-yellow-400 px-4">
-        <div className="bg-gray-900 text-yellow-400 p-8 rounded-xl shadow-2xl w-full max-w-3xl">
-          <h2 className="text-4xl font-extrabold mb-6 text-center text-yellow-300">
+      <div className="flex items-center justify-center min-h-screen bg-[#1F1F1F] text-yellow-400 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32">
+        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-lg text-yellow-400 p-8 sm:p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-3xl border border-yellow-500 relative">
+          <h2 className="text-4xl sm:text-5xl font-extrabold mb-6 text-center text-yellow-300 drop-shadow-lg animate-pulse">
             Create a Quiz
           </h2>
-
+          
           {/* Quiz Name */}
           <input
             type="text"
             placeholder="Quiz Name"
             value={quizName}
             onChange={e => setQuizName(e.target.value)}
-            className="border-2 border-yellow-500 p-4 mb-6 w-full rounded-lg focus:ring focus:ring-yellow-300"
+            className="border-2 border-yellow-500 p-4 mb-6 w-full rounded-lg focus:ring focus:ring-yellow-400 bg-transparent text-yellow-200 placeholder-yellow-400"
           />
-
+  
           {errorMessage && (
             <div className="text-red-500 text-sm mb-4">{errorMessage}</div>
           )}
-
+  
           {/* Question Type */}
           <select
             value={currentQuestion.type}
@@ -199,12 +245,12 @@ const QuizCreatorPage = () => {
                 type: e.target.value as 'multiple-choice' | 'fill-in-the-blank',
               })
             }
-            className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring focus:ring-yellow-300"
+            className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring focus:ring-yellow-400 bg-transparent text-yellow-200"
           >
             <option value="multiple-choice">Multiple Choice</option>
             <option value="fill-in-the-blank">Fill in the Blank</option>
           </select>
-
+  
           {/* Current Question Input */}
           <div className="mb-6">
             <input
@@ -212,12 +258,12 @@ const QuizCreatorPage = () => {
               placeholder="Enter a Question"
               value={currentQuestion.question}
               onChange={e => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
-              className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring focus:ring-yellow-300"
+              className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring focus:ring-yellow-400 bg-transparent text-yellow-200"
             />
             {currentQuestion.type === 'multiple-choice' && (
               <div>
                 {currentQuestion.options?.map((option, index) => (
-                  <div key={index} className="mb-2 flex gap-2">
+                  <div key={index} className="mb-2 flex flex-col sm:flex-row gap-2">
                     <input
                       type="text"
                       placeholder={`Option ${index + 1}`}
@@ -227,7 +273,7 @@ const QuizCreatorPage = () => {
                         updatedOptions[index] = e.target.value;
                         setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
                       }}
-                      className="border-2 border-yellow-500 p-3 w-full rounded-lg focus:ring focus:ring-yellow-300"
+                      className="border-2 border-yellow-500 p-3 w-full rounded-lg focus:ring focus:ring-yellow-400 bg-transparent text-yellow-200"
                     />
                     <button
                       onClick={() => {
@@ -235,7 +281,7 @@ const QuizCreatorPage = () => {
                         updatedOptions.splice(index, 1);
                         setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
                       }}
-                      className="bg-red-500 text-white p-2 rounded-lg"
+                      className="bg-red-500 text-white p-2 rounded-lg hover:bg-red-700"
                     >
                       Remove
                     </button>
@@ -248,12 +294,21 @@ const QuizCreatorPage = () => {
                       options: [...(currentQuestion.options || []), ''],
                     })
                   }
-                  className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg"
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto"
                 >
                   Add Option
                 </button>
               </div>
             )}
+  
+            {/* File Upload Section */}
+            <div className="mb-4">
+              <input type="file" accept=".txt" onChange={handleFileChange} className="mb-2 bg-transparent text-yellow-200" />
+              <button onClick={handleUploadFile} className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Upload Questions
+              </button>
+            </div>
+  
             <input
               type="text"
               placeholder="Correct Answer"
@@ -261,104 +316,44 @@ const QuizCreatorPage = () => {
               onChange={e =>
                 setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })
               }
-              className="border-2 border-yellow-500 p-4 mt-4 w-full rounded-lg focus:ring focus:ring-yellow-300"
+              className="border-2 border-yellow-500 p-4 mt-4 w-full rounded-lg focus:ring focus:ring-yellow-400 bg-transparent text-yellow-200"
             />
           </div>
-
-          {/* Add Question Button */}
+  
+          {/* Buttons */}
           <button
             onClick={handleAddQuestion}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg w-full mb-6 transition-all duration-300 shadow-lg"
+            className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg w-full mb-6 transition-all duration-300 shadow-lg hover:shadow-yellow-500"
           >
             Add Question
           </button>
-
-          {/* Display Added Questions */}
-          <div className="mb-6">
-            <h3 className="text-2xl font-semibold mb-4 text-yellow-300">Questions Added:</h3>
-            {questions.map((q, i) => (
-              <div
-                key={i}
-                className="bg-gray-700 p-3 mb-2 rounded-lg shadow-md border border-yellow-400 text-yellow-300"
-              >
-                {i + 1}. {q.type === 'multiple-choice' ? 'MCQ' : 'Fill in the Blank'} -{' '}{q.question}
-              </div>
-            ))}
-          </div>
-
-          {/* Create Quiz Button */}
+  
           <button
             onClick={handleCreateQuiz}
-            className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-all duration-300 shadow-lg"
+            className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-all duration-300 shadow-lg hover:shadow-green-500"
           >
             Create Quiz
           </button>
-
-          {/* View Created Exams Button */}
+  
           <button
             onClick={() => setShowQuestions(!showQuestions)}
             className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full mt-6"
           >
             {showQuestions ? 'Hide Created Quizzes' : 'View Created Quizzes'}
           </button>
-
-          {/* Show Created Quizzes */}
+  
           {showQuestions && (
             <div className="mt-4 space-y-2">
               <h3 className="text-2xl font-semibold text-yellow-300">Created Quizzes:</h3>
               {createdExams.map(quiz => (
                 <div
                   key={quiz.id}
-                  className="bg-gray-700 p-4 mb-3 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500"
+                  className="bg-gray-700 p-4 mb-3 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500 hover:shadow-lg transition-all"
                   onClick={() => handleViewQuestions(quiz)}
                 >
                   {quiz.name} (Code: {quiz.code})
-                  <div className="mt-2 flex gap-2">
-                    <button
-                      onClick={() => handleUpdateQuiz(quiz.id)}
-                      className="bg-blue-500 text-white py-2 px-4 rounded-lg"
-                    >
-                      Update
-                    </button>
-                    <button
-                      onClick={() => handleDeleteQuiz(quiz.id)}
-                      className="bg-red-500 text-white py-2 px-4 rounded-lg"
-                    >
-                      Delete
-                    </button>
-                  </div>
                 </div>
               ))}
-            </div>
-          )}
-
-          {/* Show Created Quiz Questions */}
-          {selectedQuiz && showQuestions && (
-            <div className="mt-6">
-              <h3 className="text-2xl font-semibold text-yellow-300">
-                Questions for "{selectedQuiz.name}":
-              </h3>
-              {questions.map((q, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-700 p-4 mb-3 rounded-lg text-yellow-300"
-                >
-                  {index + 1}. {q.question}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Quiz Code Modal */}
-          {showModal && quizCode && (
-            <div className="mt-6 text-center">
-              <p className="text-lg">Your quiz code is: <strong>{quizCode}</strong></p>
-              <button
-                onClick={() => setShowModal(false)}
-                className="mt-4 text-yellow-300 hover:text-yellow-400"
-              >
-                Close
-              </button>
             </div>
           )}
         </div>

@@ -1,5 +1,6 @@
 // app/quizcode/page.tsx (TESDA Take Page)
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { firestore, auth } from './../../../app/firebase/config';
@@ -80,29 +81,55 @@ const QuizPage = () => {
     }
   }, [timer, isTimerRunning]);
 
-  const handleAnswerSelection = (answer: string) => {
+  const handleAnswerSelection = async (answer: string) => {
     const updatedAnswers = [...answers];
     updatedAnswers[currentQuestionIndex] = normalizeAnswer(answer);
     setAnswers(updatedAnswers);
-
-    setFlipped(true);
+  
+    setFlipped(true); // Start flip effect
     setIsTimerRunning(false);
-
+  
+    // Save answer to Firebase immediately
+    if (userEmail) {
+      const user = auth.currentUser;
+      if (user) {
+        const responseRef = doc(
+          firestore,
+          'quizResponses',
+          `${user.uid}_${quizCode}_${currentQuestionIndex}`
+        );
+        await setDoc(responseRef, {
+          userId: user.uid,
+          quizCode: quizCode,
+          questionIndex: currentQuestionIndex,
+          question: questions[currentQuestionIndex]?.question,
+          userAnswer: normalizeAnswer(answer),
+          correctAnswer: normalizeAnswer(questions[currentQuestionIndex]?.correctAnswer),
+          createdAt: new Date(),
+        });
+      }
+    }
+  
+    // Change question immediately while keeping smooth flip effect
     setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
-        setTimer(15);
+        setTimer(30);
         setIsTimerRunning(true);
       } else {
         handleSubmit(updatedAnswers);
       }
+    }, 100); // Shorter delay, so the question loads fast
+  
+    // Reset flip after next question is set
+    setTimeout(() => {
       setFlipped(false);
-    }, 600);
+    }, 500); // Keep flip effect smooth without extra wait
   };
 
   const handleFillInAnswer = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedAnswers = [...answers];
-    updatedAnswers[currentQuestionIndex] = e.target.value;
+    updatedAnswers[currentQuestionIndex] = e.target.value; // Keep spaces as the user types
     setAnswers(updatedAnswers);
   };
 
@@ -175,71 +202,73 @@ const QuizPage = () => {
 
   return (
     <Layout>
-      <div className="flex items-center justify-center min-h-screen bg-[#1F1F1F] text-[#E5E5E5]">
-        <div className="bg-[#292929] text-[#FFC107] p-8 rounded-lg shadow-lg w-full max-w-3xl">
-          <h2 className="text-3xl font-bold mb-6 text-center text-[#FFC107]">{quiz?.name}</h2>
-          <div className={`flip-container ${flipped ? 'flipped' : ''}`}>
-            <div className="flipper bg-[#333333] p-6 rounded-lg shadow-md">
-              <p className="text-xl font-semibold mb-6 text-center">
-                {currentQuestionIndex + 1}. {currentQuestion?.question}
-              </p>
-              <p className="text-center text-yellow-500 mb-4">{timer}s</p>
-              {currentQuestion?.type === 'multiple-choice' ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {currentQuestion?.options.map((opt: string, i: number) => (
-                    <button
-                      key={i}
-                      onClick={() => handleAnswerSelection(opt)}
-                      className="bg-[#FFC107] hover:bg-[#FFD54F] text-[#292929] font-semibold py-4 px-6 rounded-lg shadow-lg transition duration-300"
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              ) : currentQuestion?.type === 'fill-in-the-blank' ? (
-                <div>
-                  <input
-                    type="text"
-                    placeholder="Your Answer"
-                    value={answers[currentQuestionIndex] || ''}
-                    onChange={handleFillInAnswer}
-                    className="border-2 border-yellow-500 p-4 w-full rounded-lg focus:ring focus:ring-yellow-300"
-                  />
-                  <button
-                    onClick={handleAnswerSubmit}
-                    className="mt-4 bg-[#FFC107] hover:bg-[#FFD54F] text-[#292929] font-semibold py-2 px-4 rounded-lg"
-                  >
-                    Submit Answer
-                  </button>
-                </div>
-              ) : (
-                <p>Question type is not supported yet</p>
-              )}
-            </div>
+      <div className="flex items-center justify-center min-h-screen bg-[#1F1F1F] text-[#E5E5E5] p-4 sm:p-6">
+  <div className="bg-[#292929] text-[#FFC107] p-6 sm:p-8 rounded-lg shadow-lg w-full max-w-3xl">
+    <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-center text-[#FFC107]">
+      {quiz?.name}
+    </h2>
+    <div className={`flip-container ${flipped ? 'flipped' : ''}`}>
+      <div className="flipper bg-[#333333] p-4 sm:p-6 rounded-lg shadow-md">
+        <p className="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 text-center">
+          {currentQuestionIndex + 1}. {currentQuestion?.question}
+        </p>
+        <p className="text-center text-yellow-500 mb-4 text-lg sm:text-xl">{timer}s</p>
+        
+        {currentQuestion?.type === 'multiple-choice' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {currentQuestion?.options.map((opt: string, i: number) => (
+              <button
+                key={i}
+                onClick={() => handleAnswerSelection(opt)}
+                className="w-full bg-[#FFC107] hover:bg-[#FFD54F] text-[#292929] font-semibold py-3 px-4 sm:py-4 sm:px-6 rounded-lg shadow-lg transition duration-300"
+              >
+                {opt}
+              </button>
+            ))}
           </div>
-        </div>
+        ) : currentQuestion?.type === 'fill-in-the-blank' ? (
+          <div className="w-full">
+            <input
+              type="text"
+              placeholder="Your Answer"
+              value={answers[currentQuestionIndex] || ''}
+              onChange={handleFillInAnswer}
+              className="border-2 border-yellow-500 p-3 sm:p-4 w-full rounded-lg focus:ring focus:ring-yellow-300 text-black"
+            />
+            <button
+              onClick={handleAnswerSubmit}
+              className="mt-4 w-full sm:w-auto bg-[#FFC107] hover:bg-[#FFD54F] text-[#292929] font-semibold py-2 px-4 rounded-lg transition duration-300"
+            >
+              Submit Answer
+            </button>
+          </div>
+        ) : (
+          <p className="text-center">Question type is not supported yet</p>
+        )}
       </div>
+    </div>
+  </div>
+</div>
 
-      {showPopup && (
-  <div className="fixed top-0 left-0 w-full h-full bg-gray-800 bg-opacity-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-      <p className={`text-xl font-semibold mb-4 ${passStatus === 'Passed' ? 'text-green-500' : 'text-red-500'}`}>
+{showPopup && (
+  <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center p-4 sm:p-6">
+    <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg text-center max-w-md w-full">
+      <p className={`text-xl sm:text-2xl font-semibold mb-4 ${passStatus === 'Passed' ? 'text-green-500' : 'text-red-500'}`}>
         {passStatus === 'Passed'
           ? '🎉 Congratulations! You Passed!'
           : '❌ You Did Not Pass This Time'}
       </p>
-      <p className="text-lg mb-6">
+      <p className="text-lg sm:text-xl mb-4 sm:mb-6 text-gray-800">
         {passStatus === 'Passed'
           ? 'Well done on successfully completing the quiz!'
           : 'Don’t give up! Review and try again.'}
       </p>
-      <p className="text-lg font-medium">
+      <p className="text-lg sm:text-xl font-medium text-gray-900">
         Your score: {score} / {questions.length} ({((score / questions.length) * 100).toFixed(2)}%)
       </p>
     </div>
   </div>
 )}
-
     </Layout>
   );
 };

@@ -1,37 +1,51 @@
 // app/results/page.tsx (TESDA Results Page)
 'use client';
+
 import { useEffect, useState } from 'react';
-import { firestore, auth } from './../../app/firebase/config'; 
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { useRouter } from 'next/navigation';
+import { firestore, auth } from './../../app/firebase/config';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import Layout from '../../components/root/Layout';
 
 const ResultsPage = () => {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchResults = async () => {
+      setLoading(true);
       try {
-        const user = auth.currentUser; 
-        if (user) {
-          
-          const userEmail = user.email;
-
-          const resultsQuery = query(
-            collection(firestore, 'quizScores'),
-            where('email', '==', userEmail) 
-          );
-          const querySnapshot = await getDocs(resultsQuery);
-
-          const resultsData = querySnapshot.docs.map((doc) => doc.data());
-          setResults(resultsData);
-        } else {
-          setError('No user is logged in.');
+        const user = auth.currentUser;
+        if (!user) {
+          setError('User not authenticated.');
+          return;
         }
+
+        const scoresQuery = query(collection(firestore, 'quizScores'), where('userId', '==', user.uid));
+        const scoresSnapshot = await getDocs(scoresQuery);
+
+        if (scoresSnapshot.empty) {
+          setError('No quiz results found.');
+          return;
+        }
+
+        const scoresData = scoresSnapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt && data.createdAt.seconds
+              ? new Date(data.createdAt.seconds * 1000).toLocaleString()
+              : 'No Date Available',
+          };
+        });
+
+        setResults(scoresData);
       } catch (err) {
-        console.error('Error fetching results:', err);
-        setError('Error fetching quiz results');
+        console.error('Error fetching quiz results:', err);
+        setError('Error loading quiz results.');
       } finally {
         setLoading(false);
       }
@@ -40,53 +54,58 @@ const ResultsPage = () => {
     fetchResults();
   }, []);
 
-  if (loading) {
+  if (loading)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#3A3A3A] text-white">
-        <div className="text-xl font-semibold animate-pulse">Loading Results...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-yellow-400 text-xl animate-pulse">
+        Loading results...
       </div>
     );
-  }
 
-  if (error) {
+  if (error)
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#3A3A3A] text-white">
+      <div className="flex items-center justify-center min-h-screen bg-gray-900 text-red-500 text-xl font-semibold">
         {error}
       </div>
     );
-  }
 
   return (
     <Layout>
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#1F1F1F] text-[#E5E5E5] p-6">
-        <h2 className="text-3xl font-bold mb-6 text-center text-[#FFC107]">Your Quiz Results</h2>
-        <div className="bg-[#292929] text-[#FFC107] p-6 rounded-lg shadow-lg w-full max-w-3xl">
-          {results.length > 0 ? (
-            <table className="w-full table-auto text-center">
+      <div className="min-h-screen flex items-center justify-center px-6 sm:px-10 md:px-16 bg-[#1F1F1F] text-yellow-400">
+        <div className="bg-[#1F1F1F] bg-opacity-50 backdrop-blur-lg p-8 sm:p-12 rounded-2xl shadow-2xl w-full max-w-4xl border border-yellow-500 relative">
+          <h2 className="text-4xl text-yellow-500 font-extrabold mb-6 text-center animate-pulse">
+            Your Quiz Results
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="w-full text-center border-collapse">
               <thead>
-                <tr>
-                  <th className="p-4 border-b">Email</th>
-                  <th className="p-4 border-b">Quiz Code</th>
-                  <th className="p-4 border-b">Score</th>
-                  <th className="p-4 border-b">Date</th>
+                <tr className="text-yellow-400 border-b border-yellow-500 text-lg">
+                  <th className="py-3">Email</th>
+                  <th className="py-3">Quiz Code</th>
+                  <th className="py-3">Score</th>
+                  <th className="py-3">Date</th>
+                  <th className="py-3">Action</th>
                 </tr>
               </thead>
               <tbody>
-                {results.map((result, index) => (
-                  <tr key={index}>
-                    <td className="p-4 border-b">{result.email}</td>
-                    <td className="p-4 border-b">{result.quizCode}</td>
-                    <td className="p-4 border-b">{result.score}</td>
-                    <td className="p-4 border-b">
-                      {result.createdAt?.toDate().toLocaleString()}
+                {results.map((result) => (
+                  <tr key={result.id} className="border-b border-gray-700 text-yellow-200 hover:bg-yellow-500 hover:text-gray-900 transition">
+                    <td className="py-4 px-2">{result.email}</td>
+                    <td className="py-4 px-2">{result.quizCode}</td>
+                    <td className="py-4 px-2 font-bold">{result.score}</td>
+                    <td className="py-4 px-2">{result.createdAt}</td>
+                    <td className="py-4 px-2">
+                      <button
+                        onClick={() => router.push(`/review/${result.quizCode}`)}
+                        className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-500 hover:to-yellow-700 text-gray-900 font-semibold py-2 px-6 rounded-lg shadow-md transform transition-transform hover:scale-105"
+                      >
+                        Review
+                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          ) : (
-            <p className="text-center text-lg">You have not taken any quizzes yet.</p>
-          )}
+          </div>
         </div>
       </div>
     </Layout>

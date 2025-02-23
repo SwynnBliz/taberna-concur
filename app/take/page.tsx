@@ -1,5 +1,6 @@
 // app/take/page.tsx (TESDA Join 2 Page)
 'use client';
+
 import { useState } from 'react';
 import { firestore } from './../../app/firebase/config';
 import { collection, query, where, getDocs } from 'firebase/firestore';
