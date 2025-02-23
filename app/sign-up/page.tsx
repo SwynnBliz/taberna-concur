@@ -124,14 +124,14 @@ const SignUpPage = () => {
 
   return (
     <div
-      className="flex items-center justify-center min-h-screen bg-cover bg-center"
+      className="flex items-center justify-center min-h-screen bg-cover bg-center p-4 md:p-0"
       style={{
         backgroundImage:
           "url('https://wallup.net/wp-content/uploads/2019/09/929884-liquor-alcohol-spirits-poster-drinks-drink-whiskey.jpg')",
       }}
     >
-      <div className="bg-white/20 border border-white rounded-xl backdrop-blur-lg p-8 shadow-lg w-full max-w-md">
-        <h1 className="text-4xl font-bold text-center text-white mb-8">
+      <div className="bg-white/20 border border-white rounded-xl backdrop-blur-lg p-6 md:p-8 shadow-lg w-full max-w-md">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-white mb-6 md:mb-8">
           <span>Welcome to </span>
           <span className="text-yellow-500 italic island-moments">TabernaConcur</span>
         </h1>
@@ -140,15 +140,16 @@ const SignUpPage = () => {
           <input
             type="email"
             placeholder="Email"
-            className="w-full px-4 py-2 rounded-md bg-white/90"
+            className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+
           <input
             type="text"
             placeholder="Username"
-            className="w-full px-4 py-2 rounded-md bg-white/90"
+            className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -158,7 +159,7 @@ const SignUpPage = () => {
             <input
               type={passwordVisible ? "text" : "password"}
               placeholder="Password"
-              className="w-full px-4 py-2 rounded-md bg-white/90"
+              className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -166,7 +167,7 @@ const SignUpPage = () => {
             <button
               type="button"
               onClick={() => setPasswordVisible(!passwordVisible)}
-              className="absolute right-4 top-2 text-gray-500"
+              className="absolute right-4 top-2 text-gray-500 text-sm md:text-base"
             >
               {passwordVisible ? "Hide" : "Show"}
             </button>
@@ -176,7 +177,7 @@ const SignUpPage = () => {
             <input
               type={confirmPasswordVisible ? "text" : "password"}
               placeholder="Confirm Password"
-              className="w-full px-4 py-2 rounded-md bg-white/90"
+              className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
@@ -184,13 +185,13 @@ const SignUpPage = () => {
             <button
               type="button"
               onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
-              className="absolute right-4 top-2 text-gray-500"
+              className="absolute right-4 top-2 text-gray-500 text-sm md:text-base"
             >
               {confirmPasswordVisible ? "Hide" : "Show"}
             </button>
           </div>
 
-          <label className="flex items-center space-x-2 text-sm">
+          <label className="flex items-center space-x-2 text-sm md:text-base">
             <input
               type="checkbox"
               checked={isTermsChecked}
@@ -202,7 +203,7 @@ const SignUpPage = () => {
               <span
                 className="text-yellow-500 hover:text-yellow-600 cursor-pointer underline"
                 onClick={(e) => {
-                  e.preventDefault(); 
+                  e.preventDefault();
                   e.stopPropagation();
                   openModal();
                 }}
@@ -217,9 +218,7 @@ const SignUpPage = () => {
           <button
             type="submit"
             className={`w-full py-2 mt-4 text-white font-semibold rounded-md ${
-              loading || !isPasswordStrong
-                ? 'bg-gray-400 cursor-not-allowed'
-                : 'bg-yellow-500 hover:bg-yellow-600'
+              loading || !isPasswordStrong ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'
             }`}
             disabled={loading || !isPasswordStrong}
           >
@@ -233,24 +232,21 @@ const SignUpPage = () => {
           )}
 
           <div className="text-center mt-4">
-            <p className="text-white">
+            <p className="text-white text-sm md:text-base">
               Already have an account?{" "}
-              <a
-                href="/sign-in"
-                className="text-white hover:underline hover:text-yellow-300 font-bold"
-              >
+              <a href="/sign-in" className="text-white hover:underline hover:text-yellow-300 font-bold">
                 Sign In
               </a>
             </p>
           </div>
         </form>
       </div>
-      
+
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-[#484242] rounded-lg w-11/12 p-6 overflow-auto max-h-[120vh] text-white">
-            <h3 className="text-xl font-semibold mt-4 mb-2">Terms and Conditions</h3>
-            <div className="terms-and-conditions max-h-80 overflow-y-scroll pr-4" onScroll={handleScroll}>
+          <div className="bg-[#484242] rounded-lg w-11/12 sm:w-3/4 md:w-1/2 p-6 overflow-auto max-h-[80vh] text-white">
+            <h3 className="text-lg md:text-xl font-semibold mt-4 mb-2">Terms and Conditions</h3>
+            <div className="terms-and-conditions max-h-60 md:max-h-80 overflow-y-scroll pr-4" onScroll={handleScroll}>
               <p className="mb-4">
                 <strong>Effective Date:</strong> January 5, 2025
               </p>
@@ -296,7 +292,7 @@ const SignUpPage = () => {
                   <h5 className="font-semibold mt-2">Warning and Ban Policy:</h5>
                   <ul className="list-disc pl-8 mb-4">
                     <li>Users violating these rules will receive warnings from admins.</li>
-                    <li>Accumulating [X warnings] may result in a temporary or permanent ban.</li>
+                    <li>Accumulating 3 warnings may result in a temporary or permanent ban.</li>
                     <li>Severe violations (e.g., explicit threats, hate speech) may result in an immediate ban without warning.</li>
                   </ul>
                 </li>
@@ -355,7 +351,7 @@ const SignUpPage = () => {
               <button
                 onClick={closeModal}
                 disabled={!hasScrolledToEnd}
-                className={`w-8/12 py-2 mt-4 text-white font-semibold rounded-md mx-auto block ${
+                className={`w-full py-2 mt-4 text-white font-semibold rounded-md ${
                   !hasScrolledToEnd ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'
                 }`}
               >

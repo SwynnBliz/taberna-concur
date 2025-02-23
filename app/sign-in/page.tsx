@@ -186,34 +186,34 @@ const SignInPage = () => {
 
   return (
     <div
-      className="flex items-center justify-center min-h-screen bg-cover bg-center"
+      className="flex items-center justify-center min-h-screen bg-cover bg-center px-4 sm:px-8"
       style={{ backgroundImage: "url('https://wallup.net/wp-content/uploads/2019/09/929884-liquor-alcohol-spirits-poster-drinks-drink-whiskey.jpg')" }}
     >
-      <div className="bg-white/20 border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-md">
-        <h1 className="text-5xl font-bold text-center text-white mb-4">
+      <div className="bg-white/20 border border-white rounded-lg backdrop-blur-md p-6 sm:p-8 shadow-lg w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-center text-white mb-4">
           <span>Welcome to </span>
           <span className="text-yellow-500 italic island-moments">TabernaConcur</span>
         </h1>
-
+    
         <button
           onClick={handleGoogleSignIn}
           className="w-full flex items-center justify-center py-2 mt-4 mb-4 bg-gray-100 text-gray-700 font-semibold rounded-lg hover:bg-gray-200 border border-gray-300"
         >
-          <FcGoogle className="w-4 h-4 mr-2" />
+          <FcGoogle className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
           Continue with Google
         </button>
-
+    
         <div className="flex items-center my-4">
           <div className="border-t border-gray-400 flex-grow"></div>
           <span className="mx-4 text-white font-semibold">OR</span>
           <div className="border-t border-gray-400 flex-grow"></div>
         </div>
-
+    
         <form onSubmit={handleEmailPasswordSignIn} className="space-y-4">
           <input
             type="email"
             placeholder="Email"
-            className="w-full px-4 py-2 rounded-md bg-white/90"
+            className="w-full px-4 py-2 rounded-md bg-white/90 text-sm sm:text-base"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -222,7 +222,7 @@ const SignInPage = () => {
             <input
               type={passwordVisible ? "text" : "password"}
               placeholder="Password"
-              className="w-full px-4 py-2 rounded-md bg-white/90"
+              className="w-full px-4 py-2 rounded-md bg-white/90 text-sm sm:text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -230,7 +230,7 @@ const SignInPage = () => {
             <button
               type="button"
               onClick={() => setPasswordVisible(!passwordVisible)}
-              className="absolute right-4 top-2 text-gray-500"
+              className="absolute right-4 top-2 text-gray-500 text-sm sm:text-base"
             >
               {passwordVisible ? "Hide" : "Show"}
             </button>
@@ -248,7 +248,7 @@ const SignInPage = () => {
             </div>
           )}
           <div className="text-center mt-4">
-            <p className="text-white">
+            <p className="text-white text-sm sm:text-base">
               Don't have an account?{" "}
               <a href="/sign-up" className="text-white hover:underline hover:text-yellow-300 font-bold">Sign Up</a>
             </p>
