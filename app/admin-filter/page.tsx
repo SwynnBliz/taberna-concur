@@ -144,7 +144,7 @@ const AdminFilterPage: React.FC = () => {
   return (
     <Layout>
       <div className="admin-filter-page max-w-7xl mx-40 mt-10 p-6 bg-[#383434] rounded-lg relative flex flex-col">
-        <h1 className="text-xl text-white border-b-2 border-white pb-2 mb-4">Filter Banned Words (Admin Mode)</h1>
+        <h1 className="text-xl text-white border-b-2 border-white pb-2 mb-4">Manage Filter</h1>
 
         {/* Add New Banned Word Section */}
         <div className="mb-4 flex items-center gap-x-4">

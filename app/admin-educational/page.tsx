@@ -457,7 +457,7 @@ const EducationalInfoAdmin = () => {
         <Layout>
             <div className="flex flex-col">
                 <div className="mt-6 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
-                    <h1 className="text-xl text-white">Educational Tips & Tricks (Admin Mode)</h1>
+                    <h1 className="text-xl text-white">Manage Tips & Tricks</h1>
                     {/* Button to show/hide the form */}
                     <button
                         onClick={handleToggleForm}

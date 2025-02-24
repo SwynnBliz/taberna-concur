@@ -152,7 +152,7 @@ const PostForum = () => {
             </div>
             {imagePreview && (
               <div className="mt-4 w-full max-w-xs border border-bd relative">
-                <img src={imagePreview} alt="Selected" className="w-full h-auto rounded-md shadow-lg" />
+                <img src={imagePreview} alt="Selected" className="w-full max-h-[400px] rounded-md shadow-lg" />
                 <button
                   onClick={handleRemoveImage}
                   className="absolute top-1 right-1 text-white bg-[#2c2c2c] rounded-full p-1 hover:bg-yellow-500"

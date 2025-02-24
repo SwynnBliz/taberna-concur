@@ -1156,7 +1156,7 @@ const AdminForumPage = () => {
             <div className="mt-6 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
                 <div>
                   {/* Posts Text with Border */}
-                  <p className="text-white text-xl">Posts (Admin Mode)</p>
+                  <p className="text-white text-xl">Manage Forum</p>
                 </div>
                 
                 {/* Buttons aligned to the right */}
@@ -1425,7 +1425,7 @@ const AdminForumPage = () => {
                                     <img
                                       src={editCurrentImageUrl}
                                       alt="Current Post Image"
-                                      className="w-full object-cover rounded-lg mt-2"
+                                      className="w-full max-h-[400px] object-cover rounded-lg mt-2"
                                     />
                                     {/* Close button to remove the image */}
                                     <button
@@ -1446,7 +1446,7 @@ const AdminForumPage = () => {
                                     <img
                                       src={URL.createObjectURL(editImageFile)}
                                       alt="Selected Image Preview"
-                                      className="w-full object-cover rounded-lg mt-2"
+                                      className="w-full max-h-[400px] object-cover rounded-lg mt-2"
                                     />
                                     {/* Close button overlaid on the image */}
                                     <button
@@ -1505,7 +1505,7 @@ const AdminForumPage = () => {
                         <img
                             src={post.imageUrl}
                             alt="Post image"
-                            className="w-full h-full object-cover rounded-lg mb-4"
+                            className="w-full max-h-[400px] object-cover rounded-lg mb-4"
                         />
                         )}
                         

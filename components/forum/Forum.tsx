@@ -6,7 +6,7 @@ import { app } from '../../app/firebase/config';
 import PostForum from './PostForum';
 import { formatDistanceToNow } from 'date-fns'; 
 import { getAuth } from 'firebase/auth';
-import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare, FaAngleLeft, FaAngleRight, FaFastBackward, FaFastForward } from 'react-icons/fa'; 
+import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus, FaComment, FaEllipsisV, FaShare } from 'react-icons/fa'; 
 import Link from 'next/link';
 import useBannedWords from "./hooks/useBannedWords"; 
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";

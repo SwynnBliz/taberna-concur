@@ -452,7 +452,7 @@ const AdminUserPage = () => {
     <Layout>
       <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative flex flex-col">
         <section>
-          <h1 className="text-xl text-white mb-8 border-b-2 border-white pb-2">Users (Admin Mode)</h1>
+          <h1 className="text-xl text-white mb-8 border-b-2 border-white pb-2">Manage Users</h1>
           <div className="space-y-8">
              {/* Status Filter Dropdown */}
             <div className="mb-4">

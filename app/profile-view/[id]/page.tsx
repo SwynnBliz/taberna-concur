@@ -1062,7 +1062,7 @@ const ProfileViewPage = () => {
                                   <img
                                     src={editCurrentImageUrl}
                                     alt="Current Post Image"
-                                    className="w-full object-cover rounded-lg mt-2"
+                                    className="w-full max-h-[400px] object-cover rounded-lg mt-2"
                                   />
                                   {/* Close button to remove the image */}
                                   <button
@@ -1083,7 +1083,7 @@ const ProfileViewPage = () => {
                                   <img
                                     src={URL.createObjectURL(editImageFile)} 
                                     alt="Selected Image Preview"
-                                    className="w-full object-cover rounded-lg mt-2"
+                                    className="w-full max-h-[400px] object-cover rounded-lg mt-2"
                                   />
                                   {/* Close button overlaid on the image */}
                                   <button
@@ -1142,7 +1142,7 @@ const ProfileViewPage = () => {
                         <img
                           src={post.imageUrl}
                           alt="Post image"
-                          className="w-full h-full object-cover rounded-lg mb-4"
+                          className="w-full max-h-[400px] object-cover rounded-lg mb-4"
                         />
                       )}
                       <div className="flex gap-2 mb-4 items-center">
