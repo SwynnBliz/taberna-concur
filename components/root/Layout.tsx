@@ -5,8 +5,10 @@ import { usePathname, useRouter } from "next/navigation";
 import TopBar from "./Topbar";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSideBar";
-import { getAuth } from "firebase/auth";
+import { getAuth, User } from "firebase/auth";
 import { app } from "../../app/firebase/config";
+import { doc, onSnapshot } from "firebase/firestore";
+import { firestore } from "../../app/firebase/config";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
@@ -25,13 +27,47 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isEducational = pathname.includes("educational");
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const checkUserStatus = async (user: User | null) => {
       if (!user) {
         router.push("/sign-in");
+        return;
+      }
+
+      try {
+        const settingsRef = doc(firestore, "settings", "disabledIds");
+
+        // Listen for changes to the disabledIds array in the settings document
+        const unsubscribeSettings = onSnapshot(settingsRef, (settingsDoc) => {
+          if (settingsDoc.exists()) {
+            const settingsData = settingsDoc.data();
+            const disabledIds = settingsData?.disabledIds || [];
+
+            // If the current user's ID is in the disabledIds, log them out and navigate to sign-in
+            if (disabledIds.includes(user.uid)) {
+              auth.signOut();
+              alert("You have been banned, logging out. Please contact support.");
+
+              setTimeout(() => {
+                router.push("/sign-in");
+              }, 2000);
+            }
+          }
+        });
+
+        return () => unsubscribeSettings();
+      } catch (err) {
+        console.error("Error checking disabled user status:", err);
+      }
+    };
+
+    const unsubscribeAuth = auth.onAuthStateChanged((user: User | null) => {
+      if (user) {
+        checkUserStatus(user);
       }
     });
 
-    return () => unsubscribe();
+    // Cleanup auth state listener
+    return () => unsubscribeAuth();
   }, [auth, router]);
 
   return (

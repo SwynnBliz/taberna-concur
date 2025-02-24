@@ -4,7 +4,7 @@ import Layout from '../../components/root/Layout';
 import { useEffect, useState } from 'react';
 import { app } from '../firebase/config'; 
 import { getAuth, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { getFirestore, collection, getDoc, getDocs, doc, updateDoc, Timestamp, query, where, addDoc, deleteDoc } from 'firebase/firestore'; 
+import { getFirestore, collection, getDoc, getDocs, doc, updateDoc, Timestamp, query, where, addDoc, setDoc, deleteDoc } from 'firebase/firestore'; 
 import { FaEdit, FaTrash, FaTimes } from 'react-icons/fa'; 
 import { AiOutlineClose } from 'react-icons/ai';  
 import { useRouter } from 'next/navigation';
@@ -263,6 +263,7 @@ const AdminUserPage = () => {
   
         const data = await response.json();
         if (response.ok) {
+          // Update user document
           await updateDoc(userRef, {
             disabled: !isCurrentlyDisabled, 
             disabledBy: !isCurrentlyDisabled ? auth.currentUser?.uid : null, 
@@ -270,6 +271,33 @@ const AdminUserPage = () => {
             banMessage: !isCurrentlyDisabled ? banMessage || '' : null,
           });
   
+          // Update the settings document with disabledIds array
+          const settingsRef = doc(firestore, "settings", "disabledIds");
+          const settingsDoc = await getDoc(settingsRef);
+  
+          let disabledIds = [];
+          if (settingsDoc.exists()) {
+            const settingsData = settingsDoc.data();
+            disabledIds = settingsData?.disabledIds || [];
+          } else {
+            // If settings document doesn't exist, create it with an empty disabledIds array
+            await setDoc(settingsRef, { disabledIds: [] });
+          }
+  
+          if (!isCurrentlyDisabled) {
+            // Ban: Add userId to disabledIds array
+            if (!disabledIds.includes(userId)) {
+              disabledIds.push(userId);
+            }
+          } else {
+            // Unban: Remove userId from disabledIds array
+            disabledIds = disabledIds.filter((id: string) => id !== userId);
+          }
+          await updateDoc(settingsRef, { disabledIds: disabledIds });
+
+          alert(`User has been ${isCurrentlyDisabled ? 'unbanned' : 'banned and logged out'} successfully.`);
+  
+          // Update users list UI
           setUsers((prevUsers) =>
             prevUsers.map((user) =>
               user.id === userId
