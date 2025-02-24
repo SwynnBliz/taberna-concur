@@ -91,9 +91,9 @@ const UserDrink = () => {
                 <div className="mt-6 w-8/12 mx-auto h-12 flex border-b-2 border-white mb-4">
                     {/* Tips & Tricks Tab */}
                     <Link
-                        href="/educational"
+                        href="/educational-tip"
                         className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                            ${pathname === "/educational" ? "bg-yellow-500 text-black" : "bg-transparent text-white hover:bg-gray-700"}`}
+                            ${pathname === "/educational-tip" ? "bg-yellow-500 text-black" : "bg-transparent text-white hover:bg-gray-700"}`}
                     >
                         Tips & Tricks
                     </Link>
