@@ -417,7 +417,7 @@ const AdminUserPage = () => {
       return;
     }
 
-    const baseUrl = category === 'profile' ? '/profile-view/' : '/post-view/';
+    const baseUrl = category === 'profile' ? '/profile-view/' : '/forum/';
     const link = `${baseUrl}${id}`;
 
     if (!selectedWarningUser) {
@@ -478,7 +478,7 @@ const AdminUserPage = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383434] rounded-lg relative flex flex-col">
+      <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383838] rounded-lg relative flex flex-col">
         <section>
           <h1 className="text-xl text-white mb-8 border-b-2 border-white pb-2">Manage Users</h1>
           <div className="space-y-8">
@@ -488,7 +488,7 @@ const AdminUserPage = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as 'all' | 'disabled' | 'notDisabled')}
-                className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323]"
+                className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
               >
                 <option value="all">All Users</option>
                 <option value="disabled">Disabled Users</option>
@@ -503,7 +503,7 @@ const AdminUserPage = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search by username..."
-                className="w-full p-3 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323]"
+                className="w-full p-3 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
               />
             </div>
 
@@ -511,20 +511,20 @@ const AdminUserPage = () => {
             {filteredUsers.map((user) => (
               <div
                 key={user.id}
-                className="flex items-start space-x-8 space-y-4 bg-[#424242] p-8 rounded-lg mb-6 relative"
+                className="flex items-start space-x-8 space-y-4 bg-[#484848] p-8 rounded-lg mb-6 relative"
               >
                 <div className="absolute top-2 right-8 flex space-x-2">
                   {/* Role Button */}
                   <button
                     onClick={() => handleToggleRole(user.id, user.role)} 
-                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white"
+                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white hover:bg-yellow-500"
                   >
                     {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
                   </button>
                   {/* NCII Holder Button */}
                   <button
                     onClick={() => handleToggleNCIIHolder(user.id, user.isNCIIHolder)}
-                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white ml-2"
+                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white ml-2 hover:bg-yellow-500"
                   >
                     {user.isNCIIHolder ? 'Revoke NC II' : 'Make NC II'}
                   </button>
@@ -554,16 +554,8 @@ const AdminUserPage = () => {
                 </div>
 
                 {selectedWarningUser && (
-                  <div className="fixed inset-0 bg-[#484242] bg-opacity-10 flex items-center justify-center z-40 pt-20 pb-10">
+                  <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-40 pt-20 pb-10">
                     <div className="bg-[#2c2c2c] p-6 rounded-lg w-8/12 max-h-[74vh] overflow-y-auto relative">
-                      {/* Close Button */}
-                      <button
-                        onClick={handleCloseWarningModal}
-                        className="absolute top-2 right-2 bg-[#2c2c2c] hover:bg-yellow-500 text-white p-2 rounded-full"
-                      >
-                        <FaTimes className="h-5 w-5" />
-                      </button>
-
                       <h2 className="text-white font-bold mb-4">Warnings for {selectedWarningUser.username}</h2>
 
                       {/* List Existing Warnings */}
@@ -578,7 +570,7 @@ const AdminUserPage = () => {
                               return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
                             })
                             .map((warning) => (
-                              <div key={warning.id} className="relative p-4 bg-[#424242] rounded-lg">
+                              <div key={warning.id} className="relative p-4 bg-[#484848] rounded-lg">
                                 {/* Delete Button */}
                                 <button
                                   onClick={() => handleDeleteWarning(warning.id)}
@@ -627,7 +619,7 @@ const AdminUserPage = () => {
                         <select
                           value={newWarning.category}
                           onChange={(e) => setNewWarning({ ...newWarning, category: e.target.value })}
-                          className="w-full p-2 mb-2 bg-[#424242] text-white rounded-lg"
+                          className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
                         >
                           <option value="" disabled>Select Category</option>
                           <option value="profile">Profile</option>
@@ -637,7 +629,7 @@ const AdminUserPage = () => {
                           placeholder="Message"
                           value={newWarning.message}
                           onChange={(e) => setNewWarning({ ...newWarning, message: e.target.value })}
-                          className="w-full p-2 mb-2 bg-[#424242] text-white rounded-lg h-auto oresize-none"
+                          className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg h-auto oresize-none outline-none focus:ring-2 focus:ring-yellow-500"
                           rows={6}
                         />
                         <input
@@ -645,30 +637,41 @@ const AdminUserPage = () => {
                           placeholder="ID (Profile or Forum Post)"
                           value={newWarning.id}
                           onChange={(e) => setNewWarning({ ...newWarning, id: e.target.value })}
-                          className="w-full p-2 mb-2 bg-[#424242] text-white rounded-lg"
+                          className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
                         />
-                        <button
-                          onClick={handleCreateWarning}
-                          className="w-full bg-orange-500 hover:bg-orange-600 p-2 text-white rounded-lg"
-                        >
-                          Add Warning
-                        </button>
+                        <div className="flex justify-between mt-4">
+                          <button
+                            onClick={handleCloseWarningModal}
+                            className="bg-gray-500 hover:bg-gray-600 px-4 py-2 text-white rounded-lg"
+                          >
+                            Close
+                          </button>
+                          <button
+                            onClick={handleCreateWarning}
+                            className="bg-orange-500 hover:bg-orange-600 px-4 py-2 text-white rounded-lg"
+                          >
+                            Add
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Left Section: Profile Image and Username */}
-                <div className="flex flex-col items-center w-1/4">
-                  <Link href={`/profile-view/${user.id}`}>
+                <div className="flex flex-col items-center w-1/4 relative">
+                  <Link href={`/profile-view/${user.id}`} className="relative">
                     <img
                       src={user.profilePhoto || '/placeholder.jpg'}
                       alt="Profile"
-                      className="w-32 h-32 rounded-full mb-4"
+                      className="w-32 h-32 rounded-full mb-4 transition-opacity duration-300"
                     />
+                    {/* Overlay for Yellow Tint */}
+                    <div className="absolute inset-0 w-32 h-32 rounded-full bg-yellow-500 opacity-0 hover:opacity-60 transition-opacity duration-300"></div>
                   </Link>
                   <h2 className="text-base text-white font-bold">{user.username}</h2>
                 </div>
+
         
                 {/* Right Section: Bio and Contact Number */}
                 <div className="flex flex-col w-2/3">
@@ -691,8 +694,8 @@ const AdminUserPage = () => {
 
         {/* Modal for Editing User */}
         {isModalOpen && selectedUser && (
-        <div className="fixed inset-0 bg-[#484242] bg-opacity-80 flex justify-center items-center z-50">
-            <div className="bg-[#383434] p-6 rounded-lg w-3/5 max-w-2xl h-5/6 overflow-auto">
+        <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex justify-center items-center z-50">
+            <div className="bg-[#383838] p-6 mt-40 mb-20 h-[80vh] rounded-lg w-3/5 max-w-2xl overflow-auto">
             <h3 className="text-2xl text-white mb-4">Edit Profile</h3>
             <form onSubmit={handleSubmit}>
                 {/* Image Preview */}
@@ -730,7 +733,7 @@ const AdminUserPage = () => {
                   <input
                     type="file"
                     onChange={handleImageUpload}
-                    className="mt-4 p-2 text-white"
+                    className="mt-4 p-2 text-white w-full bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded"
                   />
                 </div>
 
@@ -742,7 +745,7 @@ const AdminUserPage = () => {
                     name="username"
                     value={selectedUser?.username || ""}
                     onChange={handleInputChange}
-                    className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323]"
+                    className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
                 />
                 </div>
 
@@ -753,7 +756,7 @@ const AdminUserPage = () => {
                     name="bio"
                     value={selectedUser?.bio || ""}
                     onChange={handleInputChange}
-                    className="w-full p-2 min-h-40 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323]"
+                    className="w-full p-2 min-h-40 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
                 />
                 </div>
 
@@ -762,15 +765,15 @@ const AdminUserPage = () => {
                 <button
                     type="button"
                     onClick={handleModalClose}
-                    className="bg-gray-500 px-4 py-2 rounded-md text-white"
+                    className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md text-white"
                 >
                     Cancel
                 </button>
                 <button
                     type="submit"
-                    className="bg-yellow-500 px-4 py-2 rounded-md text-white"
+                    className="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md text-white"
                 >
-                    {isSaving ? 'Saving...' : 'Update Profile'}
+                    {isSaving ? 'Saving...' : 'Update'}
                 </button>
                 </div>
             </form>

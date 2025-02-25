@@ -74,11 +74,11 @@ const DrinkViewPage = () => {
 
     return (
         <Layout>
-            <div className="max-w-4xl mx-auto mt-8 mb-8 bg-[#383434] p-6 rounded-lg shadow-lg text-white relative">
+            <div className="max-w-4xl mx-auto mt-8 mb-8 bg-[#383838] p-6 rounded-lg shadow-lg text-white relative">
                 {/* Go Back Button */}
                 <button 
                     onClick={() => router.back()} 
-                    className="absolute top-4 right-4 text-yellow-500 hover:text-yellow-600 transition"
+                    className="absolute top-4 right-4 text-white hover:text-yellow-500 transition"
                 >
                     <FaArrowLeft size={24} />
                 </button>

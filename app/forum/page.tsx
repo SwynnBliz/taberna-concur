@@ -27,11 +27,11 @@ const ForumPage = () => {
 
   return (
     <Layout>
-      <div className="bg-[#484242]">
+      <div className="bg-[#484848]">
         <Forum />
         
         {showPopup && (
-         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-[#2c2c2c] p-6 rounded-lg text-white w-3/4 md:w-1/2 relative">
             {/* Close Button */}
             <button
@@ -50,7 +50,7 @@ const ForumPage = () => {
             </p>
             <ul className="list-disc list-inside text-sm mt-2">
               <li><strong>Collaborative Alcohol Party Planning 🎊</strong>: Use our intuitive platform with a Weighted Average Algorithm and Threshold Setting to help you plan the perfect party with your friends and colleagues.</li>
-              <li><strong>TESDA Quiz Assessment & Quiz Creation 📚</strong>: Take quizzes to test your knowledge and create your own quizzes for others to enjoy!</li>
+              <li><strong>TESDA Quiz Assessment 📚</strong>: Take TESDA standard quizzes to test your knowledge with Bartending!</li>
               <li><strong>Forum 🗨️</strong>: Engage with others, ask questions, and share insights on our forum</li>
               <li><strong>Profile Management 👤</strong>: Customize and manage your personal profile easily!</li>
               <li><strong>Educational Module 🍹</strong>: Explore tips and tricks to level up your bartending skills and learn new techniques!</li>

@@ -22,7 +22,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const isForum = pathname === '/forum';
   const isProfileView = pathname.startsWith('/profile-view/');
-  const isPostView = pathname.startsWith('/post-view/');
+  const isPostView = pathname.startsWith('/forum/');
   const isAdmin = pathname.includes("/admin");
   const isEducational = pathname.includes("educational");
 
@@ -82,7 +82,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Main Content */}
         <main 
-          className={`flex-1 bg-[#484242] overflow-auto ${isForum || isProfileView || isPostView || isAdmin || isEducational ? "mr-60" : ""}`}
+          className={`flex-1 bg-[#484848] overflow-auto ${isForum || isProfileView || isPostView || isAdmin || isEducational ? "mr-60" : ""}`}
         >
           {children}
         </main>

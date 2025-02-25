@@ -62,7 +62,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
 
   return (
     <div
-      className={`fixed top-18 left-0 h-full w-64 bg-[#363232] text-white p-6 transition-all transform ${
+      className={`fixed top-18 left-0 h-full w-64 bg-[#383838] text-white p-6 transition-all transform ${
         isVisible ? 'translate-x-0' : '-translate-x-full'
       }`}
       style={{ zIndex: 1000 }}
@@ -98,7 +98,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             <li>
               <button
                 className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => handleNavigate('/forum')}
+                onClick={() => handleNavigate('/collaborative')}
               >
                 Collaborative
               </button>
@@ -135,7 +135,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
               <li>
                 <button
                   className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                  onClick={() => handleNavigate('/admin-educational')}
+                  onClick={() => handleNavigate('/admin-educational-tip')}
                 >
                   Manage Tips
                 </button>
@@ -143,7 +143,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
               <li>
                 <button
                   className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                  onClick={() => handleNavigate('/admin-drink')}
+                  onClick={() => handleNavigate('/admin-educational-drink')}
                 >
                   Manage Drinks
                 </button>

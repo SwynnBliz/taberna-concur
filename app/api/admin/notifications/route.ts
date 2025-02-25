@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         userId: postOwnerId,
         type: "comment",
         content: `${username} commented: "${comment}" on your post`,
-        link: `/post-view/${postId}`,
+        link: `/forum/${postId}`,
         read: false,
         timestamp: serverTimestamp(),
       });

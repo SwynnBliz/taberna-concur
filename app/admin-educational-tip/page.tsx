@@ -1,4 +1,4 @@
-// app/admin-educational/page.tsx (Admin Educational Page)
+// app/admin-educational-tip/page.tsx (Admin Educational Tip Page)
 'use client'
 import { useState, useEffect, useRef } from 'react';
 import { firestore } from '../firebase/config'; 
@@ -461,7 +461,7 @@ const EducationalInfoAdmin = () => {
                     {/* Button to show/hide the form */}
                     <button
                         onClick={handleToggleForm}
-                        className="bg-yellow-500 text-black p-2 rounded-full hover:bg-yellow-600 transition duration-200"
+                        className="text-white p-2 rounded-full hover:bg-yellow-500 transition duration-200"
                     >
                         <FaPlus className="inline mr-2" /> Add Tip
                     </button>
@@ -469,7 +469,7 @@ const EducationalInfoAdmin = () => {
     
                 <div className="flex flex-col justify-center align-middle mx-auto w-6/12">
                     {formData.showForm && (
-                    <form onSubmit={editingTip ? handleUpdateTip : handleCreateTip} className="bg-[#383434] p-6 rounded-lg shadow-xl w-full space-y-4">
+                    <form onSubmit={editingTip ? handleUpdateTip : handleCreateTip} className="bg-[#383838] p-6 rounded-lg shadow-xl w-full space-y-4">
                         <div>
                             <div className="flex items-center justify-between">
                                 <label className="text-white">Title</label>
@@ -538,7 +538,7 @@ const EducationalInfoAdmin = () => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-yellow-500 text-black py-2 rounded mt-4 hover:bg-yellow-600 transition duration-200 disabled:opacity-50"
+                            className="w-full bg-yellow-500 text-white py-2 rounded mt-4 hover:bg-yellow-600 transition duration-200 disabled:opacity-40"
                         >
                             {loading ? 'Uploading...' : editingTip ? 'Update Tip' : 'Add Tip'}
                         </button>
@@ -634,9 +634,9 @@ const EducationalInfoAdmin = () => {
                         />
                         <button
                             onClick={handleSearch}
-                            className="bg-yellow-500 text-black p-2 rounded-full hover:bg-yellow-600 transition duration-200"
+                            className="text-white p-2 rounded-full hover:text-yellow-500 transition duration-200"
                         >
-                            <FaSearch />
+                            <FaSearch className="w-6 h-6" />
                         </button>
                     </div>
     
@@ -646,7 +646,7 @@ const EducationalInfoAdmin = () => {
                             <p className="text-yellow-500">No results found</p>
                         ) : (
                             filteredTips.map((tip: Tip) => (
-                                <div key={tip.id} className="bg-[#383434] flex flex-col p-4 rounded-lg shadow-lg space-y-4 text-white relative">
+                                <div key={tip.id} className="bg-[#383838] flex flex-col p-4 rounded-lg shadow-lg space-y-4 text-white relative">
                                   {/* Title and buttons container */}
                                   <div className="flex items-center justify-between">
                                     <h3 className="text-2xl font-semibold text-center text-yellow-500 flex-1">{tip.title}</h3>
@@ -704,13 +704,13 @@ const EducationalInfoAdmin = () => {
                     </div>
                     
                     {deleteTipPrompt && (
-                      <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                      <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
                         <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                           <p>Are you sure you want to delete this tip? This cannot be undone!</p>
-                          <div className="mt-4 flex justify-center gap-4">
+                          <div className="mt-4 flex justify-between gap-4">
                             <button
                               onClick={confirmDeleteTip}
-                              className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+                              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                             >
                               Confirm
                             </button>

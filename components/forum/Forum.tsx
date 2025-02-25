@@ -1063,7 +1063,7 @@ const Forum = () => {
 
   const handleShare = (postId: string) => {
     
-    const url = `${window.location.origin}/post-view/${postId}`;
+    const url = `${window.location.origin}/forum/${postId}`;
     navigator.clipboard.writeText(url)
       .then(() => {
         setNotification('Link copied!');
@@ -1189,24 +1189,28 @@ const Forum = () => {
 
       {/* Contains the Posts and Comments Sections*/}
       <div>
-        <div className="p-3 w-9/12 bg-[#484242] mx-auto">
+        <div className="p-3 w-9/12 bg-[#484848] mx-auto">
           {filteredPosts.length === 0 ? (
               <p className="text-center text-white w-full">There are no posts matching your search query.</p>
           ) : (
             filteredPosts.map((post) => (
-              <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383434] p-6">
+              <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383838] p-6">
                 <div className="flex items-center justify-between mb-4">
                   {/* Left Section: Image, Username, and Timestamp */}
                   <div className="flex items-center">
                     <div className="relative group inline-flex items-center">
-                      <Link href={`/profile-view/${post.userId}`}>
-                        <img
-                          src={userPhotos.get(post.userId) || '/placeholder.jpg'}
-                          alt="Profile"
-                          className="w-12 h-12 rounded-full mr-4 cursor-pointer"
-                          onLoad={() => fetchUserPhoto(post.userId)}
-                        />
-                      </Link>
+                    <Link href={`/profile-view/${post.userId}`} className="relative">
+                      {/* Profile Image */}
+                      <img
+                        src={userPhotos.get(post.userId) || '/placeholder.jpg'}
+                        alt="Profile"
+                        className="w-12 h-12 rounded-full mr-4 cursor-pointer transition-opacity duration-300"
+                        onLoad={() => fetchUserPhoto(post.userId)}
+                      />
+                      
+                      {/* Yellow Tint Overlay */}
+                      <div className="absolute inset-0 w-12 h-12 rounded-full bg-yellow-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                    </Link>
 
                       {/* Tooltip for View User's Profile */}
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1249,7 +1253,7 @@ const Forum = () => {
                       <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
                         {/* View Post Button */}
                         <div className="relative group inline-flex items-center">
-                          <Link href={`/post-view/${post.id}`}>
+                          <Link href={`/forum/${post.id}`}>
                             <button className="text-white hover:text-yellow-500 mt-2">
                               <HiDocumentMagnifyingGlass className="w-4 h-4" />
                             </button>
@@ -1333,17 +1337,17 @@ const Forum = () => {
 
                 {/* Delete Confirmation Modal */}
                 {deletePostPrompt && (
-                  <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                  <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
                     <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                       <p>Are you sure you want to delete this post? This cannot be undone!</p>
-                      <div className="mt-4 flex justify-center gap-4">
+                      <div className="mt-4 flex justify-between gap-4">
                         <button
                           onClick={async () => {
                             if (!postIdToDelete) return;
                             await deletePost(postIdToDelete);
                             setDeletePostPrompt(false); 
                           }}
-                          className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+                          className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                         >
                           Confirm
                         </button>
@@ -1396,13 +1400,13 @@ const Forum = () => {
                 </div>
 
                 {isEditingPost && (
-                  <div className="fixed inset-0 bg-[#484242] bg-opacity-20 flex items-center justify-center z-50">
-                    <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                  <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
+                    <div className="bg-[#383838] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                       {/* Textarea for Editing Content */}
                       <textarea
                         value={editContentPost}
                         onChange={(e) => setEditContentPost(e.target.value)}
-                        className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
+                        className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c] resize-none"
                         rows={5}
                         placeholder="Edit your post..."
                       />
@@ -1464,23 +1468,23 @@ const Forum = () => {
                             setEditImageFile(e.target.files[0]); 
                           }
                         }}
-                        className="mt-4 text-white"
+                        className="mt-4 text-white bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full p-2"
                       />
 
                       {/* Buttons */}
-                      <div className="mt-4 flex justify-end space-x-2">
+                      <div className="mt-4 flex justify-between">
                         <button
                           onClick={() => {
                             setIsEditingPost(false);
                             setEditImageFile(null); 
                           }}
-                          className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
+                          className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={handleSavePost}
-                          className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+                          className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
                           disabled={isSaving} 
                         >
                           {isSaving ? "Saving..." : "Save"}
@@ -1503,7 +1507,7 @@ const Forum = () => {
                   <div className="relative group inline-flex items-center">
                     <button
                       onClick={() => handleLike(post.id)}
-                      className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
+                      className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 hover:text-yellow-500 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
                       <FaThumbsUp className="w-4 h-4" />
                       <span>{formatNumberIntl(post.likes)}</span>
@@ -1518,7 +1522,7 @@ const Forum = () => {
                   <div className="relative group inline-flex items-center">
                     <button
                       onClick={() => handleDislike(post.id)}
-                      className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
+                      className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 hover:text-yellow-500 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
                       <FaThumbsDown className="w-4 h-4" />
                       <span>{formatNumberIntl(post.dislikes)}</span>
@@ -1568,11 +1572,11 @@ const Forum = () => {
                       className="flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 text-gray-400 hover:text-yellow-500"
                     >
                       <FaShare className="w-4 h-4" />
-                      <span>Share</span>
+                      <span>Copy Link</span>
                     </button>
                     {/* Tooltip for Share Button */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                      Share Post
+                      Copy Link
                     </div>
                   </div>
                 </div>
@@ -1583,15 +1587,17 @@ const Forum = () => {
                       {Array.isArray(post.comments) && post.comments.length > 0 ? (
                         post.comments.map((comment, index) => (
                           <div key={index} className="flex items-start mb-3">
-                            <Link href={`/profile-view/${comment.userId}`}>
+                            <Link href={`/profile-view/${comment.userId}`} className="relative inline-block">
+                              {/* Profile Image */}
                               <img
-                                src={
-                                  userPhotos.get(comment.userId) || "/placeholder.jpg"
-                                }
+                                src={userPhotos.get(comment.userId) || "/placeholder.jpg"}
                                 alt="Commenter profile"
-                                className="w-8 h-8 rounded-full mr-2 cursor-pointer"
+                                className="w-8 h-8 rounded-full mr-2 cursor-pointer transition-opacity duration-300"
                                 onLoad={() => fetchUserPhoto(comment.userId)}
                               />
+                              
+                              {/* Yellow Tint Overlay */}
+                              <div className="absolute inset-0 w-8 h-8 rounded-full bg-yellow-500 opacity-0 hover:opacity-50 transition-opacity duration-300"></div>
                             </Link>
                             <div className="flex flex-col w-full">
                               <div className="flex flex-row justify-between">
@@ -1660,10 +1666,10 @@ const Forum = () => {
 
                               {/* Delete Comment Confirmation Modal */}
                               {deleteCommentPrompt && (
-                                <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                                <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
                                   <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                                     <p>Are you sure you want to delete this comment? This cannot be undone!</p>
-                                    <div className="mt-4 flex justify-center gap-4">
+                                    <div className="mt-4 flex justify-between gap-4">
                                       <button
                                         onClick={async () => {
                                           if (!commentToDelete) return;
@@ -1671,13 +1677,13 @@ const Forum = () => {
                                           await deleteComment(postId, commentIndex); 
                                           setDeleteCommentPrompt(false); 
                                         }}
-                                        className="bg-yellow-500 text-black px-4 py-2 rounded"
+                                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
                                       >
                                         Confirm
                                       </button>
                                       <button
                                         onClick={() => setDeleteCommentPrompt(false)}
-                                        className="bg-gray-500 text-white px-4 py-2 rounded"
+                                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
                                       >
                                         Cancel
                                       </button>
@@ -1687,24 +1693,24 @@ const Forum = () => {
                               )}
 
                               {isEditingComment && (
-                                <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
-                                  <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                                <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
+                                  <div className="bg-[#383838] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                                     <textarea
                                       value={editContentComment}
                                       onChange={(e) => setEditContentComment(e.target.value)}
-                                      className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
+                                      className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c] resize-none"
                                       rows={5}
                                     />
-                                    <div className="mt-4 flex justify-end space-x-2">
+                                    <div className="mt-4 flex justify-between">
                                       <button
                                         onClick={() => setIsEditingComment(false)}
-                                        className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
+                                        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                                       >
                                         Cancel
                                       </button>
                                       <button
                                         onClick={handleSaveComment}
-                                        className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+                                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
                                         disabled={isSaving} 
                                       >
                                         {isSaving ? "Saving..." : "Save"}
@@ -1723,7 +1729,7 @@ const Forum = () => {
                                 <div className="relative group inline-flex items-center">
                                   <button
                                     onClick={() => handleLikeComment(post.id, index)}
-                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
                                       comment.likedBy?.includes(auth.currentUser?.uid || "")
                                         ? "text-yellow-500"
                                         : "text-gray-400"
@@ -1741,7 +1747,7 @@ const Forum = () => {
                                 <div className="relative group inline-flex items-center">
                                   <button
                                     onClick={() => handleDislikeComment(post.id, index)}
-                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
                                       comment.dislikedBy.includes(auth.currentUser?.uid || "")
                                         ? "text-yellow-500"
                                         : "text-gray-400"
@@ -1771,13 +1777,17 @@ const Forum = () => {
                                     {comment.replies && comment.replies.length > 0 ? (
                                       comment.replies.map((reply, replyIndex) => (
                                         <div key={replyIndex} className="flex items-start mb-2">
-                                          <Link href={`/profile-view/${reply.userId}`}>
+                                          <Link href={`/profile-view/${reply.userId}`} className="relative inline-block">
+                                            {/* Profile Image */}
                                             <img
                                               src={userPhotos.get(reply.userId) || "/placeholder.jpg"}
                                               alt="Reply User"
-                                              className="w-6 h-6 rounded-full mr-2 cursor-pointer"
+                                              className="w-6 h-6 rounded-full mr-2 cursor-pointer transition-opacity duration-300"
                                               onLoad={() => fetchUserPhoto(reply.userId)}
                                             />
+
+                                            {/* Yellow Tint Overlay */}
+                                            <div className="absolute inset-0 w-6 h-6 rounded-full bg-yellow-500 opacity-0 hover:opacity-50 transition-opacity duration-300"></div>
                                           </Link>
                                           <div className="flex flex-col w-full">
                                             <div className="flex flex-row justify-between">
@@ -1845,10 +1855,10 @@ const Forum = () => {
 
                                             {/* Delete Reply Confirmation Modal */}
                                             {deleteReplyPrompt && (
-                                              <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                                              <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
                                                 <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                                                   <p>Are you sure you want to delete this reply? This cannot be undone!</p>
-                                                  <div className="mt-4 flex justify-center gap-4">
+                                                  <div className="mt-4 flex justify-between gap-4">
                                                     <button
                                                       onClick={async () => {
                                                         if (!replyToDelete) return;
@@ -1856,13 +1866,13 @@ const Forum = () => {
                                                         await deleteReply(postId, commentIndex, replyIndex); 
                                                         setDeleteReplyPrompt(false); 
                                                       }}
-                                                      className="bg-yellow-500 text-black px-4 py-2 rounded"
+                                                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
                                                     >
                                                       Confirm
                                                     </button>
                                                     <button
                                                       onClick={() => setDeleteReplyPrompt(false)}
-                                                      className="bg-gray-500 text-white px-4 py-2 rounded"
+                                                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
                                                     >
                                                       Cancel
                                                     </button>
@@ -1872,8 +1882,8 @@ const Forum = () => {
                                             )}
 
                                             {isEditingReply && (
-                                              <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
-                                                <div className="bg-[#383434] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                                              <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
+                                                <div className="bg-[#383838] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
                                                   {/* Display @name separately, uneditable */}
                                                   {repliedToUserId && (
                                                     <div className="text-sm text-blue-500 mb-4">
@@ -1885,20 +1895,20 @@ const Forum = () => {
                                                   <textarea
                                                     value={editContentReply}
                                                     onChange={(e) => setEditContentReply(e.target.value)}
-                                                    className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#252323] resize-none"
+                                                    className="w-full p-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c] resize-none"
                                                     rows={5}
                                                   />
 
-                                                  <div className="mt-4 flex justify-end space-x-2">
+                                                  <div className="mt-4 flex justify-between">
                                                     <button
                                                       onClick={() => setIsEditingReply(false)}
-                                                      className="bg-[#2c2c2c] text-white px-4 py-2 rounded-lg"
+                                                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                                                     >
                                                       Cancel
                                                     </button>
                                                     <button
                                                       onClick={handleSaveReply}
-                                                      className="bg-yellow-500 text-white px-4 py-2 rounded-lg"
+                                                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
                                                       disabled={isSaving}
                                                     >
                                                       {isSaving ? "Saving..." : "Save"}
@@ -1917,7 +1927,7 @@ const Forum = () => {
                                               <div className="relative group inline-flex items-center">
                                                 <button
                                                   onClick={() => handleLikeReply(post.id, index, replyIndex)}
-                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
                                                     reply.likedBy?.includes(auth.currentUser?.uid || "")
                                                       ? "text-yellow-500"
                                                       : "text-gray-400"
@@ -1934,7 +1944,7 @@ const Forum = () => {
                                               <div className="relative group inline-flex items-center">
                                                 <button
                                                   onClick={() => handleDislikeReply(post.id, index, replyIndex)}
-                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm ${
+                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
                                                     reply.dislikedBy.includes(auth.currentUser?.uid || "")
                                                       ? "text-yellow-500"
                                                       : "text-gray-400"
@@ -1974,7 +1984,7 @@ const Forum = () => {
                                     <input
                                       type="text"
                                       placeholder={"Add a reply..."}
-                                      className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
+                                      className="ml-1 text-white w-full p-2 rounded-md bg-[#2c2c2c] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
                                       value={replyText}
                                       onChange={(e) => {
                                         const newText = e.target.value;
@@ -2018,7 +2028,7 @@ const Forum = () => {
                 <input
                   type="text"
                   placeholder="Add a comment..."
-                  className="ml-1 text-white w-full p-2 rounded-md bg-[#292626] focus:ring-2 focus:ring-yellow-500 outline-none"
+                  className="ml-1 text-white w-full p-2 rounded-md bg-[#2c2c2c] focus:ring-2 focus:ring-yellow-500 outline-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       handleAddComment(post.id, e.currentTarget.value);

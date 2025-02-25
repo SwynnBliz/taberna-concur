@@ -241,7 +241,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   };
 
   return (
-    <div className="sticky top-0 z-50 flex justify-between items-center bg-[#302C2C] text-white p-4 shadow-md max-h-18">
+    <div className="sticky top-0 z-50 flex justify-between items-center bg-[#303030] text-white p-4 shadow-md max-h-18">
       <div className="relative group">
         <button
           onClick={handleSidebarToggle} 
@@ -281,7 +281,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         </button>
 
         {isNotificationsOpen && (
-          <div className="absolute right-0 mt-2 bg-[#3f3b3b] text-black p-4 rounded-md shadow-lg w-72 max-h-80 overflow-y-auto">
+          <div className="absolute right-0 mt-2 bg-[#383838] text-black p-4 rounded-md shadow-lg w-72 max-h-80 overflow-y-auto">
             {/* Mark All as Read Button */}
             <div className="flex justify-between items-center mb-2">
               <span className="text-white text-sm font-semibold">Notifications</span>
@@ -339,7 +339,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
       </div>
 
       {deleteNotificationPrompt && (
-        <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
             <p>Are you sure you want to delete this notification? This cannot be undone!</p>
             <div className="mt-4 flex justify-center gap-4">
@@ -365,7 +365,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
           onClick={handleProfileClick}
           className="w-10 h-10 rounded-full overflow-hidden relative transition-all"
         >
-          <div className="absolute top-0 left-0 w-full h-full bg-yellow-500 opacity-0 hover:opacity-50 transition-all"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-yellow-500 opacity-0 hover:opacity-40 transition-all"></div>
           {/* Profile image */} 
           {loading ? (
             <div className="w-full h-full flex items-center justify-center bg-gray-400 animate-pulse rounded-full">
@@ -383,7 +383,7 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
         </button>
 
         {isProfileMenuOpen && (
-          <div className="absolute right-0 mt-2 bg-[#363232] text-black p-4 rounded-md shadow-lg w-48">
+          <div className="absolute right-0 mt-2 bg-[#383838] text-black p-4 rounded-md shadow-lg w-48">
             {/* Mode toggle button */}
             {isAdmin && (
               <button

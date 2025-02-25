@@ -1,4 +1,4 @@
-// app/admin-drink/page.tsx (Admin Drink Page)
+// app/educational-drink/page.tsx (Educational Drink Page)
 'use client';
 import { firestore, auth } from '../firebase/config';
 import { collection, addDoc, onSnapshot, serverTimestamp, setDoc, doc, deleteDoc } from "firebase/firestore";
@@ -93,7 +93,7 @@ const UserDrink = () => {
                     <Link
                         href="/educational-tip"
                         className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                            ${pathname === "/educational-tip" ? "bg-yellow-500 text-black" : "bg-transparent text-white hover:bg-gray-700"}`}
+                            ${pathname === "/educational-tip" ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
                     >
                         Tips & Tricks
                     </Link>
@@ -102,7 +102,7 @@ const UserDrink = () => {
                     <Link
                         href="/drink"
                         className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                            ${pathname === "/educational-drink" ? "bg-yellow-500 text-black" : "bg-transparent text-white hover:bg-gray-700"}`}
+                            ${pathname === "/educational-drink" ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
                     >
                         Drink Database
                     </Link>
@@ -146,7 +146,7 @@ const UserDrink = () => {
                                     {/* Drink Card */}
                                     <Link href={drink.id ? `/educational-drink-view/${drink.id}` : "#"}>
                                         <div 
-                                            className="bg-[#383434] p-4 rounded-lg shadow-lg text-white cursor-pointer hover:bg-[#504848] hover:shadow-xl transform hover:scale-105 transition-transform duration-200 ease-in-out h-56 flex flex-col justify-between"
+                                            className="bg-[#383838] p-4 rounded-lg shadow-lg text-white cursor-pointer hover:bg-[#484848] hover:shadow-xl transform hover:scale-105 transition-transform duration-200 ease-in-out h-56 flex flex-col justify-between"
                                         >
                                             <img src={drink.imageUrl} alt={drink.name} className="w-full h-32 object-cover rounded-lg" />
                                             <h3 className="text-lg font-semibold text-yellow-500 mt-2">{drink.name}</h3>

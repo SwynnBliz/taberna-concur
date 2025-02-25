@@ -90,7 +90,7 @@ const RightSidebar = () => {
   };
 
   return (
-    <div className="w-60 bg-[#484242] p-4 border-l-2 border-white h-[calc(100vh-64px)] overflow-y-auto fixed top-16 right-0 z-10">
+    <div className="w-60 bg-[#484848] p-4 border-l-2 border-white h-[calc(100vh-64px)] overflow-y-auto fixed top-16 right-0 z-10">
       <h3 className="pl-5 mt-3 -mb-2 text-sm text-white">
         Bookmarked Posts
       </h3>
@@ -136,13 +136,13 @@ const RightSidebar = () => {
                     alt="Post Image"
                     className="w-full h-32 object-cover rounded-lg"
                   />
-                  <div className="absolute top-0 left-0 w-full h-full bg-black opacity-20 rounded-lg transition-all" />
+                  <div className="absolute top-0 left-0 w-full h-full bg-[#2c2c2c] opacity-40 rounded-lg transition-all" />
                 </div>
               )}
 
               {/* "View Original Post" Button */}
               <div className="mt-2 flex items-center justify-between">
-                <Link href={`/post-view/${post.id}`} passHref>
+                <Link href={`/forum/${post.id}`} passHref>
                   <button 
                     className="text-white text-xs hover:text-yellow-400 underline"
                   >

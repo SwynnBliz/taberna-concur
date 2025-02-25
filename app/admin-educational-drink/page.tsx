@@ -1,4 +1,4 @@
-// app/admin-drink/page.tsx (Admin Drink Page)
+// app/admin-educational-drink/page.tsx (Admin Educational Drink Page)
 'use client';
 import { firestore, auth } from '../firebase/config';
 import { collection, addDoc, onSnapshot, serverTimestamp, setDoc, doc, deleteDoc } from "firebase/firestore";
@@ -334,7 +334,7 @@ const AdminDrink = () => {
                     <h1 className="text-xl text-white">Manage Drinks</h1>
                     <button
                         onClick={() => setShowCreateForm(!showCreateForm)}
-                        className="bg-yellow-500 text-black p-2 rounded-full hover:bg-yellow-600 transition duration-200"
+                        className="text-white p-2 rounded-full hover:bg-yellow-500 transition duration-200"
                     >
                         <FaPlus className="inline mr-2" /> Add Drink
                     </button>
@@ -342,7 +342,7 @@ const AdminDrink = () => {
     
                 <div className="flex flex-col justify-center align-middle mx-auto w-6/12">
                     {showCreateForm && (
-                        <div className="max-w-xl mx-auto p-6 bg-[#383434] shadow-md rounded-lg relative">
+                        <div className="max-w-xl mx-auto p-6 bg-[#383838] shadow-md rounded-lg relative">
                             {/* Clear Button */}
                             <button
                                 type="button"
@@ -353,15 +353,13 @@ const AdminDrink = () => {
                                 <FaTimes />
                             </button>
 
-                            <h2 className="text-xl font-bold mb-4 text-yellow-500">Add a Drink</h2>
-
                             {/* Name */}
                             <label className="font-semibold text-white">Drink Name</label>
-                            <input type="text" name="name" value={drink.name} onChange={handleChange} className="w-full p-2 border rounded mb-3" />
+                            <input type="text" name="name" value={drink.name} onChange={handleChange} className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded mb-3" />
 
                             {/* Category */}
                             <label className="font-semibold text-white">Category</label>
-                            <select name="category" value={drink.category} onChange={handleChange} className="w-full p-2 border rounded mb-3">
+                            <select name="category" value={drink.category} onChange={handleChange} className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded mb-3">
                                 {["Brandy", "Beer", "Gin", "Liqueur", "Rum", "Spirit", "Tequila", "Vodka", "Whiskey", "Wine"].map((cat) => (
                                     <option key={cat} value={cat}>{cat}</option>
                                 ))}
@@ -369,7 +367,7 @@ const AdminDrink = () => {
 
                             {/* Image URL */}
                             <label className="font-semibold text-white">Select Image</label><br/>
-                            <input type="file" accept="image/*" className="text-white mb-3" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])} /><br/>
+                            <input type="file" accept="image/*" className="bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full mb-3 p-2" onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])} /><br/>
 
                             {/* Alcohol Content */}
                             <label className="font-semibold text-white">Alcohol Content</label>
@@ -387,24 +385,24 @@ const AdminDrink = () => {
                                             alcoholContent: { abv, proof: abv * 2 },
                                         });
                                     }}
-                                    className="w-1/2 p-2 border rounded"
+                                    className="w-1/2 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded"
                                 />
-                                <input type="number" name="proof" placeholder="Proof" value={drink.alcoholContent.proof} disabled className="w-1/2 p-2 border rounded bg-gray-200" />
+                                <input type="number" name="proof" placeholder="Proof" value={drink.alcoholContent.proof} disabled className="w-1/2 p-2 bg-[#484848] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded" />
                             </div>
 
                             {/* Flavor Profile */}
                             <label className="font-semibold text-white">Flavor Profile</label>
                             {drink.flavorProfile.map((flavor, index) => (
                                 <div key={index} className="flex gap-2 mb-2">
-                                    <select value={flavor} onChange={(e) => handleFlavorProfileChange(index, e.target.value)} className="w-full p-2 border rounded">
+                                    <select value={flavor} onChange={(e) => handleFlavorProfileChange(index, e.target.value)} className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded">
                                         {flavorOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                                     </select>
                                     {index > 0 && (
-                                        <button onClick={() => handleFlavorProfileRemove(index)} className="text-red-500"><FaTrashAlt /></button>
+                                        <button onClick={() => handleFlavorProfileRemove(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
                                     )}
                                 </div>
                             ))}
-                            <button onClick={handleFlavorProfileAdd} className="w-full bg-yellow-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-yellow-600 transition">
+                            <button onClick={handleFlavorProfileAdd} className="w-full bg-gray-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-gray-600 transition mb-3">
                                 <FaPlus /> Add Flavor
                             </button>
 
@@ -412,7 +410,7 @@ const AdminDrink = () => {
                             <label className="font-semibold text-white">Ingredients</label>
                             {drink.ingredients.map((ingredient, index) => (
                                 <div key={index} className="flex gap-2 mb-2">
-                                    <input type="text" placeholder="Ingredient Name" value={ingredient.name} onChange={(e) => handleIngredientChange(index, "name", e.target.value)} className="w-1/2 p-2 border rounded" />
+                                    <input type="text" placeholder="Ingredient Name" value={ingredient.name} onChange={(e) => handleIngredientChange(index, "name", e.target.value)} className="w-1/2 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded" />
                                     <input
                                         type="number"
                                         placeholder="Quantity"
@@ -421,17 +419,17 @@ const AdminDrink = () => {
                                             const value = e.target.value;
                                             handleIngredientChange(index, "quantity", value === "" ? 0 : parseFloat(value));
                                         }} 
-                                        className="w-1/4 p-2 border rounded"
+                                        className="w-1/4 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded"
                                     />
-                                    <select value={ingredient.unit} onChange={(e) => handleIngredientChange(index, "unit", e.target.value)} className="w-1/4 p-2 border rounded">
+                                    <select value={ingredient.unit} onChange={(e) => handleIngredientChange(index, "unit", e.target.value)} className="w-1/4 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded">
                                         {measurementOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
                                     </select>
                                     {index > 0 && (
-                                        <button onClick={() => handleIngredientRemove(index)} className="text-red-500"><FaTrashAlt /></button>
+                                        <button onClick={() => handleIngredientRemove(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
                                     )}
                                 </div>
                             ))}
-                            <button onClick={handleIngredientAdd} className="w-full bg-yellow-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-yellow-600 transition">
+                            <button onClick={handleIngredientAdd} className="w-full bg-gray-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-gray-600 transition mb-3">
                                 <FaPlus /> Add Ingredient
                             </button>
 
@@ -444,10 +442,10 @@ const AdminDrink = () => {
                                         placeholder={`Step ${index + 1}`}
                                         value={step}
                                         onChange={(e) => handleStepChange(index, e.target.value)}
-                                        className="w-full p-2 border rounded"
+                                        className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded"
                                     />
                                     {index > 0 && (
-                                        <button onClick={() => handleStepRemove(index)} className="text-red-500">
+                                        <button onClick={() => handleStepRemove(index)} className="text-red-500 hover:text-red-600">
                                             <FaTrashAlt />
                                         </button>
                                     )}
@@ -455,13 +453,13 @@ const AdminDrink = () => {
                             ))}
                             <button
                                 onClick={handleStepAdd}
-                                className="w-full bg-yellow-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-yellow-600 transition"
+                                className="w-full bg-gray-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-gray-600 transition"
                             >
                                 <FaPlus /> Add Step
                             </button>
 
                             {/* Submit Button */}
-                            <button onClick={addDrink} className="w-full bg-blue-500 text-white py-2 rounded mt-3 hover:bg-blue-600 transition">Add Drink</button>
+                            <button onClick={addDrink} className="w-full bg-yellow-500 text-white py-2 rounded mt-3 hover:bg-yellow-600 transition">Add Drink</button>
                         </div>
                     )}
                 </div>
@@ -507,7 +505,7 @@ const AdminDrink = () => {
                                                 e.stopPropagation(); 
                                                 toggleDropdown(drink.id);
                                             }} 
-                                            className={`p-2 rounded-full bg-black bg-opacity-50 dropdown-button 
+                                            className={`p-2 rounded-full bg-black bg-opacity-40 dropdown-button 
                                                 ${dropdownOpen === drink.id ? "text-yellow-500" : "text-white hover:text-yellow-500"}`}
                                         >
                                             <FaEllipsisH />
@@ -541,7 +539,7 @@ const AdminDrink = () => {
                                                         setShowDeletePopup(true);
                                                         setDropdownOpen(null);
                                                     }} 
-                                                    className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500"
+                                                    className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500 hover:text-red-600"
                                                 >
                                                     <FaTrash className="w-4 h-4 mr-2" />
                                                     <span className="whitespace-nowrap">Delete</span>
@@ -553,7 +551,7 @@ const AdminDrink = () => {
                                     {/* Drink Card */}
                                     <Link href={drink.id ? `/educational-drink-view/${drink.id}` : "#"}>
                                         <div 
-                                            className="bg-[#383434] p-4 rounded-lg shadow-lg text-white cursor-pointer hover:bg-[#504848] hover:shadow-xl transform hover:scale-105 transition-transform duration-200 ease-in-out h-56 flex flex-col justify-between"
+                                            className="bg-[#383838] p-4 rounded-lg shadow-lg text-white cursor-pointer hover:bg-[#484848] hover:shadow-xl transform hover:scale-105 transition-transform duration-200 ease-in-out h-56 flex flex-col justify-between"
                                         >
                                             <img src={drink.imageUrl} alt={drink.name} className="w-full h-32 object-cover rounded-lg" />
                                             <h3 className="text-lg font-semibold text-yellow-500 mt-2">{drink.name}</h3>
@@ -567,25 +565,28 @@ const AdminDrink = () => {
 
                     {/* Update Drink Popup */}
                     {showUpdatePopup && selectedDrink && (
-                        <div className="fixed inset-0 bg-[#484242] bg-opacity-50 flex items-center justify-center z-50">
-                            <div className="max-w-xl w-full max-h-screen overflow-y-auto mx-auto p-6 my-10 bg-[#383434] shadow-md rounded-lg relative">
+                        <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
+                            <div className="max-w-xl w-full max-h-[70vh] overflow-y-auto p-6 bg-[#383838] shadow-md rounded-lg relative mt-20">
                                 <h2 className="text-xl font-bold mb-4 text-yellow-500">Update Drink</h2>
-
-                                <div className="space-y-3">
+                                <div className="space-y-4">
                                     {/* Name */}
-                                    <label className="font-semibold text-white">Drink Name</label>
-                                    <input type="text" value={selectedDrink?.name || ""} onChange={(e) => setSelectedDrink({ ...selectedDrink, name: e.target.value })} className="w-full p-2 border rounded" />
+                                    <div className="mb-2">
+                                        <label className="font-semibold text-white">Drink Name</label>
+                                        <input type="text" value={selectedDrink?.name || ""} onChange={(e) => setSelectedDrink({ ...selectedDrink, name: e.target.value })} className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded" />
+                                    </div>
 
                                     {/* Category */}
-                                    <label className="font-semibold text-white">Category</label>
-                                    <select value={selectedDrink?.category || ""} onChange={(e) => setSelectedDrink({ ...selectedDrink, category: e.target.value })} className="w-full p-2 border rounded">
-                                        {["Brandy", "Beer", "Gin", "Liqueur", "Rum", "Spirit", "Tequila", "Vodka", "Whiskey", "Wine"].map((cat) => (
-                                            <option key={cat} value={cat}>{cat}</option>
-                                        ))}
-                                    </select>
-
+                                    <div className="mb-2"> 
+                                        <label className="font-semibold text-white">Category</label>
+                                        <select value={selectedDrink?.category || ""} onChange={(e) => setSelectedDrink({ ...selectedDrink, category: e.target.value })} className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded">
+                                            {["Brandy", "Beer", "Gin", "Liqueur", "Rum", "Spirit", "Tequila", "Vodka", "Whiskey", "Wine"].map((cat) => (
+                                                <option key={cat} value={cat}>{cat}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    
                                     {/* Image Upload Section */}
-                                    <div className="mb-4">
+                                    <div className="mb-2">
                                         <label className="font-semibold text-white block mb-2">Update Image</label>
 
                                         {/* Image Container (Flexbox for side-by-side layout) */}
@@ -636,65 +637,80 @@ const AdminDrink = () => {
                                         <input 
                                             type="file" 
                                             accept="image/*" 
-                                            className="mt-2 mb-2 text-white"
+                                            className="mt-2 mb-2 text-white bg-[#2c2c2c] w-full p-2 outline-none focus:ring-2 focus:ring-yellow-500 rounded"
                                             onChange={(e) => e.target.files && setNewImage(e.target.files[0])} 
                                         />
                                     </div>
+                                    
                                     {/* Flavor Profile */}
-                                    <label className="font-semibold text-white">Flavor Profile</label>
-                                    {(selectedDrink?.flavorProfile || []).map((flavor, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <select value={flavor} onChange={(e) => handleFlavorProfileChangeToUpdate(index, e.target.value)} className="w-full p-2 border rounded">
-                                                {flavorOptions.map((option) => <option key={option} value={option}>{option}</option>)}
-                                            </select>
-                                            {index > 0 && (
-                                                <button onClick={() => handleFlavorProfileRemoveToUpdate(index)} className="text-red-500"><FaTrashAlt /></button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button onClick={handleFlavorProfileAddToUpdate} className="w-full bg-yellow-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-yellow-600 transition">
-                                        <FaPlus /> Add Flavor
-                                    </button>
+                                    <div className="space-y-2"> 
+                                        <label className="font-semibold text-white">Flavor Profile</label>
+                                        {(selectedDrink?.flavorProfile || []).map((flavor, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <select value={flavor} onChange={(e) => handleFlavorProfileChangeToUpdate(index, e.target.value)} className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded">
+                                                    {flavorOptions.map((option) => <option key={option} value={option} className="">{option}</option>)}
+                                                </select>
+                                                {index > 0 && (
+                                                    <button onClick={() => handleFlavorProfileRemoveToUpdate(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button onClick={handleFlavorProfileAddToUpdate} className="w-full bg-gray-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-600 transition">
+                                            <FaPlus /> Add Flavor
+                                        </button>
+                                    </div>
 
                                     {/* Ingredients */}
-                                    <label className="font-semibold text-white">Ingredients</label>
-                                    {(selectedDrink?.ingredients || []).map((ingredient, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input type="text" placeholder="Ingredient Name" value={ingredient.name || ""} onChange={(e) => handleIngredientChangeToUpdate(index, "name", e.target.value)} className="w-1/2 p-2 border rounded" />
-                                            <input type="number" placeholder="Quantity" value={ingredient.quantity || ""} onChange={(e) => handleIngredientChangeToUpdate(index, "quantity", parseFloat(e.target.value) || 0)} className="w-1/4 p-2 border rounded" />
-                                            <select value={ingredient.unit || ""} onChange={(e) => handleIngredientChangeToUpdate(index, "unit", e.target.value)} className="w-1/4 p-2 border rounded">
-                                                {measurementOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
-                                            </select>
-                                            {index > 0 && (
-                                                <button onClick={() => handleIngredientRemoveToUpdate(index)} className="text-red-500"><FaTrashAlt /></button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button onClick={handleIngredientAddToUpdate} className="w-full bg-yellow-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-yellow-600 transition">
-                                        <FaPlus /> Add Ingredient
-                                    </button>
+                                    <div className="space-y-2"> 
+                                        <label className="font-semibold text-white">Ingredients</label>
+                                        {(selectedDrink?.ingredients || []).map((ingredient, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <input type="text" placeholder="Ingredient Name" value={ingredient.name || ""} onChange={(e) => handleIngredientChangeToUpdate(index, "name", e.target.value)} className="w-1/2 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded" />
+                                                <input type="number" placeholder="Quantity" value={ingredient.quantity || ""} onChange={(e) => handleIngredientChangeToUpdate(index, "quantity", parseFloat(e.target.value) || 0)} className="w-1/4 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded" />
+                                                <select value={ingredient.unit || ""} onChange={(e) => handleIngredientChangeToUpdate(index, "unit", e.target.value)} className="w-1/4 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded">
+                                                    {measurementOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                                                </select>
+                                                {index > 0 && (
+                                                    <button onClick={() => handleIngredientRemoveToUpdate(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button onClick={handleIngredientAddToUpdate} className="w-full bg-gray-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-600 transition">
+                                            <FaPlus /> Add Ingredient
+                                        </button>
+                                    </div>
 
                                     {/* Step Instructions */}
-                                    <label className="font-semibold text-white">Step-by-Step Instructions</label>
-                                    {(selectedDrink?.steps || []).map((step, index) => (
-                                        <div key={index} className="flex gap-2">
-                                            <input type="text" placeholder={`Step ${index + 1}`} value={step || ""} onChange={(e) => handleStepChangeToUpdate(index, e.target.value)} className="w-full p-2 border rounded" />
-                                            {index > 0 && (
-                                                <button onClick={() => handleStepRemoveToUpdate(index)} className="text-red-500"><FaTrashAlt /></button>
-                                            )}
-                                        </div>
-                                    ))}
-                                    <button onClick={handleStepAddToUpdate} className="w-full bg-yellow-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-yellow-600 transition">
-                                        <FaPlus /> Add Step
-                                    </button>
+                                    <div className="space-y-2"> 
+                                        <label className="font-semibold text-white">Step-by-Step Instructions</label>
+                                        {(selectedDrink?.steps || []).map((step, index) => (
+                                            <div key={index} className="flex gap-2">
+                                                <input type="text" placeholder={`Step ${index + 1}`} value={step || ""} onChange={(e) => handleStepChangeToUpdate(index, e.target.value)} className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded" />
+                                                {index > 0 && (
+                                                    <button onClick={() => handleStepRemoveToUpdate(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
+                                                )}
+                                            </div>
+                                        ))}
+                                        <button onClick={handleStepAddToUpdate} className="w-full bg-gray-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-600 transition">
+                                            <FaPlus /> Add Step
+                                        </button>
+                                    </div>
 
                                     {/* Save & Cancel Buttons */}
-                                    <button onClick={() => updateDrink(selectedDrink)} className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition">
-                                        Save Changes
-                                    </button>
-                                    <button onClick={() => setShowUpdatePopup(false)} className="w-full bg-gray-600 text-white py-2 rounded hover:bg-gray-700 transition">
+                                    <div className="flex justify-between mt-4">
+                                    <button 
+                                        onClick={() => setShowUpdatePopup(false)} 
+                                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition"
+                                    >
                                         Cancel
                                     </button>
+                                    <button 
+                                        onClick={() => updateDrink(selectedDrink)} 
+                                        className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
+                                    >
+                                        Save
+                                    </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -702,7 +718,7 @@ const AdminDrink = () => {
 
                     {/* Delete Confirmation Modal */}
                     {showDeletePopup && selectedDrink && (
-                        <div className="fixed inset-0 bg-[#484242] bg-opacity-60 flex items-center justify-center z-50">
+                        <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
                             <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                                 <p>Are you sure you want to delete {selectedDrink.name}? This cannot be undone!</p>
                                 <div className="mt-4 flex justify-center gap-4">

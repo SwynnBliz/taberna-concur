@@ -140,7 +140,7 @@ const SignUpPage = () => {
           <input
             type="email"
             placeholder="Email"
-            className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
+            className="w-full px-4 py-2 rounded-md text-black bg-white/90 text-sm md:text-base"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -149,7 +149,7 @@ const SignUpPage = () => {
           <input
             type="text"
             placeholder="Username"
-            className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
+            className="w-full px-4 py-2 rounded-md text-black bg-white/90 text-sm md:text-base"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
@@ -159,7 +159,7 @@ const SignUpPage = () => {
             <input
               type={passwordVisible ? "text" : "password"}
               placeholder="Password"
-              className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
+              className="w-full px-4 py-2 rounded-md text-black bg-white/90 text-sm md:text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -177,7 +177,7 @@ const SignUpPage = () => {
             <input
               type={confirmPasswordVisible ? "text" : "password"}
               placeholder="Confirm Password"
-              className="w-full px-4 py-2 rounded-md bg-white/90 text-sm md:text-base"
+              className="w-full px-4 py-2 rounded-md text-black bg-white/90 text-sm md:text-base"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required

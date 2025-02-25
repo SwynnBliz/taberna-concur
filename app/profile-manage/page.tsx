@@ -166,9 +166,9 @@ const ProfileManagePage = () => {
 
   return (
     <Layout>
-      <div className="flex justify-center items-start min-h-screen bg-[#484242] p-8">
+      <div className="flex justify-center items-start min-h-screen bg-[#484848] p-8">
         <div
-          className="bg-[#383434] border border-white rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-4xl"
+          className="bg-[#383838] border border-yellow-500 rounded-lg backdrop-blur-md p-8 shadow-lg w-full max-w-4xl"
           style={{ paddingTop: '30px', paddingBottom: '30px' }}
         >
           <h1 className="text-4xl font-bold text-center text-white mb-6">
@@ -207,8 +207,7 @@ const ProfileManagePage = () => {
                     <input
                       type="file"
                       onChange={handleProfilePhotoChange}
-                      className="mb-10 text-white"
-                      accept="image/*"
+                      className="mb-10 text-white bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded p-2"
                     />
 
                   
@@ -230,7 +229,7 @@ const ProfileManagePage = () => {
                   value={userData.username}
                   onChange={(e) => setUserData({ ...userData, username: e.target.value })}
                   placeholder="Username"
-                  className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                  className="w-full px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500"
                 />
               )}
             </div>
@@ -251,7 +250,7 @@ const ProfileManagePage = () => {
                     value={userData.bio || ''}
                     onChange={(e) => setUserData({ ...userData, bio: e.target.value })}
                     placeholder="Write a short bio"
-                    className="w-full h-56 px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90 resize-none"
+                    className="w-full h-56 px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 resize-none"
                   />
                 )}
               </div>
@@ -272,7 +271,7 @@ const ProfileManagePage = () => {
                         value={userData.contactNumber || ''}
                         onChange={(e) => setUserData({ ...userData, contactNumber: e.target.value })}
                         placeholder="Contact Number"
-                        className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                        className="w-full px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500"
                       />
                     )}
                 </div>
@@ -296,7 +295,7 @@ const ProfileManagePage = () => {
                             value={oldPassword}
                             onChange={(e) => setOldPassword(e.target.value)}
                             placeholder="Old Password"
-                            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                            className="w-full px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500"
                           />
                           <button
                             type="button"
@@ -316,7 +315,7 @@ const ProfileManagePage = () => {
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="New Password"
-                            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                            className="w-full px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500"
                           />
                           <button
                             type="button"
@@ -336,7 +335,7 @@ const ProfileManagePage = () => {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="Confirm Password"
-                            className="w-full px-4 py-2 rounded-md text-gray-800 outline-none focus:ring-2 focus:ring-yellow-500 bg-white/90"
+                            className="w-full px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500"
                           />
                           <button
                             type="button"

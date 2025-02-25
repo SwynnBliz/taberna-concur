@@ -127,7 +127,6 @@ const AdminFilterPage: React.FC = () => {
     }
   };
 
-  
   const toggleSelectWord = (word: string) => {
     setSelectedWords((prevSelected) =>
       prevSelected.includes(word)
@@ -136,14 +135,13 @@ const AdminFilterPage: React.FC = () => {
     );
   };
 
-  
   const filteredWords = bannedWords.filter(word =>
     word.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <Layout>
-      <div className="admin-filter-page max-w-7xl mx-40 mt-10 p-6 bg-[#383434] rounded-lg relative flex flex-col">
+      <div className="admin-filter-page max-w-7xl mx-40 mt-10 p-6 bg-[#383838] rounded-lg relative flex flex-col">
         <h1 className="text-xl text-white border-b-2 border-white pb-2 mb-4">Manage Filter</h1>
 
         {/* Add New Banned Word Section */}
@@ -209,7 +207,7 @@ const AdminFilterPage: React.FC = () => {
 
         {/* Delete Confirmation Modal */}
         {deletePrompt && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-10">
             <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
               <p>Are you sure you want to delete the selected words?</p>
               <div className="mt-4 flex justify-center gap-4">
@@ -237,14 +235,14 @@ const AdminFilterPage: React.FC = () => {
           <table className="min-w-fit table-auto border-collapse bg-[#2c2c2c] text-white text-center">
             <thead>
               <tr>
-                <th className="w-fit border px-4 py-2 border-yellow-500">Select</th>
-                <th className="w-full border px-4 py-2 border-yellow-500">Banned Word</th>
+                <th className="w-fit border px-4 py-2 border-white">Select</th>
+                <th className="w-full border px-4 py-2 border-white">Banned Word</th>
               </tr>
             </thead>
             <tbody>
               {filteredWords.sort().map((word) => (
                 <tr key={word}>
-                  <td className="border px-4 py-2 border-yellow-500">
+                  <td className="border px-4 py-2 border-white">
                     <input
                       type="checkbox"
                       checked={selectedWords.includes(word)}
@@ -252,7 +250,7 @@ const AdminFilterPage: React.FC = () => {
                       className="form-checkbox"
                     />
                   </td>
-                  <td className="border px-4 py-2 border-yellow-500">{word}</td>
+                  <td className="border px-4 py-2 border-white">{word}</td>
                 </tr>
               ))}
             </tbody>

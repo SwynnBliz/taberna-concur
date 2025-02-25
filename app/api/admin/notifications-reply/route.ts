@@ -20,7 +20,7 @@ export async function POST(req: Request) {
           userId: commentCreatorId,
           type: "reply",
           content: `${replyUsername} replied: "${reply}" to your comment`,
-          link: `/post-view/${postId}`,
+          link: `/forum/${postId}`,
           read: false,
           timestamp: serverTimestamp(),
         });
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
         userId: repliedToUserId,
         type: "reply",
         content: `${replyUsername} mentioned you in a reply: "${reply}"`,
-        link: `/post-view/${postId}`,
+        link: `/forum/${postId}`,
         read: false,
         timestamp: serverTimestamp(),
       });

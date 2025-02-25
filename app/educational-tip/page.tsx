@@ -111,7 +111,7 @@ const EducationalInfo = () => {
               <Link
                   href="/educational-tip"
                   className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                      ${pathname === "/educational-tip" ? "bg-yellow-500 text-black" : "bg-transparent text-white hover:bg-gray-700"}`}
+                      ${pathname === "/educational-tip" ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
               >
                   Tips & Tricks
               </Link>
@@ -120,7 +120,7 @@ const EducationalInfo = () => {
               <Link
                   href="/educational-drink"
                   className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                      ${pathname === "/educational-drink" ? "bg-yellow-500 text-black" : "bg-transparent text-white hover:bg-gray-700"}`}
+                      ${pathname === "/educational-drink" ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
               >
                   Drink Database
               </Link>
@@ -150,7 +150,7 @@ const EducationalInfo = () => {
                       <p className="text-white text-center">No results found</p>
                   ) : (
                       filteredTips.map((tip: Tip) => (
-                          <div key={tip.id} className="bg-[#383434] flex flex-col p-4 rounded-lg shadow-lg space-y-4 text-white relative">
+                          <div key={tip.id} className="bg-[#383838] flex flex-col p-4 rounded-lg shadow-lg space-y-4 text-white relative">
                             {/* Title and buttons container */}
                             <div className="flex items-center justify-between">
                               <h3 className="text-2xl font-semibold text-center text-yellow-500 flex-1">{tip.title}</h3>
