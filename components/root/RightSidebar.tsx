@@ -6,7 +6,8 @@ import { collection, onSnapshot, doc, getDoc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import Link from "next/link";
 import useBannedWords from "../forum/hooks/useBannedWords";
-import { formatDistanceToNow } from 'date-fns'; 
+import { formatDistanceToNow } from 'date-fns';
+import PostMediaCarousel from '../forum/ui/PostMediaCarousel';
 
 const RightSidebar = () => {
   const [bookmarkedPosts, setBookmarkedPosts] = useState<any[]>([]);
@@ -90,7 +91,7 @@ const RightSidebar = () => {
   };
 
   return (
-    <div className="w-60 bg-[#484848] p-4 border-l-2 border-white h-[calc(100vh-64px)] overflow-y-auto fixed top-16 right-0 z-10">
+    <div className="right-sidebar w-60 bg-[#484848] p-4 border-l-2 border-white h-[calc(100vh-64px)] overflow-y-auto fixed top-16 right-0 z-10">
       <h3 className="pl-5 mt-3 -mb-2 text-sm text-white">
         Bookmarked Posts
       </h3>
@@ -128,17 +129,13 @@ const RightSidebar = () => {
 
               <p className="text-sm mt-1 text-gray-300 line-clamp-2">{post.message}</p>
 
-              {/* Post Image Preview */}
-              {post.imageUrl && (
-                <div className="mt-2 relative">
-                  <img
-                    src={post.imageUrl}
-                    alt="Post Image"
-                    className="w-full h-32 object-cover rounded-lg"
-                  />
-                  <div className="absolute top-0 left-0 w-full h-full bg-[#2c2c2c] opacity-40 rounded-lg transition-all" />
-                </div>
-              )}
+              {/* Post Media Carousel for Sidebar */}
+              <div className="mt-2 relative">
+                <PostMediaCarousel imageUrl={post.imageUrl} videoUrl={post.videoUrl} className="h-32" />
+
+                {/* Tint Overlay */}
+                <div className="absolute top-0 left-0 w-full h-full bg-[#2c2c2c] opacity-20 rounded-lg pointer-events-none" />
+              </div>
 
               {/* "View Original Post" Button */}
               <div className="mt-2 flex items-center justify-between">

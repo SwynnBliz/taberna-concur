@@ -15,15 +15,33 @@ const PostForum = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [uploadingVideo, setUploadingVideo] = useState(false);  
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
-      setFile(selectedFile);
-      setImagePreview(URL.createObjectURL(selectedFile));
+      if (selectedFile.type.startsWith('image/')) {
+        setFile(selectedFile);
+        setImagePreview(URL.createObjectURL(selectedFile));
+      } else {
+        setErrorMessage('Only image files are allowed here.');
+      }
     }
   };
-
+  
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedVideo = e.target.files?.[0];
+    if (selectedVideo) {
+      if (selectedVideo.type.startsWith('video/')) {
+        setVideoFile(selectedVideo);
+        setVideoPreview(URL.createObjectURL(selectedVideo));
+      } else {
+        setErrorMessage('Only video files are allowed.');
+      }
+    }
+  };
   
   const handleImageUpload = async (file: File) => {
     const formData = new FormData();
@@ -46,6 +64,26 @@ const PostForum = () => {
     }
   };
 
+  const handleVideoUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', 'post-video-upload'); 
+  
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+      const data = await res.json();
+      return data.secure_url;
+    } catch (error) {
+      setErrorMessage('Failed to upload video');
+      throw new Error('Failed to upload video');
+    }
+  };
   
   const fetchUserProfile = async (userId: string) => {
     const userDoc = doc(firestore, 'users', userId);
@@ -56,7 +94,6 @@ const PostForum = () => {
     }
   };
 
-  
   const handlePostCreation = async () => {
     if (!message.trim()) {
       setErrorMessage('Message cannot be empty.');
@@ -64,8 +101,11 @@ const PostForum = () => {
     }
   
     setUploading(true);
+    setUploadingVideo(true);
+  
     try {
       const uploadedImageUrl = file ? await handleImageUpload(file) : null;
+      const uploadedVideoUrl = videoFile ? await handleVideoUpload(videoFile) : null;
   
       const user = auth.currentUser;
       if (user && userProfile) {
@@ -73,26 +113,33 @@ const PostForum = () => {
           userId: user.uid,
           message,
           imageUrl: uploadedImageUrl,
+          videoUrl: uploadedVideoUrl,
           createdAt: new Date(),
           likes: 0,
           dislikes: 0,
           comments: [],
         });
-  
+
         setMessage('');
         setFile(null);
         setImagePreview(null);
+        setVideoFile(null);
+        setVideoPreview(null);
         setUploading(false);
+        setUploadingVideo(false);
       } else {
         setErrorMessage('User data is unavailable.');
         setUploading(false);
+        setUploadingVideo(false);
       }
     } catch (error) {
       console.error('Error creating post:', error);
       setErrorMessage('Failed to create post. Please try again.');
       setUploading(false);
+      setUploadingVideo(false);
     }
-  };
+  }; 
+  
 
   useEffect(() => {
     const user = auth.currentUser;
@@ -104,68 +151,97 @@ const PostForum = () => {
   const handleRemoveImage = () => {
     setFile(null);
     setImagePreview(null);
+  
+    const imageInput = document.getElementById('image-upload') as HTMLInputElement;
+    if (imageInput) imageInput.value = '';
   };
+  
+  const handleRemoveVideo = () => {
+    setVideoFile(null);
+    setVideoPreview(null);
+  
+    const videoInput = document.getElementById('video-upload') as HTMLInputElement;
+    if (videoInput) videoInput.value = '';
+  };
+  
 
   return (
-    <div className="flex justify-center items-center bg-[#484242] p-8 min-h-40">
-      <div className="w-8/12 bg-[#383434] rounded-lg shadow-lg p-8 space-y-6">
-        <div className="flex flex-row justify-between">
-          <h1 className="text-2xl font-bold text-white mb-4">Create a Post</h1>
-          <div className="flex justify-center">
-            <button
-              onClick={handlePostCreation}
-              className="py-1 px-4 bg-[#2c2c2c] text-white rounded-md hover:bg-yellow-500 transition-all duration-200"
-              disabled={uploading}
-            >
-              {uploading ? 'Creating Post...' : 'Post'}
-            </button>
-          </div>
+    <div className="flex justify-center items-center p-8 min-h-screen">
+      <div className="w-full max-w-2xl bg-[#383838] rounded-lg shadow-lg p-6 space-y-6">
+        
+        {/* Post Header */}
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-bold text-white">Create a Post</h1>
+          <button
+            onClick={handlePostCreation}
+            className="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+            disabled={uploading}
+          >
+            {uploading ? 'Posting...' : 'Post'}
+          </button>
         </div>
-
-        <div className="mb-4">
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="What's on your mind?"
-            className="w-full px-4 py-3 rounded-md text-white outline-none focus:ring-2 focus:ring-yellow-500 bg-[#2c2c2c] h-36 resize-none"
-          />
-        </div>
-
+  
+        {/* Text Input */}
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="What's on your mind?"
+          className="w-full p-3 rounded-md text-white bg-[#2c2c2c] h-32 resize-none focus:ring-2 focus:ring-yellow-500 outline-none"
+        />
+  
+        {/* Error Message */}
         {errorMessage && <p className="text-red-500 text-center">{errorMessage}</p>}
-
-        <div className="flex flex-col items-center text-center mb-4">
-          <div className="relative">
-            <div className="flex flex-row">
-              <label className="text-white text-lg mb-2 mr-2">Attach an Image (Optional)</label>
-              <input
-                type="file"
-                id="image-upload"
-                onChange={handleFileChange}
-                className="hidden"
-                accept="image/*"
-              />
-              <button 
-                onClick={() => document.getElementById('image-upload')?.click()}
-                className="text-white p-2 bg-[#2c2c2c] rounded-full hover:bg-yellow-500 transition-all duration-200">
-                <HiPaperClip size={20} />
+  
+        {/* Image Upload Section */}
+        <div className="flex flex-col items-center space-y-2">
+          <label className="text-white text-lg font-semibold">Attach an Image (Optional)</label>
+          <input type="file" id="image-upload" onChange={handleFileChange} className="hidden" accept="image/*" />
+          <button
+            onClick={() => document.getElementById('image-upload')?.click()}
+            className="flex items-center gap-2 px-4 py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-yellow-500 transition"
+          >
+            <HiPaperClip size={20} /> Upload Image
+          </button>
+  
+          {imagePreview && (
+            <div className="relative mt-4 w-full h-[450px] sm:h-[500px] max-w-2xl">
+              <img src={imagePreview} alt="Selected" className="w-full h-full object-cover rounded-md shadow-lg" />
+              <button
+                onClick={handleRemoveImage}
+                className="absolute top-2 right-2 text-white bg-[#2c2c2c] rounded-full p-1 hover:bg-yellow-500"
+              >
+                <AiOutlineClose size={16} />
               </button>
             </div>
-            {imagePreview && (
-              <div className="mt-4 w-full max-w-xs relative">
-                <img src={imagePreview} alt="Selected" className="w-full max-h-[400px] rounded-md shadow-lg" />
-                <button
-                  onClick={handleRemoveImage}
-                  className="absolute top-1 right-1 text-white bg-[#2c2c2c] rounded-full p-1 hover:bg-yellow-500"
-                >
-                  <AiOutlineClose size={16} />
-                </button>
-              </div>
-            )}
-          </div>
+          )}
+        </div>
+  
+        {/* Video Upload Section */}
+        <div className="flex flex-col items-center space-y-2">
+          <label className="text-white text-lg font-semibold">Attach a Video (Optional)</label>
+          <input type="file" id="video-upload" onChange={handleVideoChange} className="hidden" accept="video/*" />
+          <button
+            onClick={() => document.getElementById('video-upload')?.click()}
+            className="flex items-center gap-2 px-4 py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-yellow-500 transition"
+          >
+            <HiPaperClip size={20} /> Upload Video
+          </button>
+  
+          {videoPreview && (
+            <div className="relative mt-4 w-full h-[450px] sm:h-[500px] max-w-2xl">
+              <video src={videoPreview} controls className="w-full h-full object-cover rounded-md shadow-lg" />
+              <button
+                onClick={handleRemoveVideo}
+                className="absolute top-2 right-2 text-white bg-[#2c2c2c] rounded-full p-1 hover:bg-yellow-500"
+              >
+                <AiOutlineClose size={16} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
-  );
+  );  
 };
 
 export default PostForum;

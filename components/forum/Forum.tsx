@@ -12,12 +12,14 @@ import useBannedWords from "./hooks/useBannedWords";
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
 import { AiOutlineClose } from 'react-icons/ai'; 
 import { LinkIt } from 'react-linkify-it';
+import PostMediaCarousel from './ui/PostMediaCarousel';
 
 interface Post {
   id: string;
   userId: string;
   message: string;
   imageUrl: string | null;
+  videoUrl?: string | null;
   createdAt: any;
   likes: number;
   dislikes: number;
@@ -1494,14 +1496,14 @@ const Forum = () => {
                   </div>
                 )}
 
-                {post.imageUrl && (
-                  <img
-                    src={post.imageUrl}
-                    alt="Post image"
-                    className="w-full max-h-[400px] object-cover rounded-lg mb-4"
+                {/* Image and Video Display Carousel */}
+                <div className="mb-4">
+                  <PostMediaCarousel 
+                    imageUrl={post.imageUrl ?? undefined} 
+                    videoUrl={post.videoUrl ?? undefined}
                   />
-                )}
-                
+                </div>
+
                 <div className="flex gap-2 mb-4 items-center">
                   {/* Like Button with Tooltip */}
                   <div className="relative group inline-flex items-center">

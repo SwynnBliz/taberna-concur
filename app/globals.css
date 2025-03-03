@@ -72,3 +72,7 @@ html, body {
   height: 100%;
   backface-visibility: hidden;
 }
+
+.right-sidebar video {
+  pointer-events: none;
+}
