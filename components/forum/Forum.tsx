@@ -511,7 +511,7 @@ const Forum = () => {
       const postCreatorId = postData.userId;
       if (postCreatorId !== userId) {
         try {
-          const response = await fetch("/api/admin/notifications", {
+          const response = await fetch("/api/notifications", {
             method: "POST",
             body: JSON.stringify({
               postId,
@@ -908,7 +908,7 @@ const Forum = () => {
     await updateDoc(postRef, { comments: updatedComments });
   
     try {
-      const response = await fetch("/api/admin/notifications-reply", {
+      const response = await fetch("/api/notifications-reply", {
         method: "POST",
         body: JSON.stringify({
           postId,

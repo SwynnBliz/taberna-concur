@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect } from "react";
-import { collection, query, where, onSnapshot, doc, setDoc } from "firebase/firestore";
+import { collection, query, where, onSnapshot, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import Layout from "../../components/root/Layout";
 import { app, firestore } from "../../app/firebase/config";
 import { AiOutlinePlus } from "react-icons/ai";
-import { FaTrashAlt, FaPlus  } from "react-icons/fa";
-import Link from "next/link";  // Import the Link component
+import { FaTrashAlt, FaPlus, FaCheck } from "react-icons/fa";
+import { AiOutlineClose } from "react-icons/ai";
+import { formatDistanceToNow } from 'date-fns';
+import Link from "next/link";
 
 // Options for flavor and measurement
 const flavorOptions = [
@@ -20,16 +22,18 @@ const measurementOptions = [
   "g", "kg", "lb", "piece", "cube", "dash", "slice", "sprig"
 ];
 
-// Project Interface with flavorProfile and ingredients
 interface Project {
   id: string;
   name: string;
   createdBy: string;
   members: string[];
+  invitedEmails: string[];
   createdAt: Date;
   flavorProfile: string[];
   ingredients: { name: string; quantity: number; unit: string }[];
+  priorityPercentage: { ingredients: number; flavors: number };
 }
+
 
 const CollaborativePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,13 +45,19 @@ const CollaborativePage = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const auth = getAuth(app);
-
-  // Real-time listener to fetch projects the user is a member of
+  const [invitations, setInvitations] = useState<{ id: string; projectName: string }[]>([]);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [invitedEmails, setInvitedEmails] = useState<string[]>([]);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [priorityPercentage, setPriorityPercentage] = useState({
+    ingredients: 50,
+    flavors: 50
+  });
+  
   const fetchProjects = (userId: string) => {
     const projectsRef = collection(firestore, "projects");
     const q = query(projectsRef, where("members", "array-contains", userId));
 
-    // Real-time listener using onSnapshot
     const unsubscribe = onSnapshot(q, (querySnapshot) => {
       const userProjects: Project[] = querySnapshot.docs.map((doc) => {
         return {
@@ -56,7 +66,6 @@ const CollaborativePage = () => {
         } as Project;
       });
 
-      // Sort the projects alphabetically by name
       const sortedProjects = userProjects.sort((a, b) => {
         if (a.name < b.name) return -1;
         if (a.name > b.name) return 1;
@@ -66,7 +75,6 @@ const CollaborativePage = () => {
       setProjects(sortedProjects);
     });
 
-    // Return unsubscribe function to stop listening when no longer needed
     return unsubscribe;
   };
 
@@ -75,61 +83,169 @@ const CollaborativePage = () => {
       if (user) {
         setIsAuthenticated(true);
         const unsubscribeProjects = fetchProjects(user.uid);
-        // Clean up listener when the user is logged out
-        return () => unsubscribeProjects();
+        const unsubscribeInvitations = fetchInvitations(user.uid);
+        
+        return () => {
+          unsubscribeProjects();
+          unsubscribeInvitations();
+        };
       } else {
         setIsAuthenticated(false);
       }
     });
-
-    // Clean up listener for authentication state change
+  
     return () => unsubscribeAuth();
   }, []);
-
+  
+  const fetchInvitations = (userId: string) => {
+    const invitationsRef = collection(firestore, "invitations");
+    const q = query(invitationsRef, where("email", "==", auth.currentUser?.email));
+  
+    return onSnapshot(q, (snapshot) => {
+      const pendingInvites = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        projectName: doc.data().projectName,
+      }));
+      setInvitations(pendingInvites);
+    });
+  };
+  
+  const handleAcceptInvitation = async (inviteId: string, projectName: string) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+  
+    try {
+      const invitationRef = doc(firestore, "invitations", inviteId);
+      const invitationSnap = await getDoc(invitationRef);
+  
+      if (!invitationSnap.exists()) {
+        console.error("Invitation does not exist.");
+        return;
+      }
+  
+      const projectId = invitationSnap.data().projectId;
+      const invitedEmail = invitationSnap.data().email; // Get the invited email
+      const projectRef = doc(firestore, "projects", projectId);
+      const projectSnap = await getDoc(projectRef);
+  
+      if (!projectSnap.exists()) {
+        console.error("Project not found.");
+        return;
+      }
+  
+      const projectData = projectSnap.data();
+      const updatedMembers = [...(projectData.members || []), userId];
+  
+      // Remove the accepted email from invitedEmails array
+      const updatedInvitedEmails = projectData.invitedEmails?.filter((email: string) => email !== invitedEmail) || [];
+  
+      // Update the project document
+      await setDoc(projectRef, { 
+        members: updatedMembers, 
+        invitedEmails: updatedInvitedEmails 
+      }, { merge: true });
+  
+      // Remove invitation after accepting
+      await deleteDoc(invitationRef);
+  
+      // Update UI state
+      setInvitations((prev) => prev.filter((inv) => inv.id !== inviteId));
+    } catch (error) {
+      console.error("Error accepting invitation:", error);
+    }
+  };  
+  
+  const handleDeclineInvitation = async (inviteId: string) => {
+    try {
+      const invitationRef = doc(firestore, "invitations", inviteId);
+      const invitationSnap = await getDoc(invitationRef);
+  
+      if (!invitationSnap.exists()) {
+        console.error("Invitation not found in Firestore.");
+        return;
+      }
+  
+      const projectId = invitationSnap.data().projectId;
+      const invitedEmail = invitationSnap.data().email; // Get the invited email
+      const projectRef = doc(firestore, "projects", projectId);
+      const projectSnap = await getDoc(projectRef);
+  
+      if (!projectSnap.exists()) {
+        console.error("Project not found.");
+        return;
+      }
+  
+      const projectData = projectSnap.data();
+      const updatedInvitedEmails = projectData.invitedEmails?.filter((email: string) => email !== invitedEmail) || [];
+  
+      // Update the project document
+      await setDoc(projectRef, { invitedEmails: updatedInvitedEmails }, { merge: true });
+  
+      // Remove invitation after declining
+      await deleteDoc(invitationRef);
+      setInvitations((prev) => prev.filter((inv) => inv.id !== inviteId));
+    } catch (error) {
+      console.error("Error declining invitation:", error);
+    }
+  };
+  
   const handleCreateProject = async () => {
     if (!projectName) return alert("Project name is required.");
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-
+  
     const projectData: Omit<Project, 'id'> = {
       name: projectName,
       createdBy: userId,
       members: [userId],
+      invitedEmails,
       createdAt: new Date(),
       flavorProfile,
-      ingredients
+      ingredients,
+      priorityPercentage: {
+        ingredients: priorityPercentage.ingredients / 100,
+        flavors: priorityPercentage.flavors / 100
+      }
     };
-
+    
+  
     try {
       const projectRef = doc(collection(firestore, "projects"));
       await setDoc(projectRef, projectData);
-      const newProject: Project = { ...projectData, id: projectRef.id };
-
-      setProjects((prevProjects) => {
-        const isProjectExist = prevProjects.some((project) => project.id === newProject.id);
-        if (!isProjectExist) {
-          const updatedProjects = [...prevProjects, newProject];
-          return updatedProjects.sort((a, b) => a.name.localeCompare(b.name));
-        }
-        return prevProjects;
-      });
-
-      setIsModalOpen(false);
-      setProjectName('');
-      setFlavorProfile(["Fruity"]);
-      setIngredients([{ name: "", quantity: 0, unit: "ml" }]);
+  
+      // Send invitations
+      await Promise.all(invitedEmails.map(email =>
+        setDoc(doc(collection(firestore, "invitations")), {
+          projectId: projectRef.id,
+          email,
+          projectName,
+        })
+      ));
+  
+      handleCancel();
     } catch (error) {
       console.error("Error creating project:", error);
       alert("Failed to create project.");
     }
   };
 
+  const handlePriorityChange = (value: number) => {
+    setPriorityPercentage({
+      ingredients: 100 - value,
+      flavors: value
+    });
+  };  
+  
   const handleCancel = () => {
     setIsModalOpen(false);
     setProjectName('');
     setFlavorProfile(["Fruity"]);
     setIngredients([{ name: "", quantity: 0, unit: "ml" }]);
+    setInvitedEmails([]);
+    setInviteEmail("");
+    setPriorityPercentage({ ingredients: 50, flavors: 50 });
   };
+  
 
   const handleFlavorProfileChange = (index: number, value: string) => {
     const updatedProfiles = [...flavorProfile];
@@ -163,17 +279,52 @@ const CollaborativePage = () => {
     setIngredients(updatedIngredients);
   };
 
+  const formatTimestamp = (timestamp: any) => {
+    return timestamp && timestamp.seconds
+      ? formatDistanceToNow(new Date(timestamp.seconds * 1000), { addSuffix: true })
+      : 'Invalid date';
+  };
+
   return (
     <Layout>
       <div className="p-6 min-h-screen">
+        <div className="absolute top-5 right-5">
+        <button onClick={() => setIsNotificationOpen(!isNotificationOpen)} className={`relative p-3 rounded-full text-white text-sm transition-colors ${isNotificationOpen ? "bg-yellow-500" : "bg-[#2c2c2c] hover:bg-yellow-500"}`}>
+            Invitations
+            {invitations.length > 0 && (
+              <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-2">
+                {invitations.length}
+              </span>
+            )}
+          </button>
+
+          {isNotificationOpen && (
+            <div className="absolute right-0 mt-2 bg-[#383838] rounded-lg p-4 w-64">
+              <h2 className="font-bold text-white mb-2 text-sm">Invitations</h2>
+              {invitations.length > 0 ? (
+                invitations.map((invite) => (
+                  <div key={invite.id} className="p-2 bg-[#484848] flex justify-between mb-2 rounded-md text-sm">
+                    <p className="text-white  ">{invite.projectName}</p>
+                    <div className="flex gap-2">
+                      <button onClick={() => handleAcceptInvitation(invite.id, invite.projectName)} className="text-white hover:text-yellow-500"><FaCheck size={16}/></button>
+                      <button onClick={() => handleDeclineInvitation(invite.id)} className="text-white hover:text-red-500"><AiOutlineClose size={16}/></button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-white text-sm">No new invitations.</p>
+              )}
+            </div>
+          )}
+        </div>
         <h1 className="text-yellow-500 text-3xl font-bold mb-6">Collaborative Projects</h1>
         
-        <div className="grid grid-cols-3 gap-8">
+        <div className="grid grid-cols-4 gap-8">
           {/* Create Project Box */}
           <div
             onClick={() => setIsModalOpen(true)}
             className="flex justify-center items-center bg-[#383838] text-black rounded-xl p-10 cursor-pointer shadow-lg hover:bg-yellow-500 transition duration-300 ease-in-out"
-            style={{ height: '300px' }}
+            style={{ height: '180px' }}
           >
             <AiOutlinePlus size={80} color="white" />
           </div>
@@ -183,10 +334,11 @@ const CollaborativePage = () => {
             <Link key={index} href={`/collaborative/${project.id}`}>
               <div
                 className="flex flex-col justify-between items-center bg-[#2c2c2c] text-white rounded-xl p-8 cursor-pointer hover:bg-yellow-500 transition duration-300 ease-in-out shadow-lg"
-                style={{ height: '300px' }}
+                style={{ height: '180px' }}
               >
-                <div className="text-xl font-semibold text-white">{project.name}</div>
-                <div className="text-sm mt-2 text-gray-300">Members: {project.members.length}</div>
+                <div className="text-2xl font-semibold text-yellow-500">{project.name}</div>
+                <div className="text-xs font-semibold text-gray-300">Created at: {formatTimestamp(project.createdAt)}</div>
+                <div className="text-xs mt-2 text-gray-300">Members: {project.members.length}</div>
               </div>
             </Link>
           ))}
@@ -196,8 +348,7 @@ const CollaborativePage = () => {
       {/* Create Project Modal */}
       {isModalOpen && (
         <div
-          className="fixed inset-0 flex mt-32 mb-10 justify-center items-center bg-[#484848] bg-opacity-40 z-50"
-          onClick={() => setIsModalOpen(false)}
+          className="fixed inset-0 flex pt-32 pb-10 justify-center items-center bg-[#484848] bg-opacity-40 z-50"
         >
           <div
             className="bg-[#383838] text-white p-6 rounded-xl shadow-xl max-w-xl w-full h-auto overflow-y-auto"
@@ -205,7 +356,7 @@ const CollaborativePage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-2xl font-semibold mb-4 text-yellow-500">Create a New Project</h2>
-            
+            {/* Project Name */}
             <label className="font-semibold text-white">Project Name</label>
             <input
               type="text"
@@ -214,7 +365,25 @@ const CollaborativePage = () => {
               value={projectName}
               onChange={(e) => setProjectName(e.target.value)}
             />
-            
+
+            {/* Priority Slider */}
+            <label className="font-semibold text-white">Flavor vs. Ingredient Priority</label>
+            <input
+              type="range"
+              id="priority-slider"
+              min="0"
+              max="100"
+              value={priorityPercentage.flavors}
+              onChange={(e) => handlePriorityChange(parseInt(e.target.value))}
+              className="w-full cursor-pointer appearance-none h-2 rounded-lg outline-none"
+              style={{
+                background: `linear-gradient(to right, #FF8C00 ${priorityPercentage.flavors}%, #E63946 ${priorityPercentage.flavors}%)`,
+              }}
+            />
+            <p className="text-white text-sm mb-4">
+              <span className="text-[#FF8C00]">Flavors: {priorityPercentage.flavors}%</span>, <span className="text-[#E63946]">Ingredients: {priorityPercentage.ingredients}%</span>
+            </p>
+
             {/* Flavor Profile */}
             <label className="font-semibold text-white">Flavor Profile</label>
             {flavorProfile.map((flavor, index) => (
@@ -223,7 +392,7 @@ const CollaborativePage = () => {
                   {flavorOptions.map((option) => <option key={option} value={option}>{option}</option>)}
                 </select>
                 {index > 0 && (
-                  <button onClick={() => handleFlavorProfileRemove(index)} className="text-red-500"><FaTrashAlt /></button>
+                  <button onClick={() => handleFlavorProfileRemove(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
                 )}
               </div>
             ))}
@@ -260,13 +429,44 @@ const CollaborativePage = () => {
                   {measurementOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
                 </select>
                 {index > 0 && (
-                  <button onClick={() => handleIngredientRemove(index)} className="text-red-500"><FaTrashAlt /></button>
+                  <button onClick={() => handleIngredientRemove(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
                 )}
               </div>
             ))}
-            <button onClick={handleIngredientAdd} className="w-full bg-gray-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-gray-600 transition">
+            <button onClick={handleIngredientAdd} className="w-full bg-gray-500 text-white py-2 rounded mt-2 mb-4 flex items-center justify-center gap-2 hover:bg-gray-600 transition">
               <FaPlus /> Add Ingredient
             </button>
+
+            {/* Invitation for Collaborators */}
+            <label className="font-semibold text-white">Invite Collaborators (Emails)</label>
+              <div className="flex gap-2 mb-4">
+                <input
+                  type="email"
+                  placeholder="Enter email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="w-full p-2 rounded bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500"
+                />
+                <button
+                  onClick={() => {
+                    if (inviteEmail) {
+                      setInvitedEmails([...invitedEmails, inviteEmail]);
+                      setInviteEmail("");
+                    }
+                  }}
+                  className="bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600 transition"
+                >
+                  Add
+                </button>
+              </div>
+              <ul>
+                {invitedEmails.map((email, index) => (
+                  <li key={index} className="text-gray-300 bg-[#2c2c2c] border border-yellow-500 p-2 rounded flex justify-between">
+                    {email}
+                    <button onClick={() => setInvitedEmails(invitedEmails.filter((_, i) => i !== index))} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
+                  </li>
+                ))}
+              </ul>
 
             {/* Buttons */}
             <div className="flex justify-between mt-6">

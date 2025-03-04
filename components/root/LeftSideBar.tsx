@@ -2,7 +2,7 @@
 import { useRouter } from 'next/navigation';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
 import { useState, useEffect } from 'react';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { usePathname } from 'next/navigation';
 
 interface LeftSidebarProps {
@@ -16,7 +16,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);  
   const pathname = usePathname(); 
-  
+  const [inviteCount, setInviteCount] = useState(0);
   
   useEffect(() => {
     const auth = getAuth();
@@ -40,6 +40,29 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
     
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!userId) return;
+  
+    const auth = getAuth();
+    const firestore = getFirestore();
+  
+    getDoc(doc(firestore, "users", userId)).then((userDoc) => {
+      if (userDoc.exists()) {
+        const userEmail = userDoc.data().email?.toLowerCase();
+        if (!userEmail) return;
+  
+        const projectsRef = collection(firestore, "projects");
+        const q = query(projectsRef, where("invitedEmails", "array-contains", userEmail));
+  
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          setInviteCount(snapshot.size);
+        });
+  
+        return () => unsubscribe();
+      }
+    });
+  }, [userId]);  
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -97,10 +120,15 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             </li>
             <li>
               <button
-                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                className="relative w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg flex items-center justify-between"
                 onClick={() => handleNavigate('/collaborative')}
               >
                 Collaborative
+                {inviteCount > 0 && (
+                  <span className="ml-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {inviteCount}
+                  </span>
+                )}
               </button>
             </li>
             <li>

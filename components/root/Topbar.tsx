@@ -32,6 +32,24 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
   const isOnAdminPage = pathname.includes("/admin");
   const [deleteNotificationPrompt, setDeleteNotificationPrompt] = useState(false);
   const [notificationIdToDelete, setNotificationIdToDelete] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [inviteCount, setInviteCount] = useState(0);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const user = auth.currentUser;
+    if (user) {
+      setUserId(user.uid);
+    }
+    
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        setUserId(user.uid);
+      }
+    });
+  
+    return () => unsubscribe();
+  }, []);  
 
   useEffect(() => {
     const fetchNotifications = () => {
@@ -69,6 +87,29 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
       unsubscribeAuth();
     };
   }, [firestore]);
+  
+  useEffect(() => {
+    if (!userId) return;
+  
+    const auth = getAuth();
+    const firestore = getFirestore();
+  
+    getDoc(doc(firestore, "users", userId)).then((userDoc) => {
+      if (userDoc.exists()) {
+        const userEmail = userDoc.data().email?.toLowerCase();
+        if (!userEmail) return;
+  
+        const projectsRef = collection(firestore, "projects");
+        const q = query(projectsRef, where("invitedEmails", "array-contains", userEmail));
+  
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          setInviteCount(snapshot.size);
+        });
+  
+        return () => unsubscribe();
+      }
+    });
+  }, [userId]);  
 
   const handleNotificationClick = async (notificationId: string, link: string) => {
     try {
@@ -245,9 +286,15 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
       <div className="relative group">
         <button
           onClick={handleSidebarToggle} 
-          className="hover:bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center transition-all"
+          className="relative hover:bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center transition-all"
         >
           <span className="text-white text-2xl">☰</span>
+
+          {inviteCount > 0 && (
+            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+              {inviteCount}
+            </span>
+          )}
         </button>
 
         {/* Tooltip */}

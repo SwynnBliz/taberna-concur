@@ -1,5 +1,5 @@
-// app/admin/notifications-reply/route.ts (Notify User Reply, Server Side API Route Call)
-import { firestore } from "../../../firebase/config";
+// app/notifications-reply/route.ts (Notify User Reply, Server Side API Route Call)
+import { firestore } from "../../firebase/config";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
