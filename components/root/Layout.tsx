@@ -78,7 +78,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     <div className="flex flex-col min-h-screen">
       <TopBar 
         onLeftSidebarToggle={handleLeftSidebarToggle} 
-        onRightSidebarToggle={handleRightSidebarToggle} 
+        onRightSidebarToggle={handleRightSidebarToggle}
       />
       <div className="flex flex-1 relative">
         {/* Left Sidebar */}

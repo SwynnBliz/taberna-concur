@@ -166,15 +166,14 @@ const PostForum = () => {
   
 
   return (
-    <div className="flex justify-center items-center p-8">
-      <div className="w-full max-w-2xl bg-[#383838] rounded-lg shadow-lg p-6 space-y-6">
-        
+    <div className="flex justify-center items-center | py-4 px-8 |  md:px-20 | lg:px-20 | xl:w-full">
+      <div className="w-full max-w-2xl bg-[#383838] rounded-lg shadow-lg | p-6 | sm:p-6 | md:p-8 | lg:p-8 | space-y-6">
         {/* Post Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-xl font-bold text-white">Create a Post</h1>
+          <h1 className="text-sm | sm:text-lg | md:text-xl | lg:text-xl | xl:text-2xl | font-bold text-white">Create Post</h1>
           <button
             onClick={handlePostCreation}
-            className="px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition"
+            className="text-xs p-1 | sm:text-lg sm:p-2 | md:text-xl | lg:text-xl | xl:text-2xl | bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
             disabled={uploading}
           >
             {uploading ? 'Posting...' : 'Post'}
@@ -186,7 +185,7 @@ const PostForum = () => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="What's on your mind?"
-          className="w-full p-3 rounded-md text-white bg-[#2c2c2c] h-32 resize-none focus:ring-2 focus:ring-yellow-500 outline-none"
+          className="h-20 text-xs | sm:text-lg sm:h-40 | w-full p-3 rounded-md text-white bg-[#2c2c2c] resize-none focus:ring-2 focus:ring-yellow-500 outline-none"
         />
   
         {/* Error Message */}
@@ -194,23 +193,23 @@ const PostForum = () => {
   
         {/* Image Upload Section */}
         <div className="flex flex-col items-center space-y-2">
-          <label className="text-white text-lg font-semibold">Attach an Image (Optional)</label>
+          <label className="text-xs | sm:text-lg | text-white font-semibold">Attach Image (Optional)</label>
           <input type="file" id="image-upload" onChange={handleFileChange} className="hidden" accept="image/*" />
           <button
             onClick={() => document.getElementById('image-upload')?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-yellow-500 transition"
+            className="text-xs | sm:text-lg | flex items-center gap-2 px-2 py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-yellow-500 transition"
           >
-            <HiPaperClip size={20} /> Upload Image
+            <HiPaperClip/> Upload Image
           </button>
   
           {imagePreview && (
-            <div className="relative mt-4 w-full h-[450px] sm:h-[500px] max-w-2xl">
+            <div className="relative mt-4 w-full h-[150px] sm:h-[450px] max-w-2xl">
               <img src={imagePreview} alt="Selected" className="w-full h-full object-cover rounded-md shadow-lg" />
               <button
                 onClick={handleRemoveImage}
                 className="absolute top-2 right-2 text-white bg-[#2c2c2c] rounded-full p-1 hover:bg-yellow-500"
               >
-                <AiOutlineClose size={16} />
+                <AiOutlineClose/>
               </button>
             </div>
           )}
@@ -218,23 +217,23 @@ const PostForum = () => {
   
         {/* Video Upload Section */}
         <div className="flex flex-col items-center space-y-2">
-          <label className="text-white text-lg font-semibold">Attach a Video (Optional)</label>
+          <label className="text-xs | sm:text-lg | text-white font-semibold">Attach Video (Optional)</label>
           <input type="file" id="video-upload" onChange={handleVideoChange} className="hidden" accept="video/*" />
           <button
             onClick={() => document.getElementById('video-upload')?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-yellow-500 transition"
+            className="text-xs | sm:text-lg | flex items-center gap-2 px-2 py-2 bg-[#2c2c2c] text-white rounded-lg hover:bg-yellow-500 transition"
           >
-            <HiPaperClip size={20} /> Upload Video
+            <HiPaperClip/> Upload Video
           </button>
   
           {videoPreview && (
-            <div className="relative mt-4 w-full h-[450px] sm:h-[500px] max-w-2xl">
-              <video src={videoPreview} controls className="w-full h-full object-cover rounded-md shadow-lg" />
+            <div className="relative mt-4 w-full h-[150px] sm:h-[450px] max-w-2xl">
+              <video src={videoPreview} controls className="w-full h-full object-contain rounded-md shadow-lg" />
               <button
                 onClick={handleRemoveVideo}
                 className="absolute top-2 right-2 text-white bg-[#2c2c2c] rounded-full p-1 hover:bg-yellow-500"
               >
-                <AiOutlineClose size={16} />
+                <AiOutlineClose/>
               </button>
             </div>
           )}

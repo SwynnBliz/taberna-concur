@@ -21,7 +21,7 @@ const PostMediaCarousel = ({
   return (
     <div className={`relative w-full max-w-2xl mx-auto`}>
       {/* Media Display */}
-      <div className={`w-full flex justify-center items-center bg-black rounded-lg overflow-hidden ${className || "h-[450px] sm:h-[500px]"}`}>
+      <div className={`w-full flex justify-center items-center bg-black rounded-lg overflow-hidden ${className.includes("h-32") ? "h-[80px] sm:h-[150px]" : "h-[150px] sm:h-[450px]"}`}>
         {mediaItems[currentIndex].type === "image" ? (
           <img
             src={mediaItems[currentIndex].src}
@@ -32,7 +32,7 @@ const PostMediaCarousel = ({
           <video
             src={mediaItems[currentIndex].src}
             controls={!className.includes("h-32")}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         )}
       </div>
@@ -43,16 +43,26 @@ const PostMediaCarousel = ({
           <button
             onClick={handlePrev}
             className={`absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white rounded-full hover:bg-opacity-80 transition 
-              ${className.includes("h-32") ? "p-1" : "p-3"}`}
+              ${className.includes("h-32") ? "p-1" : "p-2"}`}
           >
-            <AiOutlineLeft size={className.includes("h-32") ? 18 : 28} />
+            <>
+              {className.includes("h-32") && <AiOutlineLeft className="sm:hidden" size={14}/>}
+              {className.includes("h-32") && <AiOutlineLeft className="hidden sm:block" size={18}/>}
+              {!className.includes("h-32") && <AiOutlineLeft className="sm:hidden" size={16} />}
+              {!className.includes("h-32") && <AiOutlineLeft className="hidden sm:block" size={28} />}
+            </>
           </button>
           <button
             onClick={handleNext}
             className={`absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-40 text-white rounded-full hover:bg-opacity-80 transition 
-              ${className.includes("h-32") ? "p-1" : "p-3"}`}
+              ${className.includes("h-32") ? "p-1" : "p-2"}`}
           >
-            <AiOutlineRight size={className.includes("h-32") ? 18 : 28} />
+            <>
+              {className.includes("h-32") && <AiOutlineRight className="sm:hidden" size={14}/>}
+              {className.includes("h-32") && <AiOutlineRight className="hidden sm:block" size={18}/>}
+              {!className.includes("h-32") && <AiOutlineRight className="sm:hidden" size={16} />}
+              {!className.includes("h-32") && <AiOutlineRight className="hidden sm:block" size={28} />}
+            </>
           </button>
         </>
       )}

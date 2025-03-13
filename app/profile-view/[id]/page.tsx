@@ -643,17 +643,17 @@ const ProfileViewPage = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-40 my-10 p-8 bg-[#383838] rounded-lg relative flex flex-col">
+      <div className="m-6 p-4 | sm:m-10 sm:p-8 | md:m-20 | bg-[#383838] rounded-lg relative flex flex-col">
         <section>
           {/* Container for Edit Button, Visibility Toggle, and Warning List Button */}
           {currentUserId === id && (
             <div className="absolute top-3 right-4 flex space-x-2">
               {/* Visibility Toggle Button with Dropdown Indicator */}
-              <label className="text-xs text-white text-opacity-60 mt-2">Set Privacy:</label>
+              <label className="text-[10px] mt-2 | sm:text-xs | text-white text-opacity-60">Set Privacy:</label>
               <div className="relative group">
                 <button
                   onClick={toggleProfileVisibility}
-                  className="p-2 bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500 text-xs flex items-center space-x-2"
+                  className="text-[10px] p-2 | sm:text-xs | bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500 flex items-center space-x-2"
                 >
                   <span>{isProfilePublic ? 'Public' : 'Private'}</span>
                 </button>
@@ -668,7 +668,7 @@ const ProfileViewPage = () => {
               {warnings.length > 0 && (
                 <button
                   onClick={handleOpenWarningsModal}
-                  className="p-2 bg-[#2c2c2c] text-red-500 rounded-full hover:bg-yellow-500 hover:text-white text-xs"
+                  className="text-[10px] p-2 | sm:text-xs | bg-[#2c2c2c] text-red-500 rounded-full hover:bg-yellow-500 hover:text-white"
                 >
                   {warnings.length} {warnings.length === 1 ? 'Warning' : 'Warnings'}
                 </button>
@@ -678,7 +678,7 @@ const ProfileViewPage = () => {
               <div className="relative group">
                 <button
                   onClick={handleEditProfile}
-                  className="p-2 bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500"
+                  className="text-xs p-2 | sm:text-base | bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500"
                 >
                   <FaEdit />
                 </button>
@@ -693,13 +693,13 @@ const ProfileViewPage = () => {
 
           {showWarningsModal && (
             <div className="fixed inset-0 bg-[#484848] bg-opacity-10 flex items-center justify-center z-40 pt-20 pb-10">
-              <div className="bg-[#2c2c2c] p-6 rounded-lg w-8/12 max-h-[74vh] overflow-y-auto relative">
+              <div className="text-xs w-10/12 max-h-[60vh] p-4 | sm:text-base sm:w-8/12 sm:max-h-[80vh] sm:p-6 | bg-[#2c2c2c] rounded-lg overflow-y-auto relative">
                 {/* Close Button */}
                 <button
                   onClick={handleCloseWarningsModal}
                   className="absolute top-2 right-2 bg-[#2c2c2c] hover:bg-yellow-500 text-white p-2 rounded-full"
                 >
-                  <FaTimes className="h-5 w-5" />
+                  <FaTimes/>
                 </button>
 
                 <h2 className="text-white font-bold mb-4">Warnings</h2>
@@ -718,10 +718,10 @@ const ProfileViewPage = () => {
                                 "_blank"
                               )
                             }
-                            className="p-2 bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500 absolute top-2 right-2"
+                            className="p-2 -top-1 -right-1 | sm:top-2 sm:right-2 | bg-[#2c2c2c] rounded-full text-white hover:bg-yellow-500 absolute"
                             title="Appeal Warning"
                           >
-                            <FaRegEnvelope className="h-5 w-5" />
+                            <FaRegEnvelope />
                           </button>
 
                           {/* Tooltip for Appeal Button */}
@@ -767,38 +767,55 @@ const ProfileViewPage = () => {
             </div>
           )}
     
-          <div className="mt-6 flex items-start space-x-8">
+          <div className="mt-10 | sm:mt-6 | flex items-start space-x-4">
             {/* Left Section: Profile Image and Username */}
-            <div className="flex flex-col items-center w-1/3">
+            <div className="mt-16 | sm:mt-12 | flex flex-col items-center w-1/3">
               <img
                 src={userData.profilePhoto || '/placeholder.jpg'}
                 alt="Profile"
-                className="w-48 h-48 rounded-full mb-4"
+                className="w-20 h-20 | sm:w-48 sm:h-48 | rounded-full mb-4"
               />
-              <h1 className="text-2xl text-white font-bold">{userData.username}</h1>
+
+              {/* Role and NCII Labels */}
+              <div className="space-x-3 mb-2 | sm:hidden | flex">
+                {/* Admin Label */}
+                {userData.role === "admin" && (
+                  <div className="text-[6px] px-2 py-1 bg-red-500 text-white font-semibold rounded-md">
+                    Admin
+                  </div>
+                )}
+                {/* NCII Label */}
+                {userData.isNCIIHolder && (
+                  <div className="text-[6px] px-2 py-1 bg-yellow-500 text-white font-semibold rounded-md">
+                    NCII
+                  </div>
+                )}
+              </div>
+
+              <h1 className="text-[10px] | sm:text-2xl | text-white font-bold">{userData.username}</h1>
             </div>
 
             {/* Right Section: Role, Bio, and Contact Number */}
             <div className="flex flex-col w-2/3">
 
               {/* Role and NCII Labels */}
-              <div className="flex space-x-4 mb-4">
+              <div className="space-x-2 mb-2 hidden | sm:space-x-4 sm:mb-4 sm:flex">
                 {/* Admin Label */}
                 {userData.role === "admin" && (
-                  <div className="bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-md">
+                  <div className="text-sm px-4 py-2 bg-red-500 text-white font-semibold rounded-md">
                     Admin
                   </div>
                 )}
                 {/* NCII Label */}
                 {userData.isNCIIHolder && (
-                  <div className="bg-yellow-500 text-white text-sm font-semibold px-4 py-2 rounded-md">
+                  <div className="text-sm px-4 py-2 bg-yellow-500 text-white font-semibold rounded-md">
                     NCII
                   </div>
                 )}
               </div>
 
               {/* Bio */}
-              <div className="bg-[#484848] p-4 rounded-lg mb-4 max-h-60 overflow-auto">
+              <div className="text-[10px] max-h-40 | sm:text-base sm:max-h-60 | bg-[#484848] p-4 rounded-lg mb-4 overflow-auto">
                 <p className="text-gray-300 whitespace-pre-wrap">
                   <span className="font-bold text-white">Bio: </span><br />
                   {currentUserId === id || isProfilePublic ? (
@@ -810,7 +827,7 @@ const ProfileViewPage = () => {
               </div>
 
               {/* Contact Number */}
-              <div className="bg-[#484848] p-4 rounded-lg">
+              <div className="text-[10px] | sm:text-base | bg-[#484848] p-4 rounded-lg">
                 <p className="text-gray-300">
                   <span className="font-bold text-white">Contact: </span><br />
                   {currentUserId === id || isProfilePublic ? (
@@ -827,39 +844,38 @@ const ProfileViewPage = () => {
         <section>
           {/* Posts Section */}
           <div className="flex flex-col">
-            <div className="mt-4 mb-4 w-full mx-auto flex flex-col justify-center items-center border-b-2 border-white pb-2">
+            <div className="mt-4 w-10/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
               <div>
-                <p className="text-white text-xl">Posts</p>
+                <p className="text-xs | sm:text-xl | text-white">Posts</p>
               </div>
             </div>
     
             {/* Contains the Posts and Comments Sections */}
             <div>
-              <div className="p-3 w-full bg-[#383838] mx-auto">
+              <div className="p-2 w-11/12 bg-[#383838] mx-auto">
                 {!isProfilePublic && currentUserId !== id ? (
-                  <p className="text-center text-yellow-500 w-full">This post is set to private.</p>
+                  <p className="text-xs | sm:text-base | text-center text-yellow-500 w-full">This post is set to private.</p>
                 ) : 
                 filteredPosts.length === 0 ? (
-                  <p className="text-center text-white w-full">There are no posts matching your search query.</p>
+                  <p className="text-xs | sm:text-base | text-center text-white w-full">There are no posts matching your search query.</p>
                 ) : (
                   filteredPosts.map((post) => (
-                    <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#484848] p-6">
-                      
-                      <div className="flex items-center justify-between mb-4">
+                    <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#484848] p-4">
+                      <div className="flex items-center justify-between">
                         {/* Left Section: Image, Username, and Timestamp */}
-                        <div className="flex items-center">
+                        <div className="flex flex-row items-center">
                           <div className="relative group inline-flex items-center">
                           <Link href={`/profile-view/${post.userId}`} className="relative">
                             {/* Profile Image */}
                             <img
                               src={userPhotos.get(post.userId) || '/placeholder.jpg'}
                               alt="Profile"
-                              className="w-12 h-12 rounded-full mr-4 cursor-pointer transition-opacity duration-300"
+                              className="w-5 h-5 | sm:w-12 sm:h-12 sm:mr-2 | rounded-full cursor-pointer transition-opacity duration-300"
                               onLoad={() => fetchUserPhoto(post.userId)}
                             />
                             
                             {/* Yellow Tint Overlay */}
-                            <div className="absolute inset-0 w-12 h-12 rounded-full bg-yellow-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 | w-6 h-6 | sm:w-12 sm:h-12 sm:mr-2 | rounded-full bg-yellow-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
                           </Link>
 
                             {/* Tooltip for View User's Profile */}
@@ -868,27 +884,16 @@ const ProfileViewPage = () => {
                             </div>
                           </div>
 
-                          <div>
-                            <p className="text-xl font-semibold text-white flex items-center space-x-2">
-                              <span>{userData.username || "Loading..."}</span>
-                              {/* Display Role and NCII */}
-                              {userDetails.get(post.userId)?.role === "admin" && (
-                                <span className="text-red-500 font-bold text-sm">
-                                  Admin
-                                </span>
-                              )}
-                              {userDetails.get(post.userId)?.isNCIIHolder && (
-                                <span className="text-yellow-500 font-bold text-sm">
-                                  NCII
-                                </span>
-                              )}
+                          <div className="ml-1">
+                            <p className="space-x-1 | sm:space-x-2 | font-semibold text-white flex items-center">
+                              <span className="text-[10px] | sm:text-base sm:max-w-none | truncate max-w-[50px]">{userData.username || "Loading..."}</span>
                             </p>
 
-                            <p className="text-sm text-gray-400">
+                            <p className="text-[6px] | sm:text-sm | text-gray-400">
                               {post.updatedAt ? (
                                 <>
                                   {formatTimestamp(post.updatedAt)}{" "}
-                                  <span className="text-gray-400">(edited)</span>
+                                  <span className="text-[6px] | sm:text-sm | text-gray-400">(edited)</span>
                                 </>
                               ) : (
                                 formatTimestamp(post.createdAt)
@@ -898,97 +903,94 @@ const ProfileViewPage = () => {
                         </div>
         
                         {/* Right Section: View Post, Bookmark, and More Options */}
-                        <div className="flex space-x-2">
-                          {/* Container for all buttons */}
-                          <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                            {/* View Post Button */}
-                            <div className="relative group inline-flex items-center">
-                              <Link href={`/forum/${post.id}`}>
-                                <button className="text-white hover:text-yellow-500 mt-2">
-                                  <HiDocumentMagnifyingGlass className="w-4 h-4" />
-                                </button>
-                              </Link>
-                              {/* Tooltip for View Post */}
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                                View Post
-                              </div>
+                        <div className="ml-1 text-[10px] space-x-1 p-1 max-h-6 | sm:ml-0 sm:text-base sm:space-x-4 sm:p-2 sm:max-h-10 | bg-[#2c2c2c] rounded-full flex">
+                          {/* View Post Button */}
+                          <div className="-mt-1 |  relative group inline-flex items-center">
+                            <Link href={`/forum/${post.id}`}>
+                              <button className="text-white hover:text-yellow-500 mt-2">
+                                <HiDocumentMagnifyingGlass/>
+                              </button>
+                            </Link>
+                            {/* Tooltip for View Post */}
+                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                              View Post
                             </div>
+                          </div>
 
-                            {/* Bookmark Button */}
+                          {/* Bookmark Button */}
+                          <div className="relative group inline-flex items-center">
+                            <button
+                              onClick={() => handleBookmarkPost(post.id)}
+                              className={`${
+                                post.bookmarks?.some(
+                                  (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
+                                )
+                                  ? "text-yellow-500"
+                                  : "text-white"
+                              } hover:text-yellow-500`}
+                            >
+                              <FaBookmark/>
+                            </button>
+                            {/* Tooltip for Bookmark */}
+                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                              Bookmark Post
+                            </div>
+                          </div>
+
+                          {/* More Options Dropdown */}
+                          {auth.currentUser?.uid === post.userId && (
                             <div className="relative group inline-flex items-center">
                               <button
-                                onClick={() => handleBookmarkPost(post.id)}
-                                className={`${
-                                  post.bookmarks?.some(
-                                    (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
-                                  )
-                                    ? "text-yellow-500"
-                                    : "text-white"
-                                } hover:text-yellow-500`}
+                                onClick={() => setShowMoreOptions((prev) => ({ ...prev, [post.id]: !prev[post.id] }))}
+                                className="text-white hover:text-yellow-500"
                               >
-                                <FaBookmark className="w-4 h-4" />
+                                <FaEllipsisV/>
                               </button>
-                              {/* Tooltip for Bookmark */}
+
+                              {/* Tooltip for More Options */}
                               <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                                Bookmark Post
+                                More Options
                               </div>
-                            </div>
 
-                            {/* More Options Dropdown */}
-                            {auth.currentUser?.uid === post.userId && (
-                              <div className="relative group inline-flex items-center">
-                                <button
-                                  onClick={() => setShowMoreOptions((prev) => ({ ...prev, [post.id]: !prev[post.id] }))}
-                                  className="text-white hover:text-yellow-500"
-                                >
-                                  <FaEllipsisV className="w-4 h-4" />
-                                </button>
+                              {showMoreOptions[post.id] && (
+                                <div className="mt-4 -right-3 | sm:mt-6 | absolute top-full bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
+                                  {/* Triangle Pointer */}
+                                  <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
 
-                                {/* Tooltip for More Options */}
-                                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                                  More Options
+                                  {/* Edit Button */}
+                                  <button
+                                    onClick={() => { 
+                                      handleUpdatePost(post.id); 
+                                      setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
+                                    }}
+                                    className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
+                                  >
+                                    <FaEdit className="mr-2" />
+                                    <span className="whitespace-nowrap">Edit Post</span>
+                                  </button>
+
+                                  {/* Delete Button */}
+                                  <button
+                                    onClick={() => { 
+                                      handleDeletePost(post.id);
+                                      setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
+                                    }}
+                                    className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500"
+                                  >
+                                    <FaTrash className="mr-2" />
+                                    <span className="whitespace-nowrap">Delete Post</span>
+                                  </button>
                                 </div>
-
-                                {showMoreOptions[post.id] && (
-                                  <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
-                                    {/* Triangle Pointer */}
-                                    <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
-
-                                    {/* Edit Button */}
-                                    <button
-                                      onClick={() => { 
-                                        handleUpdatePost(post.id); 
-                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
-                                      }}
-                                      className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
-                                    >
-                                      <FaEdit className="w-4 h-4 mr-2" />
-                                      <span className="whitespace-nowrap">Edit Post</span>
-                                    </button>
-
-                                    {/* Delete Button */}
-                                    <button
-                                      onClick={() => { 
-                                        handleDeletePost(post.id);
-                                        setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
-                                      }}
-                                      className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500"
-                                    >
-                                      <FaTrash className="w-4 h-4 mr-2" />
-                                      <span className="whitespace-nowrap">Delete Post</span>
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       </div>
 
                       {/* Delete Confirmation Modal */}
                       {deletePostPrompt && (
-                        <div className="fixed inset-0 bg-[#484848] bg-opacity-60 flex items-center justify-center z-50">
-                          <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                        <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
+                          <div className="w-10/12 text-xs | sm:w-auto sm:text-base | bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                             <p>Are you sure you want to delete this post? This cannot be undone!</p>
                             <div className="mt-4 flex justify-between gap-4">
                               <button
@@ -1015,7 +1017,7 @@ const ProfileViewPage = () => {
                       <div className="mb-2">
                         <p
                           ref={(el) => { contentRefs.current[post.id] = el; }}  
-                          className={`text-lg text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
+                          className={`text-xs | sm:text-lg | text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
                           style={{
                             whiteSpace: 'pre-wrap',
                             display: '-webkit-box',
@@ -1024,7 +1026,7 @@ const ProfileViewPage = () => {
                           }}
                         >
                           <LinkIt component={renderLink} regex={urlRegex}>
-                            {post.message} {/* Render the message with linkified URLs */}
+                            {post.message}
                           </LinkIt>
                         </p>
 
@@ -1032,7 +1034,7 @@ const ProfileViewPage = () => {
                         {isTruncated[post.id] && !isExpanded[post.id] && (
                           <button
                             onClick={() => toggleMessage(post.id)}
-                            className="text-white cursor-pointer underline hover:text-yellow-500"
+                            className="text-xs | sm:text-lg | text-white cursor-pointer underline hover:text-yellow-500"
                           >
                             See more
                           </button>
@@ -1042,7 +1044,7 @@ const ProfileViewPage = () => {
                         {isExpanded[post.id] && (
                           <button
                             onClick={() => toggleMessage(post.id)}
-                            className="text-white cursor-pointer underline hover:text-yellow-500"
+                            className="text-xs | sm:text-lg | text-white cursor-pointer underline hover:text-yellow-500"
                           >
                             See less
                           </button>
@@ -1050,8 +1052,8 @@ const ProfileViewPage = () => {
                       </div>
 
                       {isEditingPost && (
-                        <div className="fixed inset-0 bg-[#484848] bg-opacity-20 flex items-center justify-center z-50">
-                          <div className="bg-[#383838] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                        <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
+                          <div className="w-10/12 text-xs | sm:w-3/4 sm:text-base | bg-[#383838] p-6 rounded-lg max-h-[90vh] overflow-y-auto">
                             {/* Textarea for Editing Content */}
                             <textarea
                               value={editContentPost}
@@ -1068,14 +1070,14 @@ const ProfileViewPage = () => {
                                   <img
                                     src={editCurrentImageUrl}
                                     alt="Current Post Image"
-                                    className="w-full max-h-[400px] object-cover rounded-lg mt-2"
+                                    className="w-full | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
                                   />
                                   {/* Close button to remove the image */}
                                   <button
                                     onClick={() => setEditCurrentImageUrl(null)} 
                                     className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                                   >
-                                    <AiOutlineClose size={16} />
+                                    <AiOutlineClose />
                                   </button>
                                 </div>
                               </div>
@@ -1096,7 +1098,7 @@ const ProfileViewPage = () => {
                                     onClick={() => setEditImageFile(null)} 
                                     className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                                   >
-                                    <AiOutlineClose size={16} />
+                                    <AiOutlineClose />
                                   </button>
                                 </div>
                               </div>
@@ -1145,21 +1147,22 @@ const ProfileViewPage = () => {
                       )}
 
                       {/* Image and Video Display Carousel */}
-                      <div className="mb-4">
+                      <div className="mb-2">
                         <PostMediaCarousel 
                           imageUrl={post.imageUrl ?? undefined} 
                           videoUrl={post.videoUrl ?? undefined}
                         />
                       </div>
 
-                      <div className="flex gap-2 mb-4 items-center">
-                        {/* Like Button with Tooltip */}
-                        <div className="relative group inline-flex items-center">
+
+                        <div className="text-[8px] gap-2 | sm:text-base | flex mb-4 items-center">
+                          {/* Like Button with Tooltip */}
+                          <div className="relative group inline-flex items-center">
                           <button
                             onClick={() => handleLike(post.id)}
                             className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 hover:text-yellow-500 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                           >
-                            <FaThumbsUp className="w-4 h-4" />
+                            <FaThumbsUp />
                             <span>{formatNumberIntl(post.likes)}</span>
                           </button>
                           {/* Tooltip for Like Button */}
@@ -1174,7 +1177,7 @@ const ProfileViewPage = () => {
                             onClick={() => handleDislike(post.id)}
                             className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 hover:text-yellow-500 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                           >
-                            <FaThumbsDown className="w-4 h-4" />
+                            <FaThumbsDown />
                             <span>{formatNumberIntl(post.dislikes)}</span>
                           </button>
                           {/* Tooltip for Dislike Button */}
@@ -1190,7 +1193,7 @@ const ProfileViewPage = () => {
                           }}
                           className="relative group flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 ml-auto text-gray-400 hover:text-yellow-500"
                         >
-                          <FaComment className="w-4 h-4" />
+                          <FaComment />
                           <span>{formatNumberIntl(post.comments.length)}</span>
 
                           {/* Tooltip for "View Post to Comment" */}
@@ -1207,8 +1210,8 @@ const ProfileViewPage = () => {
                             onClick={() => handleShare(post.id)}
                             className="flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 text-gray-400 hover:text-yellow-500"
                           >
-                            <FaShare className="w-4 h-4" />
-                            <span>Copy Link</span>
+                            <FaShare />
+                            <span className="hidden | sm:block">Copy Link</span>
                           </button>
                           {/* Tooltip for Share Button */}
                           <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1227,7 +1230,7 @@ const ProfileViewPage = () => {
         {/* Notification */}
         {notification && (
           <div
-            className="fixed bottom-4 left-4 bg-[#2c2c2c] text-white text-lg p-4 rounded-md shadow-lg max-w-xs"
+            className="text-xs p-2 | sm:text-lg sm:p-4  | fixed bottom-4 left-4 bg-[#2c2c2c] text-white rounded-md shadow-lg max-w-xs"
             style={{ transition: 'opacity 0.3s ease-in-out' }}
           >
             {notification}

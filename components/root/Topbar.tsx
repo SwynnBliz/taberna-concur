@@ -282,16 +282,16 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
   };
 
   return (
-    <div className="sticky top-0 z-50 flex justify-between items-center bg-[#303030] text-white p-4 shadow-md max-h-18">
+    <div className="h-12 p-2 | sm:h-18 sm:p-4 | sticky top-0 z-50 flex justify-between items-center bg-[#303030] text-white shadow-md">
       <div className="relative group">
         <button
           onClick={handleSidebarToggle} 
-          className="relative hover:bg-yellow-500 rounded-full w-12 h-12 flex items-center justify-center transition-all"
+          className="w-8 h-8 | sm:w-11 sm:h-11 | relative hover:bg-yellow-500 rounded-full flex items-center justify-center transition-all"
         >
-          <span className="text-white text-2xl">☰</span>
+          <span className="text-sm | sm:text-2xl | text-white">☰</span>
 
           {inviteCount > 0 && (
-            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="text-[10px] w-4 h-4 | sm:text-xs sm:w-5 sm:h-5 | absolute top-0 right-0 bg-red-500 text-white rounded-full flex items-center justify-center">
               {inviteCount}
             </span>
           )}
@@ -303,8 +303,8 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
         </div>
       </div>
 
-      <div className="flex-1 text-center">
-        <button onClick={handleNavigateHome} className="text-yellow-500 italic island-moments font-semibold text-4xl">
+      <div className="ml-6 | sm:ml-0 | flex-1 text-center">
+        <button onClick={handleNavigateHome} className="text-md | sm:text-4xl | text-yellow-500 hover:bg-gray-500 hover:rounded-2xl hover:p-1 italic island-moments font-semibold">
           TabernaConcur
         </button>
 
@@ -314,33 +314,33 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
         </div>
       </div>
 
-      <div className="relative mr-4">
+      <div className="sm:mr-4 | relative">
         <button
-          className={`relative text-white transition-all ${isNotificationsOpen ? "bg-yellow-500 hover:bg-yellow-600" : "hover:bg-yellow-500"} rounded-full p-2`}
+          className={`text-sm | sm:text-2xl | relative text-white transition-all ${isNotificationsOpen ? "bg-yellow-500 hover:bg-yellow-600" : "hover:bg-yellow-500"} rounded-full p-2`}
           onClick={handleToggleNotifications}
         >
-          <FaBell size={24} />
+          <FaBell/>
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+            <span className="text-[10px] w-4 h-4 | sm:text-xs sm:w-5 sm:h-5 | absolute top-0 right-0 bg-red-500 text-white rounded-full flex items-center justify-center">
               {unreadCount}
             </span>
           )}
         </button>
 
         {isNotificationsOpen && (
-          <div className="absolute right-0 mt-2 bg-[#383838] text-black p-4 rounded-md shadow-lg w-72 max-h-80 overflow-y-auto">
+          <div className="w-48 max-h-80 | sm:w-72 sm:max-h-96 | absolute right-0 mt-2 bg-[#383838] text-black p-4 rounded-md shadow-lg overflow-y-auto">
             {/* Mark All as Read Button */}
             <div className="flex justify-between items-center mb-2">
-              <span className="text-white text-sm font-semibold">Notifications</span>
+              <span className="text-[10px] | sm:text-sm | text-white font-semibold">Notifications</span>
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-white hover:text-yellow-500 p-2 rounded-full"
+                className="text-xs | sm:text-base | text-white hover:text-yellow-500 p-2 rounded-full"
               >
-                <FaCheck size={16} />
+                <FaCheck/>
               </button>
             </div>
             {notifications.length === 0 ? (
-              <div className="text-white text-center">You have no notifications</div>
+              <div className="text-xs | sm:text-base | text-white text-center">You have no notifications</div>
             ) : (
               notifications.map((notification, index) => (
                 <div
@@ -348,8 +348,8 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
                   className={`flex flex-col justify-between items-start mb-2 p-2 rounded-md cursor-pointer transition-all duration-200 ease-in-out ${notification.read ? "bg-transparent hover:bg-gray-700" : "bg-yellow-500 hover:bg-yellow-600"} hover:shadow-xl`}
                   onClick={() => handleNotificationClick(notification.id, notification.link)}
                 >
-                  <div className="flex justify-between items-center w-full">
-                    <div className="text-white text-sm overflow-hidden text-ellipsis max-w-[calc(100%-50px)]">
+                  <div className="text-[10px] | sm:text-sm | flex justify-between items-center w-full">
+                    <div className="text-white overflow-hidden text-ellipsis max-w-[calc(100%-50px)]">
                       {notification.content}
                     </div>
                     {/* Mark as read button */}
@@ -361,7 +361,7 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
                         }}
                         className="text-white hover:text-yellow-500 ml-2"
                       >
-                        <FaCheck size={16} />
+                        <FaCheck/>
                       </button>
                     )}
                     {/* Delete notification button */}
@@ -372,10 +372,11 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
                       }}
                       className="text-white hover:text-red-500 ml-2"
                     >
-                      <FaTrash size={16} />
+                      <FaTrash/>
                     </button>
                   </div>
-                  <div className="text-xs text-gray-100 mt-1">
+                  
+                  <div className="text-[8px] | sm:text-xs | text-gray-100 mt-1">
                     {notification.timestamp ? formatTimestamp(notification.timestamp) : "Unknown time"}
                   </div>
                 </div>
@@ -387,12 +388,12 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
 
       {deleteNotificationPrompt && (
         <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+          <div className="w-10/12 text-xs | sm:w-auto sm:text-base | bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
             <p>Are you sure you want to delete this notification? This cannot be undone!</p>
             <div className="mt-4 flex justify-center gap-4">
               <button
                 onClick={confirmDeleteNotification}
-                className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
               >
                 Confirm
               </button>
@@ -408,27 +409,27 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
       )}
 
       <button
-        className={`relative mr-4 text-white transition-all rounded-full p-2 md:hidden ${
-          isSidebarOpen ? "bg-yellow-500 hover:bg-yellow-600" : "hover:bg-yellow-500"
+        className={`text-md mr-1 | sm:text-2xl sm:mr-4 | relative text-white transition-all rounded-full p-2 lg:hidden ${
+          isSidebarOpen ? " hover:bg-yellow-500" : "hover:bg-yellow-500"
         }`}
         onClick={() => {
           setIsSidebarOpen(!isSidebarOpen);
           onRightSidebarToggle();
         }}
       >
-        <FaBookmark className="text-white text-2xl" />
+        <FaBookmark/>
       </button>
 
       <div className="relative group">
         <button
           onClick={handleProfileClick}
-          className="w-10 h-10 rounded-full overflow-hidden relative transition-all"
+          className="w-6 h-6 mt-2 | sm:w-10 sm:h-10 sm:mt-0 | rounded-full overflow-hidden relative transition-all"
         >
           <div className="absolute top-0 left-0 w-full h-full bg-yellow-500 opacity-0 hover:opacity-40 transition-all"></div>
           {/* Profile image */} 
           {loading ? (
             <div className="w-full h-full flex items-center justify-center bg-gray-400 animate-pulse rounded-full">
-              <FaSpinner className="animate-spin text-white text-lg" />
+              <FaSpinner className="text-sm | sm:text-lg | animate-spin text-white" />
             </div>
           ) : (
             <Image
@@ -442,7 +443,7 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
         </button>
 
         {isProfileMenuOpen && (
-          <div className="absolute right-0 mt-2 bg-[#383838] text-black p-4 rounded-md shadow-lg w-48">
+          <div className="text-xs | sm:text-base | absolute right-0 mt-2 bg-[#383838] text-black p-4 rounded-md shadow-lg w-48">
             {/* Mode toggle button */}
             {isAdmin && (
               <button

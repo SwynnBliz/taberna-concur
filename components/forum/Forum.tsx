@@ -1118,13 +1118,13 @@ const Forum = () => {
     <div className="flex flex-col">
       {/* Conditionally show Search Input */}
       {isSearchVisible && (
-        <div className="flex items-center w-8/12 mx-auto mt-4 gap-4">
+        <div className="flex items-center w-8/12 mx-auto mt-2 gap-2">
           <input
             type="text"
             placeholder="Search posts..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)} 
-            className="flex-1 p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
+            className="w-[20px] text-xs | sm:text-base | flex-1 p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
           />
           <select
             value={sortMethod}
@@ -1133,7 +1133,7 @@ const Forum = () => {
               setSortMethod(selectedSort); 
               filterPosts(posts, selectedSort); 
             }}
-            className="p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
+            className="w-[80px] text-xs | sm:text-base | p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
           >
             <option value="latest">Latest</option>
             <option value="popular">Popular</option>
@@ -1142,10 +1142,10 @@ const Forum = () => {
       )}
 
       {/* Posts Section with Title and Divider */}
-       <div className="mt-6 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
+       <div className="mt-4 w-9/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
         <div>
           {/* Posts Text with Border */}
-          <p className="text-white text-xl">Posts</p>
+          <p className="text-xs | sm:text-xl | text-white">Posts</p>
         </div>
         
         {/* Buttons aligned to the right */}
@@ -1156,7 +1156,7 @@ const Forum = () => {
               onClick={togglePostForum}
               className={`text-white ${isPostForumVisible ? 'text-yellow-500' : 'hover:text-yellow-500'}`}
             >
-              <FaPlus className="w-6 h-6" />
+              <FaPlus className="w-3 h-3 | sm:w-6 sm:h-6" />
             </button>
 
             {/* Tooltip */}
@@ -1171,7 +1171,7 @@ const Forum = () => {
               onClick={toggleSearch}
               className={`text-white ${isSearchVisible ? 'text-yellow-500' : 'hover:text-yellow-500'}`}
             >
-              <FaSearch className="w-6 h-6" />
+              <FaSearch className="w-3 h-3 | sm:w-6 sm:h-6" />
             </button>
 
             {/* Tooltip */}
@@ -1191,56 +1191,56 @@ const Forum = () => {
 
       {/* Contains the Posts and Comments Sections*/}
       <div>
-        <div className="p-3 w-9/12 bg-[#484848] mx-auto">
+        <div className="p-2 w-10/12 bg-[#484848] mx-auto">
           {filteredPosts.length === 0 ? (
-              <p className="text-center text-white w-full">There are no posts matching your search query.</p>
+              <p className="text-xs | sm:text-lg | text-center text-white w-full">There are no posts matching your search query.</p>
           ) : (
             filteredPosts.map((post) => (
               <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383838] p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex justify-between mb-4">
                   {/* Left Section: Image, Username, and Timestamp */}
-                  <div className="flex items-center">
+                  <div className="flex flex-row items-center">
                     <div className="relative group inline-flex items-center">
-                    <Link href={`/profile-view/${post.userId}`} className="relative">
-                      {/* Profile Image */}
-                      <img
-                        src={userPhotos.get(post.userId) || '/placeholder.jpg'}
-                        alt="Profile"
-                        className="w-12 h-12 rounded-full mr-4 cursor-pointer transition-opacity duration-300"
-                        onLoad={() => fetchUserPhoto(post.userId)}
-                      />
-                      
-                      {/* Yellow Tint Overlay */}
-                      <div className="absolute inset-0 w-12 h-12 rounded-full bg-yellow-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-                    </Link>
+                      <Link href={`/profile-view/${post.userId}`} className="relative">
+                        {/* Profile Image */}
+                        <img
+                          src={userPhotos.get(post.userId) || '/placeholder.jpg'}
+                          alt="Profile"
+                          className="w-6 h-6 | sm:w-12 sm:h-12 sm:mr-2 | rounded-full cursor-pointer transition-opacity duration-300"
+                          onLoad={() => fetchUserPhoto(post.userId)}
+                        />
+                        
+                        {/* Yellow Tint Overlay */}
+                        <div className="absolute inset-0 | w-6 h-6 | sm:w-12 sm:h-12 sm:mr-2 | rounded-full bg-yellow-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                      </Link>
 
                       {/* Tooltip for View User's Profile */}
                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
                         View User's Profile
                       </div>
                     </div>
-                  
-                    <div>
-                      <p className="text-xl font-semibold text-white flex items-center space-x-2">
-                        <span>{usernames.get(post.userId) || "Loading..."}</span>
+                    
+                    <div className="ml-1">
+                      <p className="space-x-1 | sm:space-x-2 | font-semibold text-white flex items-center">
+                        <span className="text-[10px] | sm:text-base sm:max-w-none | truncate max-w-[70px]">{usernames.get(post.userId) || "Loading..."}</span>
                         {/* Display Role and NCII */}
                         {userDetails.get(post.userId)?.role === "admin" && (
-                          <span className="text-red-500 font-bold text-sm">
+                          <span className="hidden | sm:block sm:text-sm | text-red-500 font-bold">
                             Admin
                           </span>
                         )}
                         {userDetails.get(post.userId)?.isNCIIHolder && (
-                          <span className="text-yellow-500 font-bold text-sm">
+                          <span className="hidden | sm:block sm:text-sm | text-yellow-500 font-bold">
                             NCII
                           </span>
                         )}
                       </p>
 
-                      <p className="text-sm text-gray-400">
+                      <p className="text-[6px] | sm:text-sm | text-gray-400">
                         {post.updatedAt ? (
                           <>
                             {formatTimestamp(post.updatedAt)}{" "}
-                            <span className="text-gray-400">(edited)</span>
+                            <span className="text-[6px] | sm:text-sm | text-gray-400">(edited)</span>
                           </>
                         ) : (
                           formatTimestamp(post.createdAt)
@@ -1248,99 +1248,96 @@ const Forum = () => {
                       </p>
                     </div>
                   </div>
-  
+
                   {/* Right Section: View Post, Bookmark, and More Options */}
-                    <div className="flex space-x-2">
-                      {/* Container for all buttons */}
-                      <div className="bg-[#2c2c2c] rounded-full px-4 py-2 flex items-center space-x-4">
-                        {/* View Post Button */}
-                        <div className="relative group inline-flex items-center">
-                          <Link href={`/forum/${post.id}`}>
-                            <button className="text-white hover:text-yellow-500 mt-2">
-                              <HiDocumentMagnifyingGlass className="w-4 h-4" />
-                            </button>
-                          </Link>
-                          {/* Tooltip for View Post */}
-                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                            View Post
-                          </div>
+                  <div className="ml-1 text-[10px] space-x-1 p-1 max-h-6 | sm:ml-0 sm:text-base sm:space-x-4 sm:p-2 sm:max-h-10 | bg-[#2c2c2c] rounded-full flex">
+                    {/* View Post Button */}
+                    <div className="sm:mt-1 | relative group inline-flex items-center">
+                      <Link href={`/forum/${post.id}`}>
+                        <button className="text-white hover:text-yellow-500">
+                          <HiDocumentMagnifyingGlass/>
+                        </button>
+                      </Link>
+                      {/* Tooltip for View Post */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                        View Post
+                      </div>
+                    </div>
+
+                    {/* Bookmark Button */}
+                    <div className="relative group inline-flex items-center">
+                      <button
+                        onClick={() => handleBookmarkPost(post.id)}
+                        className={`${
+                          post.bookmarks?.some(
+                            (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
+                          )
+                            ? "text-yellow-500"
+                            : "text-white"
+                        } hover:text-yellow-500`}
+                      >
+                        <FaBookmark/>
+                      </button>
+                      {/* Tooltip for Bookmark */}
+                      <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                        Bookmark Post
+                      </div>
+                    </div>
+
+                    {/* More Options Dropdown */}
+                    {auth.currentUser?.uid === post.userId && (
+                      <div className="relative group inline-flex items-center">
+                        <button
+                          onClick={() => setShowMoreOptions(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
+                          className="text-white hover:text-yellow-500"
+                        >
+                          <FaEllipsisV/>
+                        </button>
+
+                        {/* Tooltip for More Options */}
+                        <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
+                          More Options
                         </div>
 
-                        {/* Bookmark Button */}
-                        <div className="relative group inline-flex items-center">
-                          <button
-                            onClick={() => handleBookmarkPost(post.id)}
-                            className={`${
-                              post.bookmarks?.some(
-                                (bookmark: { userId: string }) => bookmark.userId === auth.currentUser?.uid
-                              )
-                                ? "text-yellow-500"
-                                : "text-white"
-                            } hover:text-yellow-500`}
-                          >
-                            <FaBookmark className="w-4 h-4" />
-                          </button>
-                          {/* Tooltip for Bookmark */}
-                          <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                            Bookmark Post
-                          </div>
-                        </div>
+                        {showMoreOptions[post.id] && (
+                          <div className="mt-4 -right-3 | sm:mt-6 | absolute top-full bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
+                            {/* Triangle Pointer */}
+                            <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
 
-                        {/* More Options Dropdown */}
-                        {auth.currentUser?.uid === post.userId && (
-                          <div className="relative group inline-flex items-center">
+                            {/* Edit Button */}
                             <button
-                              onClick={() => setShowMoreOptions(prev => ({ ...prev, [post.id]: !prev[post.id] }))}
-                              className="text-white hover:text-yellow-500"
+                              onClick={() => { 
+                                handleUpdatePost(post.id); 
+                                setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
+                              }}
+                              className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
                             >
-                              <FaEllipsisV className="w-4 h-4" />
+                              <FaEdit className="mr-2" />
+                              <span className="whitespace-nowrap">Edit Post</span>
                             </button>
 
-                            {/* Tooltip for More Options */}
-                            <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                              More Options
-                            </div>
-
-                            {showMoreOptions[post.id] && (
-                              <div className="absolute top-full -right-3 mt-6 bg-[#2c2c2c] text-white rounded-md shadow-lg z-40">
-                                {/* Triangle Pointer */}
-                                <div className="absolute -top-2 right-3 w-4 h-4 rotate-45 transition-colors bg-[#2c2c2c]"></div>
-
-                                {/* Edit Button */}
-                                <button
-                                  onClick={() => { 
-                                    handleUpdatePost(post.id); 
-                                    setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
-                                  }}
-                                  className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group"
-                                >
-                                  <FaEdit className="w-4 h-4 mr-2" />
-                                  <span className="whitespace-nowrap">Edit Post</span>
-                                </button>
-
-                                {/* Delete Button */}
-                                <button
-                                  onClick={() => { 
-                                    handleDeletePost(post.id);
-                                    setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
-                                  }}
-                                  className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500"
-                                >
-                                  <FaTrash className="w-4 h-4 mr-2" />
-                                  <span className="whitespace-nowrap">Delete Post</span>
-                                </button>
-                              </div>
-                            )}
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => { 
+                                handleDeletePost(post.id);
+                                setShowMoreOptions(prev => ({ ...prev, [post.id]: false })); 
+                              }}
+                              className="flex items-center px-4 py-2 w-full hover:bg-[#383838] hover:rounded-md group text-red-500"
+                            >
+                              <FaTrash className="mr-2" />
+                              <span className="whitespace-nowrap">Delete Post</span>
+                            </button>
                           </div>
                         )}
                       </div>
-                    </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Delete Confirmation Modal */}
                 {deletePostPrompt && (
                   <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                    <div className="w-10/12 text-xs | sm:w-auto sm:text-base | bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                       <p>Are you sure you want to delete this post? This cannot be undone!</p>
                       <div className="mt-4 flex justify-between gap-4">
                         <button
@@ -1367,7 +1364,7 @@ const Forum = () => {
                 <div className="mb-2">
                   <div
                     ref={(el) => { contentRefs.current[post.id] = el; }}  
-                    className={`text-lg text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
+                    className={`text-xs | sm:text-lg | text-white ${isExpanded[post.id] ? 'line-clamp-none' : 'line-clamp-2'}`}
                     style={{
                       whiteSpace: 'pre-wrap',
                       display: '-webkit-box',
@@ -1384,7 +1381,7 @@ const Forum = () => {
                   {isTruncated[post.id] && !isExpanded[post.id] && (
                     <button
                       onClick={() => toggleMessage(post.id)}
-                      className="text-white cursor-pointer underline hover:text-yellow-500"
+                      className="text-xs | sm:text-lg | text-white cursor-pointer underline hover:text-yellow-500"
                     >
                       See more
                     </button>
@@ -1394,7 +1391,7 @@ const Forum = () => {
                   {isExpanded[post.id] && (
                     <button
                       onClick={() => toggleMessage(post.id)}
-                      className="text-white cursor-pointer underline hover:text-yellow-500"
+                      className="text-xs | sm:text-lg | text-white cursor-pointer underline hover:text-yellow-500"
                     >
                       See less
                     </button>
@@ -1403,7 +1400,7 @@ const Forum = () => {
 
                 {isEditingPost && (
                   <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
-                    <div className="bg-[#383838] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                    <div className="w-10/12 text-xs | sm:w-3/4 sm:text-base | bg-[#383838] p-6 rounded-lg max-h-[90vh] overflow-y-auto">
                       {/* Textarea for Editing Content */}
                       <textarea
                         value={editContentPost}
@@ -1420,14 +1417,14 @@ const Forum = () => {
                             <img
                               src={editCurrentImageUrl}
                               alt="Current Post Image"
-                              className="w-full max-h-[400px] object-cover rounded-lg mt-2"
+                              className="w-full | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
                             />
                             {/* Close button to remove the image */}
                             <button
                               onClick={() => setEditCurrentImageUrl(null)} 
                               className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                             >
-                              <AiOutlineClose size={16} />
+                              <AiOutlineClose/>
                             </button>
                           </div>
                         </div>
@@ -1441,14 +1438,14 @@ const Forum = () => {
                             <img
                               src={URL.createObjectURL(editImageFile)} 
                               alt="Selected Image Preview"
-                              className="w-full max-h-[400px] object-cover rounded-lg mt-2"
+                              className="w-full max-w-2xl | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
                             />
                             {/* Close button overlaid on the image */}
                             <button
                               onClick={() => setEditImageFile(null)} 
                               className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                             >
-                              <AiOutlineClose size={16} />
+                              <AiOutlineClose/>
                             </button>
                           </div>
                         </div>
@@ -1497,21 +1494,21 @@ const Forum = () => {
                 )}
 
                 {/* Image and Video Display Carousel */}
-                <div className="mb-4">
+                <div className="mb-2">
                   <PostMediaCarousel 
                     imageUrl={post.imageUrl ?? undefined} 
                     videoUrl={post.videoUrl ?? undefined}
                   />
                 </div>
 
-                <div className="flex gap-2 mb-4 items-center">
+                <div className="text-[10px] gap-2 | sm:text-base | flex mb-4 items-center">
                   {/* Like Button with Tooltip */}
                   <div className="relative group inline-flex items-center">
                     <button
                       onClick={() => handleLike(post.id)}
                       className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 hover:text-yellow-500 ${userLikes.get(post.id) === 'like' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
-                      <FaThumbsUp className="w-4 h-4" />
+                      <FaThumbsUp/>
                       <span>{formatNumberIntl(post.likes)}</span>
                     </button>
                     {/* Tooltip for Like Button */}
@@ -1526,7 +1523,7 @@ const Forum = () => {
                       onClick={() => handleDislike(post.id)}
                       className={`flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 hover:text-yellow-500 ${userLikes.get(post.id) === 'dislike' ? 'text-yellow-500' : 'text-gray-400'}`}
                     >
-                      <FaThumbsDown className="w-4 h-4" />
+                      <FaThumbsDown/>
                       <span>{formatNumberIntl(post.dislikes)}</span>
                     </button>
                     {/* Tooltip for Dislike Button */}
@@ -1545,7 +1542,7 @@ const Forum = () => {
                     }
                     className={`relative group flex items-center justify-between bg-[#2c2c2c] hover:text-yellow-500 p-2 rounded-full space-x-2 ml-auto ${showComments[post.id] ? 'text-yellow-500' : 'text-gray-400'}`}
                   >
-                    <FaComment className="w-4 h-4" />
+                    <FaComment/>
                     <span>{formatNumberIntl(post.comments.length)}</span>
 
                     {/* Tooltip for Show Comments */}
@@ -1571,10 +1568,10 @@ const Forum = () => {
                   <div className="relative group inline-flex items-center">
                     <button
                       onClick={() => handleShare(post.id)}
-                      className="flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full space-x-2 text-gray-400 hover:text-yellow-500"
+                      className="space-x-2 flex items-center justify-between bg-[#2c2c2c] p-2 rounded-full text-gray-400 hover:text-yellow-500"
                     >
-                      <FaShare className="w-4 h-4" />
-                      <span>Copy Link</span>
+                      <FaShare/>
+                      <span className="hidden | sm:block">Copy Link</span>
                     </button>
                     {/* Tooltip for Share Button */}
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1584,7 +1581,7 @@ const Forum = () => {
                 </div>
 
                 {showComments[post.id] && (
-                  <div className="comments-section ml-2">
+                  <div className="comments-section w-full">
                     <div className="text-white">
                       {Array.isArray(post.comments) && post.comments.length > 0 ? (
                         post.comments.map((comment, index) => (
@@ -1594,37 +1591,39 @@ const Forum = () => {
                               <img
                                 src={userPhotos.get(comment.userId) || "/placeholder.jpg"}
                                 alt="Commenter profile"
-                                className="w-8 h-8 rounded-full mr-2 cursor-pointer transition-opacity duration-300"
+                                className="w-6 h-6 mt-2 | sm:w-8 sm:h-8 sm:mt-0 sm:mr-2 | rounded-full cursor-pointer transition-opacity duration-300"
                                 onLoad={() => fetchUserPhoto(comment.userId)}
                               />
                               
                               {/* Yellow Tint Overlay */}
-                              <div className="absolute inset-0 w-8 h-8 rounded-full bg-yellow-500 opacity-0 hover:opacity-50 transition-opacity duration-300"></div>
+                              <div className="absolute inset-0 | w-6 h-6 mt-2 | sm:w-8 sm:h-8 sm:mt-0 sm:mr-2 | rounded-full bg-yellow-500 opacity-0 hover:opacity-50 transition-opacity duration-300"></div>
                             </Link>
-                            <div className="flex flex-col w-full">
+
+                            <div className="w-10/12 | sm:w-full | flex flex-col ml-1">
                               <div className="flex flex-row justify-between">
                                 <div>
-                                  <p className="font-semibold text-white">
-                                    {usernames.get(comment.userId) || "Loading..."}
+                                  <p className="font-semibold text-white flex flex-row">
+                                  <span className="text-[10px] | sm:text-base sm:max-w-none | truncate max-w-[60px]">{usernames.get(comment.userId) || "Loading..."}</span>
+
                                     {/* Check if the comment user is the post creator */}
                                     {comment.userId === post.userId && (
-                                      <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
-                                        Post Creator
+                                      <span className="ml-1 text-[6px] px-1 py-1 | sm:ml-2 sm:text-xs sm:px-2 | bg-yellow-500 text-black rounded-md">
+                                        Creator
                                       </span>
                                     )}
                                     {/* Add Admin and NCII text */}
                                     {userDetails.get(comment.userId)?.role === "admin" && (
-                                      <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                      <span className="hidden | sm:block sm:ml-2 sm:text-xs sm:mt-1 | text-red-500 font-bold">Admin</span>
                                     )}
                                     {userDetails.get(comment.userId)?.isNCIIHolder && (
-                                      <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                      <span className="hidden | sm:block sm:ml-2 sm:text-xs sm:mt-1 | text-yellow-500 font-bold">NCII</span>
                                     )}
                                   </p>
-                                  <p className="text-sm text-gray-400">
+                                  <p className="text-[8px] | sm:text-sm text-gray-400">
                                     {comment.updatedAt ? (
                                       <>
                                         {formatTimestamp(comment.updatedAt)}{" "}
-                                        <span className="text-gray-400">(edited)</span>
+                                        <span className="text-[8px] | sm:text-base | text-gray-400">(edited)</span>
                                       </>
                                     ) : (
                                       formatTimestamp(comment.createdAt)
@@ -1633,14 +1632,14 @@ const Forum = () => {
                                 </div>
 
                                 {auth.currentUser?.uid === comment.userId && (
-                                  <div className="bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
+                                  <div className="text-[10px] -mt-2 | sm:text-base sm:mt-0 | bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
                                     {/* Update Button with Tooltip */}
                                     <div className="relative group inline-flex items-center">
                                       <button
                                         onClick={() => handleUpdateComment(post.id, index)}
                                         className="hover:text-yellow-500"
                                       >
-                                        <FaEdit className="w-3 h-3" />
+                                        <FaEdit/>
                                       </button>
 
                                       {/* Tooltip */}
@@ -1654,7 +1653,7 @@ const Forum = () => {
                                         onClick={() => handleDeleteComment(post.id, index)}
                                         className="text-red-500 hover:text-red-600"
                                       >
-                                        <FaTrash className="w-3 h-3" />
+                                        <FaTrash/>
                                       </button>
 
                                       {/* Tooltip */}
@@ -1669,7 +1668,7 @@ const Forum = () => {
                               {/* Delete Comment Confirmation Modal */}
                               {deleteCommentPrompt && (
                                 <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
-                                  <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                                  <div className="w-10/12 text-xs | sm:w-auto sm:text-base | bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                                     <p>Are you sure you want to delete this comment? This cannot be undone!</p>
                                     <div className="mt-4 flex justify-between gap-4">
                                       <button
@@ -1696,7 +1695,7 @@ const Forum = () => {
 
                               {isEditingComment && (
                                 <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
-                                  <div className="bg-[#383838] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                                  <div className="w-10/12 text-xs | sm:w-2/4 sm:text-base | bg-[#383838] p-6 rounded-lg max-h-[90vh] overflow-y-auto">
                                     <textarea
                                       value={editContentComment}
                                       onChange={(e) => setEditContentComment(e.target.value)}
@@ -1723,7 +1722,7 @@ const Forum = () => {
                               )}
 
                               <LinkIt component={renderLink} regex={urlRegex}>
-                                <p>{filterBannedWords(comment.comment)}</p>
+                                <p className="text-xs | sm:text-base">{filterBannedWords(comment.comment)}</p>
                               </LinkIt>
 
                               <div className="flex gap-2 mt-2">
@@ -1731,13 +1730,13 @@ const Forum = () => {
                                 <div className="relative group inline-flex items-center">
                                   <button
                                     onClick={() => handleLikeComment(post.id, index)}
-                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
+                                    className={`text-[11px] | sm:text-base | flex items-center justify-between bg-[#2c2c2c] p-1 rounded-full space-x-1 hover:text-yellow-500 ${
                                       comment.likedBy?.includes(auth.currentUser?.uid || "")
                                         ? "text-yellow-500"
                                         : "text-gray-400"
                                     }`}
                                   >
-                                    <FaThumbsUp className="w-3 h-3" />
+                                    <FaThumbsUp/>
                                     <span>{formatNumberIntl(comment.likes)}</span>
                                   </button>
                                   {/* Tooltip for Like Button (Comment) */}
@@ -1749,13 +1748,13 @@ const Forum = () => {
                                 <div className="relative group inline-flex items-center">
                                   <button
                                     onClick={() => handleDislikeComment(post.id, index)}
-                                    className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
+                                    className={`text-[11px] | sm:text-base | flex items-center justify-between bg-[#2c2c2c] p-1 rounded-full space-x-1 hover:text-yellow-500 ${
                                       comment.dislikedBy.includes(auth.currentUser?.uid || "")
                                         ? "text-yellow-500"
                                         : "text-gray-400"
                                     }`}
                                   >
-                                    <FaThumbsDown className="w-3 h-3" />
+                                    <FaThumbsDown/>
                                     <span>{formatNumberIntl(comment.dislikes)}</span>
                                   </button>
                                   {/* Tooltip for Dislike Button (Comment) */}
@@ -1769,13 +1768,13 @@ const Forum = () => {
                               <div className="flex flex-col">
                                 <button
                                   onClick={() => toggleRepliesVisibility(post.id, index)} 
-                                  className="text-sm text-gray-400 hover:text-yellow-500 text-left w-fit"
+                                  className="text-[10px] | sm:text-sm | text-gray-400 hover:text-yellow-500 text-left w-fit"
                                 >
                                   {showReplies[post.id]?.[index] ? "Hide Replies" : "Show Replies"} ({comment.replies?.length || 0})
                                 </button>
 
                                 {showReplies[post.id]?.[index] && (
-                                  <div className="ml-6 mt-4">
+                                  <div className="ml-1 mt-2 | sm:ml-6 sm:mt-4">
                                     {comment.replies && comment.replies.length > 0 ? (
                                       comment.replies.map((reply, replyIndex) => (
                                         <div key={replyIndex} className="flex items-start mb-2">
@@ -1784,37 +1783,38 @@ const Forum = () => {
                                             <img
                                               src={userPhotos.get(reply.userId) || "/placeholder.jpg"}
                                               alt="Reply User"
-                                              className="w-6 h-6 rounded-full mr-2 cursor-pointer transition-opacity duration-300"
+                                              className="w-4 h-4 mt-2 | sm:w-6 sm:h-6 sm:mr-2 sm:mt-0 | rounded-full cursor-pointer transition-opacity duration-300"
                                               onLoad={() => fetchUserPhoto(reply.userId)}
                                             />
 
                                             {/* Yellow Tint Overlay */}
-                                            <div className="absolute inset-0 w-6 h-6 rounded-full bg-yellow-500 opacity-0 hover:opacity-50 transition-opacity duration-300"></div>
+                                            <div className="absolute inset-0 | w-4 h-4 mt-2 | sm:w-6 sm:h-6 sm:mr-2 sm:mt-0 | rounded-full bg-yellow-500 opacity-0 hover:opacity-50 transition-opacity duration-300"></div>
                                           </Link>
-                                          <div className="flex flex-col w-full">
+
+                                          <div className="flex flex-col w-full ml-1">
                                             <div className="flex flex-row justify-between">
                                               <div>
-                                                <p className="font-semibold text-white">
-                                                  {usernames.get(reply.userId) || "Loading..."}
+                                                <p className="font-semibold text-white flex flex-row">
+                                                  <span className="text-[10px] | sm:text-base sm:max-w-none | truncate max-w-[50px]">{usernames.get(reply.userId) || "Loading..."}</span>
                                                   {/* Check if the reply user is the post creator */}
                                                   {reply.userId === post.userId && (
-                                                    <span className="ml-2 text-xs bg-yellow-500 text-black px-2 py-1 rounded-md">
-                                                      Post Creator
+                                                    <span className="ml-1 text-[5px] px-1 py-1 | sm:ml-2 sm:text-xs sm:px-2 | bg-yellow-500 text-black rounded-md">
+                                                      Creator
                                                     </span>
                                                   )}
                                                   {/* Add Admin and NCII text */}
                                                   {userDetails.get(reply.userId)?.role === "admin" && (
-                                                    <span className="ml-2 text-xs text-red-500 font-bold">Admin</span>
+                                                    <span className="hidden | sm:block sm:ml-2 sm:text-xs sm:mt-1 | text-red-500 font-bold">Admin</span>
                                                   )}
                                                   {userDetails.get(reply.userId)?.isNCIIHolder && (
-                                                    <span className="ml-2 text-xs text-yellow-500 font-bold">NCII</span>
+                                                    <span className="hidden | sm:block sm:ml-2 sm:text-xs sm:mt-1 | text-yellow-500 font-bold">NCII</span>
                                                   )}
                                                 </p>
-                                                <p className="text-sm text-gray-400">
+                                                <p className="text-[7px] | sm:text-sm | text-gray-400">
                                                   {reply.updatedAt ? (
                                                     <>
                                                       {formatTimestamp(reply.updatedAt)}{" "}
-                                                      <span className="text-sm text-gray-400">(edited)</span>
+                                                      <span className="text-[7px] | sm:text-sm | text-gray-400">(edited)</span>
                                                     </>
                                                   ) : (
                                                     formatTimestamp(reply.createdAt)
@@ -1824,14 +1824,14 @@ const Forum = () => {
 
                                               {/* Only show edit and delete buttons for the current user's replies */}
                                               {auth.currentUser?.uid === reply.userId && (
-                                                <div className="bg-[#2c2c2c] max-h-8 rounded-full px-2 py-1 flex items-center space-x-2">
+                                                <div className="text-[10px] -mt-2 ml-1 px-1 py-1 | sm:text-base sm:mt-0 sm:ml-0 sm:px-2 | bg-[#2c2c2c] max-h-8 rounded-full flex items-center space-x-2">
                                                   {/* Update Button for Reply */}
                                                   <div className="relative group inline-flex items-center">
                                                     <button
                                                       onClick={() => handleUpdateReply(post.id, index, replyIndex)}
                                                       className="hover:text-yellow-500"
                                                     >
-                                                      <FaEdit className="w-3 h-3" />
+                                                      <FaEdit/>
                                                     </button>
                                                     {/* Tooltip */}
                                                     <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1844,7 +1844,7 @@ const Forum = () => {
                                                       onClick={() => handleDeleteReply(post.id, index, replyIndex)}
                                                       className="text-red-500 hover:text-red-600"
                                                     >
-                                                      <FaTrash className="w-3 h-3" />
+                                                      <FaTrash/>
                                                     </button>
                                                     {/* Tooltip */}
                                                     <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
@@ -1858,7 +1858,7 @@ const Forum = () => {
                                             {/* Delete Reply Confirmation Modal */}
                                             {deleteReplyPrompt && (
                                               <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
-                                                <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
+                                                <div className="w-10/12 text-xs | sm:w-auto sm:text-base | bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                                                   <p>Are you sure you want to delete this reply? This cannot be undone!</p>
                                                   <div className="mt-4 flex justify-between gap-4">
                                                     <button
@@ -1885,10 +1885,10 @@ const Forum = () => {
 
                                             {isEditingReply && (
                                               <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
-                                                <div className="bg-[#383838] p-6 rounded-lg w-2/4 max-h-[90vh] overflow-y-auto">
+                                                <div className="w-10/12 text-xs | sm:w-2/4 sm:text-base | bg-[#383838] p-6 rounded-lg max-h-[90vh] overflow-y-auto">
                                                   {/* Display @name separately, uneditable */}
                                                   {repliedToUserId && (
-                                                    <div className="text-sm text-blue-500 mb-4">
+                                                    <div className="text-xs | sm:text-sm | text-blue-500 mb-4">
                                                       Replied to: {repliedToUserId}
                                                     </div>
                                                   )}
@@ -1921,7 +1921,7 @@ const Forum = () => {
                                             )}
 
                                             <LinkIt component={renderLink} regex={urlRegex}>
-                                              <p>{renderReplyText(filterBannedWords(reply.reply), reply.repliedToUserId ?? '')}</p>
+                                              <p className="text-[12px] | sm:text-base">{renderReplyText(filterBannedWords(reply.reply), reply.repliedToUserId ?? '')}</p>
                                             </LinkIt>
 
                                             <div className="flex gap-2 mt-2">
@@ -1929,7 +1929,7 @@ const Forum = () => {
                                               <div className="relative group inline-flex items-center">
                                                 <button
                                                   onClick={() => handleLikeReply(post.id, index, replyIndex)}
-                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
+                                                  className={`text-[10px] | sm:text-sm | flex items-center justify-between bg-[#2c2c2c] p-1 rounded-full space-x-1 hover:text-yellow-500 ${
                                                     reply.likedBy?.includes(auth.currentUser?.uid || "")
                                                       ? "text-yellow-500"
                                                       : "text-gray-400"
@@ -1946,7 +1946,7 @@ const Forum = () => {
                                               <div className="relative group inline-flex items-center">
                                                 <button
                                                   onClick={() => handleDislikeReply(post.id, index, replyIndex)}
-                                                  className={`flex items-center justify-between min-w-9 bg-[#2c2c2c] p-1 rounded-full space-x-0 text-sm hover:text-yellow-500 ${
+                                                  className={`text-[10px] | sm:text-sm | flex items-center justify-between bg-[#2c2c2c] p-1 rounded-full space-x-1 hover:text-yellow-500 ${
                                                     reply.dislikedBy.includes(auth.currentUser?.uid || "")
                                                       ? "text-yellow-500"
                                                       : "text-gray-400"
@@ -1969,7 +1969,7 @@ const Forum = () => {
                                                     setReplyText(`@${usernameWithDashes} `); 
                                                     setRepliedToUserId(reply.userId);
                                                   }}
-                                                  className="hover:text-yellow-500 text-sm text-gray-400"
+                                                  className="text-[10px] | sm:text-sm | hover:text-yellow-500 text-gray-400"
                                                 >
                                                   Reply
                                                 </button>
@@ -1979,14 +1979,14 @@ const Forum = () => {
                                         </div>
                                       ))
                                     ) : (
-                                      <p className="text-sm text-gray-400">No replies yet</p>
+                                      <p className="text-[10px] | sm:text-sm | text-gray-400">No replies yet</p>
                                     )}
 
                                     {/* Input Field for Adding Reply */}
                                     <input
                                       type="text"
                                       placeholder={"Add a reply..."}
-                                      className="ml-1 text-white w-full p-2 rounded-md bg-[#2c2c2c] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
+                                      className="text-[10px] | sm:text-base | text-white w-full p-2 rounded-md bg-[#2c2c2c] focus:ring-2 focus:ring-yellow-500 outline-none mt-2"
                                       value={replyText}
                                       onChange={(e) => {
                                         const newText = e.target.value;
@@ -2022,7 +2022,7 @@ const Forum = () => {
                           </div>
                         ))
                       ) : (
-                        <p className="pl-2 mb-2">No comments yet</p>
+                        <p className="text-xs | sm:text-base | pl-2 mb-2">No comments yet</p>
                       )}
                     </div>
                   </div>
@@ -2030,7 +2030,7 @@ const Forum = () => {
                 <input
                   type="text"
                   placeholder="Add a comment..."
-                  className="ml-1 text-white w-full p-2 rounded-md bg-[#2c2c2c] focus:ring-2 focus:ring-yellow-500 outline-none"
+                  className="text-xs p-1 | sm:text-base sm:p-2 | ml-1 text-white w-full rounded-md bg-[#2c2c2c] focus:ring-2 focus:ring-yellow-500 outline-none"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
                       handleAddComment(post.id, e.currentTarget.value);
@@ -2047,7 +2047,7 @@ const Forum = () => {
       {/* Notification */}
       {notification && (
         <div
-          className="fixed bottom-4 left-4 bg-[#2c2c2c] text-white text-lg p-4 rounded-md shadow-lg max-w-xs"
+          className="text-xs p-2 | sm:text-lg sm:p-4  | fixed bottom-4 left-4 bg-[#2c2c2c] text-white rounded-md shadow-lg max-w-xs"
           style={{ transition: 'opacity 0.3s ease-in-out' }}
         >
           {notification}

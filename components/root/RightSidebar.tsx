@@ -91,34 +91,34 @@ const RightSidebar = () => {
   };
 
   return (
-    <div className="right-sidebar w-60 bg-[#484848] p-4 border-l-2 border-white h-[calc(100vh-64px)] overflow-y-auto fixed top-16 right-0 z-10">
-      <h3 className="pl-5 mt-3 -mb-2 text-sm text-white">
+    <div className="w-40 | sm:w-60 | right-sidebar bg-[#484848] p-4 border-l-2 border-white h-full overflow-y-auto fixed right-0 z-10">
+      <h3 className="text-[12px] pl-3 | sm:text-sm sm:pl-5 | mt-3 -mb-2 text-white">
         Bookmarked Posts
       </h3>
       {/* Separator Line */}
       <hr className="my-4 border-white w-5/6 mx-auto mb-0" />
       {loading || bannedWordsLoading ? (
-        <p className="text-white pt-2 pl-5 text-xs">Loading bookmarked posts...</p>
+        <p className="text-white pt-2 pl-3 text-[10px] | sm:pl-5 sm:text-xs |">Loading bookmarked posts...</p>
       ) : bookmarkedPosts.length === 0 ? (
-        <p className="text-white pt-2 pl-5 text-xs">No bookmarked posts yet.</p>
+        <p className="text-white pt-2 pl-3 text-[10px] | sm:pl-5 sm:text-xs |">No bookmarked posts yet.</p>
       ) : (
         <ul className="pt-1">
           {bookmarkedPosts.map((post, index) => (
             <li key={index} className="text-white p-4 rounded-lg">
               {/* User Photo and Username */}
-              <div className="flex items-center space-x-4">
+              <div className="space-x-1 | sm:space-x-4 | flex items-center">
                 <img
                   src={post.profilePhoto || '/placeholder.jpg'}
                   alt="User Profile"
-                  className="w-12 h-12 rounded-full"
+                  className="w-8 h-8 | sm:w-12 sm:h-12 | rounded-full"
                 />
                 <div className="flex flex-col">
-                  <span className="text-sm">{post.username || 'Loading...'}</span>
+                  <span className="text-[10px] | sm:text-sm sm:max-w-none | truncate max-w-[50px]">{post.username || 'Loading...'}</span>
                   {/* Check if updatedAt exists */}
-                  <p className="text-xs mb-2 text-gray-400">
+                  <p className="text-[8px] | sm:text-xs | mb-2 text-gray-400">
                     {post.updatedAt ? (
                       <>
-                        {formatTimestamp(post.updatedAt)} <span className="text-gray-400">(edited)</span>
+                        {formatTimestamp(post.updatedAt)} <span className="text-[8px] | sm:text-xs | text-gray-400">(edited)</span>
                       </>
                     ) : (
                       formatTimestamp(post.createdAt)
@@ -127,7 +127,7 @@ const RightSidebar = () => {
                 </div>
               </div>
 
-              <p className="text-sm mt-1 text-gray-300 line-clamp-2">{post.message}</p>
+              <p className="text-[10px] | sm:text-sm | mt-1 text-gray-300 line-clamp-2">{post.message}</p>
 
               {/* Post Media Carousel for Sidebar */}
               <div className="mt-2 relative">
@@ -141,7 +141,7 @@ const RightSidebar = () => {
               <div className="mt-2 flex items-center justify-between">
                 <Link href={`/forum/${post.id}`} passHref>
                   <button 
-                    className="text-white text-xs hover:text-yellow-400 underline"
+                    className="text-[8px] | sm:text-xs | text-white hover:text-yellow-500 underline"
                   >
                     View Original Post
                   </button>

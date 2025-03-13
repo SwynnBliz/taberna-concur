@@ -85,12 +85,12 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
 
   return (
     <div
-      className={`fixed top-18 left-0 h-full w-64 bg-[#383838] text-white p-6 transition-all transform ${
+      className={`w-40 p-3 | sm:w-64 sm:p-6 | fixed top-18 left-0 h-full bg-[#383838] text-white transition-all transform ${
         isVisible ? 'translate-x-0' : '-translate-x-full'
       }`}
       style={{ zIndex: 1000 }}
     >
-      <ul className="space-y-4">
+      <ul className="space-y-2 text-xs | sm:space-y-4 sm:text-base">
         {/* Show these buttons if user is not on admin page */}
         {!pathname.includes("/admin") ? (
           <>
