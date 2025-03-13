@@ -217,8 +217,9 @@ const QuizCreatorPage = () => {
 
   return (
     <Layout>
-      <div className="flex items-center justify-center min-h-screen bg-[#1F1F1F] text-yellow-400 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32">
-        <div className="bg-gray-800 bg-opacity-50 backdrop-blur-lg text-yellow-400 p-8 sm:p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-3xl border border-yellow-500 relative">
+      <div className="flex items-center justify-center min-h-screen bg-[#1F1F1F] text-yellow-400 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32"
+      style={{ backgroundImage: "url('/Background.png')", backgroundSize: "cover" }}>
+        <div className="bg-gray-800 bg-opacity-90 backdrop-blur-lg text-yellow-400 p-8 sm:p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-3xl border border-yellow-500 relative">
           <h2 className="text-4xl sm:text-5xl font-extrabold mb-6 text-center text-yellow-300 drop-shadow-lg animate-pulse">
             Create a Quiz
           </h2>
