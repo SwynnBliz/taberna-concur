@@ -70,8 +70,9 @@ const ResultsPage = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen flex items-center justify-center px-6 sm:px-10 md:px-16 bg-[#1F1F1F] text-yellow-400">
-        <div className="bg-[#1F1F1F] bg-opacity-50 backdrop-blur-lg p-8 sm:p-12 rounded-2xl shadow-2xl w-full max-w-4xl border border-yellow-500 relative">
+      <div className="min-h-screen flex items-center justify-center px-6 sm:px-10 md:px-16 bg-[#1F1F1F] text-yellow-400" 
+      style={{backgroundImage: "url('/Background.png')",backgroundSize: "cover"}}>
+        <div className="bg-[#1F1F1F] bg-opacity-90 backdrop-blur-lg p-8 sm:p-12 rounded-2xl shadow-2xl w-full max-w-4xl border border-yellow-500 relative">
           <h2 className="text-4xl text-yellow-500 font-extrabold mb-6 text-center animate-pulse">
             Your Quiz Results
           </h2>

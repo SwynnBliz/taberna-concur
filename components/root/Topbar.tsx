@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { usePathname } from 'next/navigation';  
 import { getAuth, signOut } from "firebase/auth"; 
-import { FaSpinner, FaBell, FaCheck, FaTrash } from "react-icons/fa";
+import { FaSpinner, FaBell, FaCheck, FaTrash, FaBookmark } from "react-icons/fa";
 import { getFirestore, collection, query, where, onSnapshot, getDoc, getDocs, writeBatch, updateDoc, deleteDoc, doc, orderBy } from "firebase/firestore";
 import { formatDistanceToNow } from 'date-fns';
 
@@ -17,7 +17,7 @@ interface Notification {
   link: string;
 }
 
-const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) => {
+const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarToggle: () => void; onRightSidebarToggle: () => void; }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [profilePhoto, setProfilePhoto] = useState<string | null>(null); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
@@ -406,6 +406,18 @@ const Topbar = ({ onLeftSidebarToggle }: { onLeftSidebarToggle: () => void }) =>
           </div>
         </div>
       )}
+
+      <button
+        className={`relative mr-4 text-white transition-all rounded-full p-2 md:hidden ${
+          isSidebarOpen ? "bg-yellow-500 hover:bg-yellow-600" : "hover:bg-yellow-500"
+        }`}
+        onClick={() => {
+          setIsSidebarOpen(!isSidebarOpen);
+          onRightSidebarToggle();
+        }}
+      >
+        <FaBookmark className="text-white text-2xl" />
+      </button>
 
       <div className="relative group">
         <button

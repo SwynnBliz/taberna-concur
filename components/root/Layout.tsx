@@ -15,14 +15,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname(); 
   const auth = getAuth(app);
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false);
+  const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(false);
 
   const handleLeftSidebarToggle = () => {
     setIsLeftSidebarVisible(!isLeftSidebarVisible);
   };
 
-  const isForum = pathname === '/forum';
+  const handleRightSidebarToggle = () => {
+    setIsRightSidebarVisible(!isRightSidebarVisible);
+  };  
+
+  const isForum = pathname.startsWith('/forum');
   const isProfileView = pathname.startsWith('/profile-view/');
-  const isPostView = pathname.startsWith('/forum/');
   const isAdmin = pathname.includes("/admin");
   const isEducational = pathname.includes("educational");
 
@@ -72,7 +76,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <TopBar onLeftSidebarToggle={handleLeftSidebarToggle} />
+      <TopBar 
+        onLeftSidebarToggle={handleLeftSidebarToggle} 
+        onRightSidebarToggle={handleRightSidebarToggle} 
+      />
       <div className="flex flex-1 relative">
         {/* Left Sidebar */}
         <LeftSidebar 
@@ -82,13 +89,24 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Main Content */}
         <main 
-          className={`flex-1 bg-[#484848] overflow-auto ${isForum || isProfileView || isPostView || isAdmin || isEducational ? "mr-60" : ""}`}
+          className={`flex-1 bg-[#484848] overflow-auto ${isForum || isProfileView || isAdmin || isEducational ? "lg:mr-60" : ""}`}
         >
           {children}
         </main>
 
-        {/* Conditionally Render Right Sidebar */}
-        {(isForum|| isProfileView || isPostView || isAdmin || isEducational) && <RightSidebar />}
+        {/* Right Sidebar for Desktop */}
+        {(isForum || isProfileView || isAdmin || isEducational) && (
+          <div className="hidden lg:block">
+            <RightSidebar />
+          </div>
+        )}
+
+        {/* Right Sidebar for Mobile */}
+        {isRightSidebarVisible && (
+          <div className="fixed right-0 w-64 h-full z-40 lg:hidden">
+            <RightSidebar />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -166,7 +166,7 @@ const PostForum = () => {
   
 
   return (
-    <div className="flex justify-center items-center p-8 min-h-screen">
+    <div className="flex justify-center items-center p-8">
       <div className="w-full max-w-2xl bg-[#383838] rounded-lg shadow-lg p-6 space-y-6">
         
         {/* Post Header */}
