@@ -141,123 +141,111 @@ const AdminFilterPage: React.FC = () => {
 
   return (
     <Layout>
-      <div className="admin-filter-page max-w-7xl mx-40 mt-10 p-6 bg-[#383838] rounded-lg relative flex flex-col">
-        <h1 className="text-xl text-white border-b-2 border-white pb-2 mb-4">Manage Filter</h1>
+  <div className="admin-filter-page max-w-7xl mx-auto mt-10 p-6 bg-[#383838] rounded-lg relative flex flex-col">
+    <h1 className="text-xl text-white border-b-2 border-white pb-2 mb-4">Manage Filter</h1>
 
-        {/* Add New Banned Word Section */}
-        <div className="mb-4 flex items-center gap-x-4">
-          {/* Search Input */}
-          <div className="flex items-center gap-x-4">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white"
-              placeholder="Search for a banned word"
-            />
-          </div>
+    {/* Add New Banned Word Section */}
+    <div className="mb-4 flex flex-col sm:flex-row items-center gap-4">
+      {/* Search Input */}
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white w-full sm:w-auto"
+        placeholder="Search for a banned word"
+      />
 
-          <input
-            type="text"
-            value={newWord}
-            onChange={(e) => setNewWord(e.target.value)}
-            className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white"
-            placeholder="Enter a new banned word"
-          />
+      <input
+        type="text"
+        value={newWord}
+        onChange={(e) => setNewWord(e.target.value)}
+        className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white w-full sm:w-auto"
+        placeholder="Enter a new banned word"
+      />
 
-          <div className="relative group inline-flex items-center">
-            <button
-              onClick={handleAddWord}
-              className="bg-[#2c2c2c] text-white p-2 rounded hover:bg-yellow-500"
-            >
-              <BsDatabaseAdd className="h-6 w-6"/>
-            </button>
-
-            {/* Tooltip */}
-            <div className="absolute bottom-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-              Add Word
-            </div>
-          </div>
-
-          {/* Bulk Delete Button with Confirmation */}
-          {selectedWords.length > 0 && (
-            <div className="relative group inline-flex items-center">
-              <button
-                onClick={() => setDeletePrompt(true)} 
-                className="bg-[#2c2c2c] text-red-500 p-2 rounded hover:bg-yellow-500"
-              >
-                <BsDatabaseX className="h-6 w-6"/>
-              </button>
-
-              {/* Tooltip */}
-              <div className="absolute bottom-full mt-2 left-1/2 transform -translate-x-1/2 hidden group-hover:block bg-[#2c2c2c] text-white text-xs py-1 px-2 rounded-md whitespace-nowrap">
-                Delete Word
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Error and Success Messages */}
-        {duplicateError && (
-          <p className="text-red-500 text-sm mt-2">This word is already in the banned list.</p>
-        )}
-        {successMessage && (
-          <p className="text-green-500 text-sm mt-2">{successMessage}</p>
-        )}
-
-        {/* Delete Confirmation Modal */}
-        {deletePrompt && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-10">
-            <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
-              <p>Are you sure you want to delete the selected words?</p>
-              <div className="mt-4 flex justify-center gap-4">
-                <button
-                  onClick={handleDeleteSelectedWords}
-                  className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
-                >
-                  Confirm
-                </button>
-                <button
-                  onClick={() => setDeletePrompt(false)}
-                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Banned Words List */}
-        {isLoading ? (
-          <p className="text-white">Loading banned words...</p>
-        ) : (
-          <table className="min-w-fit table-auto border-collapse bg-[#2c2c2c] text-white text-center">
-            <thead>
-              <tr>
-                <th className="w-fit border px-4 py-2 border-white">Select</th>
-                <th className="w-full border px-4 py-2 border-white">Banned Word</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredWords.sort().map((word) => (
-                <tr key={word}>
-                  <td className="border px-4 py-2 border-white">
-                    <input
-                      type="checkbox"
-                      checked={selectedWords.includes(word)}
-                      onChange={() => toggleSelectWord(word)}
-                      className="form-checkbox"
-                    />
-                  </td>
-                  <td className="border px-4 py-2 border-white">{word}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+      {/* Add Word Button */}
+      <div className="relative group">
+        <button
+          onClick={handleAddWord}
+          className="bg-[#2c2c2c] text-white p-2 rounded hover:bg-yellow-500"
+        >
+          <BsDatabaseAdd className="h-6 w-6"/>
+        </button>
       </div>
-    </Layout>
+
+      {/* Bulk Delete Button */}
+      {selectedWords.length > 0 && (
+        <div className="relative group">
+          <button
+            onClick={() => setDeletePrompt(true)} 
+            className="bg-[#2c2c2c] text-red-500 p-2 rounded hover:bg-yellow-500"
+          >
+            <BsDatabaseX className="h-6 w-6"/>
+          </button>
+        </div>
+      )}
+    </div>
+
+    {/* Error and Success Messages */}
+    {duplicateError && <p className="text-red-500 text-sm mt-2">This word is already in the banned list.</p>}
+    {successMessage && <p className="text-green-500 text-sm mt-2">{successMessage}</p>}
+
+    {/* Delete Confirmation Modal */}
+    {deletePrompt && (
+      <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-10 px-4">
+        <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center w-full max-w-md">
+          <p>Are you sure you want to delete the selected words?</p>
+          <div className="mt-4 flex justify-between">
+            <button
+              onClick={handleDeleteSelectedWords}
+              className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600 w-1/2"
+            >
+              Confirm
+            </button>
+            <button
+              onClick={() => setDeletePrompt(false)}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 w-1/2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Banned Words List */}
+    {isLoading ? (
+      <p className="text-white">Loading banned words...</p>
+    ) : (
+      <div className="overflow-x-auto">
+        <table className="min-w-full table-auto border-collapse bg-[#2c2c2c] text-white text-center">
+          <thead>
+            <tr>
+              <th className="border px-4 py-2 border-white">Select</th>
+              <th className="border px-4 py-2 border-white">Banned Word</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredWords.sort().map((word) => (
+              <tr key={word}>
+                <td className="border px-4 py-2 border-white">
+                  <input
+                    type="checkbox"
+                    checked={selectedWords.includes(word)}
+                    onChange={() => toggleSelectWord(word)}
+                    className="form-checkbox"
+                  />
+                </td>
+                <td className="border px-4 py-2 border-white">{word}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+</Layout>
+
   );
 };
 
