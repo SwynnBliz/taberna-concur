@@ -119,12 +119,12 @@ const QuizPage = () => {
       } else {
         handleSubmit(updatedAnswers);
       }
-    }, 100); // Shorter delay, so the question loads fast
+    }, 300); // Shorter delay, so the question loads fast
   
     // Reset flip after next question is set
     setTimeout(() => {
       setFlipped(false);
-    }, 500); // Keep flip effect smooth without extra wait
+    }, 200); // Keep flip effect smooth without extra wait
   };
 
   const handleFillInAnswer = (e: React.ChangeEvent<HTMLInputElement>) => {

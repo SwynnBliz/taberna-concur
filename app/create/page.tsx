@@ -335,30 +335,59 @@ const QuizCreatorPage = () => {
           >
             Create Quiz
           </button>
-  
-          <button
-            onClick={() => setShowQuestions(!showQuestions)}
-            className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full mt-6"
+
+{/* Button to Open Modal */}
+<button
+  onClick={() => setShowQuestions(true)}
+  className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full mt-6"
+>
+  View Created Quizzes
+</button>
+
+{/* Modal for Created Quizzes */}
+{showQuestions && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-lg relative">
+      
+      {/* Close Button */}
+      <button
+        onClick={() => setShowQuestions(false)}
+        className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded"
+      >
+        ✖
+      </button>
+
+      <h3 className="text-2xl font-semibold text-yellow-300 mb-4">Created Quizzes</h3>
+      
+      {/* List of Quizzes */}
+      <div className="space-y-2">
+        {createdExams.map((quiz) => (
+          <div
+            key={quiz.id}
+            className="flex justify-between items-center bg-gray-700 p-4 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500 transition-all"
+            onClick={() => handleViewQuestions(quiz)}
           >
-            {showQuestions ? 'Hide Created Quizzes' : 'View Created Quizzes'}
-          </button>
-  
-          {showQuestions && (
-            <div className="mt-4 space-y-2">
-              <h3 className="text-2xl font-semibold text-yellow-300">Created Quizzes:</h3>
-              {createdExams.map(quiz => (
-                <div
-                  key={quiz.id}
-                  className="bg-gray-700 p-4 mb-3 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500 hover:shadow-lg transition-all"
-                  onClick={() => handleViewQuestions(quiz)}
-                >
-                  {quiz.name} (Code: {quiz.code})
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+            <span>{quiz.name} (Code: {quiz.code})</span>
+
+            {/* Delete Button */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent clicking the quiz from opening it
+                handleDeleteQuiz(quiz.id);
+              }}
+              className="bg-red-500 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
+            >
+              🗑 Delete
+            </button>
+          </div>
+        ))}
       </div>
+    </div>
+  </div>
+)}
+
+   </div>
+ </div>
     </Layout>
   );
 };
