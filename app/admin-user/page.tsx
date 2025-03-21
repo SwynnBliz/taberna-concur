@@ -478,308 +478,317 @@ const AdminUserPage = () => {
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-40 mt-10 p-8 bg-[#383838] rounded-lg relative flex flex-col">
-        <section>
-          <h1 className="text-xl text-white mb-8 border-b-2 border-white pb-2">Manage Users</h1>
-          <div className="space-y-8">
-             {/* Status Filter Dropdown */}
-            <div className="mb-4">
-              <label className="block text-white">User Status</label>
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as 'all' | 'disabled' | 'notDisabled')}
-                className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
-              >
-                <option value="all">All Users</option>
-                <option value="disabled">Disabled Users</option>
-                <option value="notDisabled">Active Users</option>
-              </select>
-            </div>
+      <div className="max-w-7xl mx-auto mt-10 p-6 bg-[#383838] rounded-lg relative flex flex-col w-full sm:p-8">
+      <section>
+        <h1 className="text-xl text-white mb-6 border-b-2 border-white pb-2">Manage Users</h1>
+        <div className="space-y-6">
+          {/* Status Filter Dropdown */}
+          <div>
+            <label className="block text-white">User Status</label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'disabled' | 'notDisabled')}
+              className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
+            >
+              <option value="all">All Users</option>
+              <option value="disabled">Disabled Users</option>
+              <option value="notDisabled">Active Users</option>
+            </select>
+          </div>
 
-            {/* Search Bar */}
-            <div className="mb-4">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by username..."
-                className="w-full p-3 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
-              />
-            </div>
+          {/* Search Bar */}
+          <div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by username..."
+              className="w-full p-3 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
+            />
+          </div>
 
             {/* Display Users */}
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-start space-x-8 space-y-4 bg-[#484848] p-8 rounded-lg mb-6 relative"
-              >
-                <div className="absolute top-2 right-8 flex space-x-2">
-                  {/* Role Button */}
-                  <button
-                    onClick={() => handleToggleRole(user.id, user.role)} 
-                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white hover:bg-yellow-500"
+{filteredUsers.map((user) => (
+  <div
+    key={user.id}
+    className="flex flex-col md:flex-row items-start md:items-center space-x-0 md:space-x-8 space-y-4 bg-[#484848] p-4 md:p-8 rounded-lg mb-6 relative"
+  >
+    {/* Action Buttons - Mobile Responsive */}
+    <div className="flex flex-wrap gap-2 justify-end md:absolute md:top-2 md:right-8">
+      {/* Role Button */}
+      <button
+        onClick={() => handleToggleRole(user.id, user.role)} 
+        className="h-8 px-4 text-xs rounded-2xl bg-[#2c2c2c] text-white hover:bg-yellow-500"
+      >
+        {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
+      </button>
+
+      {/* NCII Holder Button */}
+      <button
+        onClick={() => handleToggleNCIIHolder(user.id, user.isNCIIHolder)}
+        className="h-8 px-4 text-xs rounded-2xl bg-[#2c2c2c] text-white hover:bg-yellow-500"
+      >
+        {user.isNCIIHolder ? 'Revoke NC II' : 'Make NC II'}
+      </button>
+
+      {/* Edit Button */}
+      <button
+        onClick={() => handleEditButtonClick(user)}
+        className="h-8 w-10 flex items-center justify-center bg-[#2c2c2c] rounded-2xl text-sm text-white hover:bg-yellow-500"
+      >
+        <FaEdit className="h-4 w-4"/>
+      </button>
+
+      {/* Warning Button */}
+      <button
+        onClick={() => handleOpenWarningModal(user)}
+        className="h-8 px-4 text-xs rounded-2xl bg-orange-500 text-white hover:bg-orange-600"
+      >
+        Warn
+      </button>
+
+      {/* Ban Button */}
+      <button
+        onClick={() => handleBanUser(user.id, user.disabled)} 
+        className={`h-8 px-4 text-xs rounded-2xl ${user.disabled ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white`}
+      >
+        {user.disabled ? 'Unban' : 'Ban'}
+      </button>
+    </div>
+
+
+    {selectedWarningUser && (
+  <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-40 pt-10 pb-10">
+    <div className="bg-[#2c2c2c] p-4 md:p-6 rounded-lg w-11/12 md:w-8/12 max-h-[80vh] md:max-h-[74vh] overflow-y-auto relative">
+      <h2 className="text-white font-bold mb-4 text-center md:text-left">
+        Warnings for {selectedWarningUser.username}
+      </h2>
+
+      {/* List Existing Warnings */}
+      {warnings.length > 0 ? (
+        <div className="space-y-4 max-h-56 md:max-h-48 overflow-y-auto">
+          {warnings
+            .sort((a, b) => {
+              if (a.category === 'profile' && b.category !== 'profile') return -1;
+              if (a.category !== 'profile' && b.category === 'profile') return 1;
+              return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
+            })
+            .map((warning) => (
+              <div key={warning.id} className="relative p-4 bg-[#484848] rounded-lg">
+                {/* Delete Button */}
+                <button
+                  onClick={() => handleDeleteWarning(warning.id)}
+                  className="absolute top-2 right-2 bg-[#2c2c2c] hover:bg-yellow-500 text-white p-1 rounded-full"
+                >
+                  <FaTrash className="h-4 w-4" />
+                </button>
+
+                <p className="text-gray-300">
+                  <span className="font-bold">Category:</span>{" "}
+                  <span className="text-yellow-500 font-bold">{warning.category}</span>
+                </p>
+                <p className="text-gray-300">
+                  <span className="font-bold">Message:</span> {warning.message}
+                </p>
+                <p className="text-gray-300">
+                  <span className="font-bold">Status:</span> {warning.status}
+                </p>
+                <p className="text-gray-300">
+                  <span className="font-bold">Created:</span>{" "}
+                  {new Date(warning.timestamp).toLocaleString()}
+                </p>
+
+                {/* Warning URL (clickable) */}
+                <p className="text-gray-300">
+                  <span className="font-bold">URL:</span>{" "}
+                  <a
+                    href={`${window.location.origin}${warning.link}`}
+                    onClick={(e) => {
+                      window.location.href = `${window.location.origin}${warning.link}`;
+                    }}
+                    className="text-yellow-500 hover:text-yellow-600 break-all"
                   >
-                    {user.role === 'admin' ? 'Revoke Admin' : 'Make Admin'}
-                  </button>
-                  {/* NCII Holder Button */}
-                  <button
-                    onClick={() => handleToggleNCIIHolder(user.id, user.isNCIIHolder)}
-                    className="h-8 w-24 text-xs rounded-2xl bg-[#2c2c2c] text-white ml-2 hover:bg-yellow-500"
-                  >
-                    {user.isNCIIHolder ? 'Revoke NC II' : 'Make NC II'}
-                  </button>
-                  {/* Edit Button */}
-                  <button
-                    onClick={() => handleEditButtonClick(user)}
-                    className="pl-3 text-center justify-center h-8 w-10 bg-[#2c2c2c] rounded-2xl text-sm text-white hover:bg-yellow-500"
-                  >
-                    <FaEdit className="h-4 w-4"/>
-                  </button>
+                    View {warning.category} link
+                  </a>
+                </p>
+              </div>
+            ))}
+        </div>
+      ) : (
+        <p className="text-gray-400 text-center">No warnings for this user.</p>
+      )}
+ 
 
-                  {/* Warning Button */}
-                  <button
-                    onClick={() => handleOpenWarningModal(user)}
-                    className="h-8 w-16 text-xs rounded-2xl bg-orange-500 text-white hover:bg-orange-600"
-                  >
-                    Warn
-                  </button>
-
-                  {/* Ban Button */}
-                  <button
-                    onClick={() => handleBanUser(user.id, user.disabled)} 
-                    className={`h-8 w-12 text-xs rounded-2xl ${user.disabled ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white`}
-                  >
-                    {user.disabled ? 'Unban' : 'Ban'}
-                  </button>
-                </div>
-
-                {selectedWarningUser && (
-                  <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-40 pt-20 pb-10">
-                    <div className="bg-[#2c2c2c] p-6 rounded-lg w-8/12 max-h-[74vh] overflow-y-auto relative">
-                      <h2 className="text-white font-bold mb-4">Warnings for {selectedWarningUser.username}</h2>
-
-                      {/* List Existing Warnings */}
-                      {warnings.length > 0 ? (
-                        <div className="space-y-4 max-h-48 overflow-y-auto">
-                          {warnings
-                            .sort((a, b) => {
-                              // Sort first by category (profile first, then forum)
-                              if (a.category === 'profile' && b.category !== 'profile') return -1;
-                              if (a.category !== 'profile' && b.category === 'profile') return 1;
-                              // Then by timestamp (ascending order, earliest first)
-                              return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
-                            })
-                            .map((warning) => (
-                              <div key={warning.id} className="relative p-4 bg-[#484848] rounded-lg">
-                                {/* Delete Button */}
-                                <button
-                                  onClick={() => handleDeleteWarning(warning.id)}
-                                  className="absolute top-2 right-2 bg-[#2c2c2c] hover:bg-yellow-500 text-white p-1 rounded-full"
-                                >
-                                  <FaTrash className="h-4 w-4" />
-                                </button>
-
-                                <p className="text-gray-300">
-                                  <span className="font-bold">Category:</span>{" "}
-                                  <span className="text-yellow-500 font-bold">{warning.category}</span>
-                                </p>
-                                <p className="text-gray-300">
-                                  <span className="font-bold">Message:</span> {warning.message}
-                                </p>
-                                <p className="text-gray-300">
-                                  <span className="font-bold">Status:</span> {warning.status}
-                                </p>
-                                <p className="text-gray-300">
-                                  <span className="font-bold">Created:</span>{" "}
-                                  {new Date(warning.timestamp).toLocaleString()}
-                                </p>
-
-                                {/* Warning URL (clickable) */}
-                                <p className="text-gray-300">
-                                  <span className="font-bold">URL:</span>{" "}
-                                  <a
-                                    href={`${window.location.origin}${warning.link}`}
-                                    onClick={(e) => {
-                                      window.location.href = `${window.location.origin}${warning.link}`;
-                                    }}
-                                    className="text-yellow-500 hover:text-yellow-600"
-                                  >
-                                    View {warning.category} link
-                                  </a>
-                                </p>
-                              </div>
-                            ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-400">No warnings for this user.</p>
-                      )}
 
                       {/* Create New Warning */}
-                      <div className="mt-4">
-                        <select
-                          value={newWarning.category}
-                          onChange={(e) => setNewWarning({ ...newWarning, category: e.target.value })}
-                          className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
-                        >
-                          <option value="" disabled>Select Category</option>
-                          <option value="profile">Profile</option>
-                          <option value="forum">Forum</option>
-                        </select>
-                        <textarea
-                          placeholder="Message"
-                          value={newWarning.message}
-                          onChange={(e) => setNewWarning({ ...newWarning, message: e.target.value })}
-                          className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg h-auto oresize-none outline-none focus:ring-2 focus:ring-yellow-500"
-                          rows={6}
-                        />
-                        <input
-                          type="text"
-                          placeholder="ID (Profile or Forum Post)"
-                          value={newWarning.id}
-                          onChange={(e) => setNewWarning({ ...newWarning, id: e.target.value })}
-                          className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
-                        />
-                        <div className="flex justify-between mt-4">
-                          <button
-                            onClick={handleCloseWarningModal}
-                            className="bg-gray-500 hover:bg-gray-600 px-4 py-2 text-white rounded-lg"
-                          >
-                            Close
-                          </button>
-                          <button
-                            onClick={handleCreateWarning}
-                            className="bg-orange-500 hover:bg-orange-600 px-4 py-2 text-white rounded-lg"
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
+<div className="mt-4">
+  <select
+    value={newWarning.category}
+    onChange={(e) => setNewWarning({ ...newWarning, category: e.target.value })}
+    className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+  >
+    <option value="" disabled>Select Category</option>
+    <option value="profile">Profile</option>
+    <option value="forum">Forum</option>
+  </select>
+  
+  <textarea
+    placeholder="Message"
+    value={newWarning.message}
+    onChange={(e) => setNewWarning({ ...newWarning, message: e.target.value })}
+    className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg h-auto resize-none outline-none focus:ring-2 focus:ring-yellow-500"
+    rows={6}
+  />
+
+  <input
+    type="text"
+    placeholder="ID (Profile or Forum Post)"
+    value={newWarning.id}
+    onChange={(e) => setNewWarning({ ...newWarning, id: e.target.value })}
+    className="w-full p-2 mb-2 bg-[#484848] text-white rounded-lg outline-none focus:ring-2 focus:ring-yellow-500"
+  />
+
+  <div className="flex justify-between mt-4">
+    <button
+      onClick={handleCloseWarningModal}
+      className="bg-gray-500 hover:bg-gray-600 px-4 py-2 text-white rounded-lg"
+    >
+      Close
+    </button>
+    <button
+      onClick={handleCreateWarning}
+      className="bg-orange-500 hover:bg-orange-600 px-4 py-2 text-white rounded-lg"
+    >
+      Add
+    </button>
+  </div>
+</div>
                     </div>
                   </div>
                 )}
 
                 {/* Left Section: Profile Image and Username */}
-                <div className="flex flex-col items-center w-1/4 relative">
-                  <Link href={`/profile-view/${user.id}`} className="relative">
-                    <img
-                      src={user.profilePhoto || '/placeholder.jpg'}
-                      alt="Profile"
-                      className="w-32 h-32 rounded-full mb-4 transition-opacity duration-300"
-                    />
-                    {/* Overlay for Yellow Tint */}
-                    <div className="absolute inset-0 w-32 h-32 rounded-full bg-yellow-500 opacity-0 hover:opacity-60 transition-opacity duration-300"></div>
-                  </Link>
-                  <h2 className="text-base text-white font-bold">{user.username}</h2>
-                </div>
+<div className="flex flex-col items-center w-full md:w-1/4 relative">
+  <Link href={`/profile-view/${user.id}`} className="relative">
+    <img
+      src={user.profilePhoto || '/placeholder.jpg'}
+      alt="Profile"
+      className="w-32 h-32 md:w-40 md:h-40 rounded-full mb-4 transition-opacity duration-300"
+    />
+    {/* Overlay for Yellow Tint */}
+    <div className="absolute inset-0 w-32 h-32 md:w-40 md:h-40 rounded-full bg-yellow-500 opacity-0 hover:opacity-60 transition-opacity duration-300"></div>
+  </Link>
+  <h2 className="text-base md:text-lg text-white font-bold text-center">{user.username}</h2>
+</div>
 
-        
-                {/* Right Section: Bio and Contact Number */}
-                <div className="flex flex-col w-2/3">
-                  {/* Bio */}
-                  <div className="bg-[#2c2c2c] p-4 rounded-lg mb-4 max-h-60 overflow-auto">
-                    <p className="text-gray-300 whitespace-pre-wrap">
-                      {user.bio || 'No bio provided'}
-                    </p>
-                  </div>
-                  
-                  {/* Contact Number */}
-                  <div className="bg-[#2c2c2c] p-4 rounded-lg">
-                    <p className="text-gray-300">{user.contactNumber || 'No contact number provided'}</p>
-                  </div>
-                </div>
+{/* Right Section: Bio and Contact Number */}
+<div className="flex flex-col w-full md:w-2/3">
+  {/* Bio */}
+  <div className="bg-[#2c2c2c] p-4 rounded-lg mb-4 max-h-60 overflow-auto">
+    <p className="text-gray-300 whitespace-pre-wrap">
+      {user.bio || 'No bio provided'}
+    </p>
+  </div>
+  
+  {/* Contact Number */}
+  <div className="bg-[#2c2c2c] p-4 rounded-lg">
+    <p className="text-gray-300">{user.contactNumber || 'No contact number provided'}</p>
+  </div>
+</div>
               </div>
             ))}
           </div>
         </section>
 
         {/* Modal for Editing User */}
-        {isModalOpen && selectedUser && (
-        <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex justify-center items-center z-50">
-            <div className="bg-[#383838] p-6 mt-40 mb-20 h-[80vh] rounded-lg w-3/5 max-w-2xl overflow-auto">
-            <h3 className="text-2xl text-white mb-4">Edit Profile</h3>
-            <form onSubmit={handleSubmit}>
-                {/* Image Preview */}
-                <div className="flex flex-col items-center mb-4">
-                  <label className="block text-white">Profile Image</label>
-                  <div className="flex items-center justify-center space-x-4">
-                    {/* Current Profile Image */}
-                    <img
-                      src={selectedUser.profilePhoto || '/placeholder.jpg'}
-                      alt="Current Profile"
-                      className="w-32 h-32 rounded-full"
-                    />
+{isModalOpen && selectedUser && (
+  <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex justify-center items-center z-50 p-4">
+    <div className="bg-[#383838] p-6 mt-20 mb-10 h-auto max-h-[80vh] rounded-lg w-full sm:w-3/5 max-w-2xl overflow-auto">
+      <h3 className="text-2xl text-white mb-4 text-center">Edit Profile</h3>
+      <form onSubmit={handleSubmit}>
+        {/* Image Preview */}
+        <div className="flex flex-col items-center mb-4">
+          <label className="block text-white">Profile Image</label>
+          <div className="flex flex-wrap items-center justify-center space-x-2 sm:space-x-4">
+            {/* Current Profile Image */}
+            <img
+              src={selectedUser.profilePhoto || '/placeholder.jpg'}
+              alt="Current Profile"
+              className="w-24 h-24 sm:w-32 sm:h-32 rounded-full"
+            />
 
-                    {/* New Image Preview */}
-                    {editImageFile && (
-                      <div className="relative">
-                        <img
-                          src={URL.createObjectURL(editImageFile)}
-                          alt="New Preview"
-                          className="w-32 h-32 rounded-full"
-                        />
-                        {/* Close button for the new image */}
-                        <button
-                          type="button"
-                          onClick={() => setEditImageFile(null)} 
-                          className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
-                        >
-                          <AiOutlineClose size={20} />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Input to upload a new image */}
-                  <input
-                    type="file"
-                    onChange={handleImageUpload}
-                    className="mt-4 p-2 text-white w-full bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded"
-                  />
-                </div>
-
-                {/* Username */}
-                <div className="mb-4">
-                <label className="block text-white">Username</label>
-                <input
-                    type="text"
-                    name="username"
-                    value={selectedUser?.username || ""}
-                    onChange={handleInputChange}
-                    className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
+            {/* New Image Preview */}
+            {editImageFile && (
+              <div className="relative">
+                <img
+                  src={URL.createObjectURL(editImageFile)}
+                  alt="New Preview"
+                  className="w-24 h-24 sm:w-32 sm:h-32 rounded-full"
                 />
-                </div>
-
-                {/* Bio */}
-                <div className="mb-4">
-                <label className="block text-white">Bio</label>
-                <textarea
-                    name="bio"
-                    value={selectedUser?.bio || ""}
-                    onChange={handleInputChange}
-                    className="w-full p-2 min-h-40 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
-                />
-                </div>
-
-                {/* Modal Buttons */}
-                <div className="flex justify-between mt-4">
+                {/* Close button for the new image */}
                 <button
-                    type="button"
-                    onClick={handleModalClose}
-                    className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md text-white"
+                  type="button"
+                  onClick={() => setEditImageFile(null)}
+                  className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                 >
-                    Cancel
+                  <AiOutlineClose size={20} />
                 </button>
-                <button
-                    type="submit"
-                    className="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md text-white"
-                >
-                    {isSaving ? 'Saving...' : 'Update'}
-                </button>
-                </div>
-            </form>
-            </div>
+              </div>
+            )}
+          </div>
+
+          {/* Input to upload a new image */}
+          <input
+            type="file"
+            onChange={handleImageUpload}
+            className="mt-4 p-2 text-white w-full bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded"
+          />
         </div>
-        )}
+
+        {/* Username */}
+        <div className="mb-4">
+          <label className="block text-white">Username</label>
+          <input
+            type="text"
+            name="username"
+            value={selectedUser?.username || ""}
+            onChange={handleInputChange}
+            className="w-full p-2 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
+          />
+        </div>
+
+        {/* Bio */}
+        <div className="mb-4">
+          <label className="block text-white">Bio</label>
+          <textarea
+            name="bio"
+            value={selectedUser?.bio || ""}
+            onChange={handleInputChange}
+            className="w-full p-2 min-h-32 rounded-md focus:ring-2 focus:ring-yellow-500 outline-none text-white bg-[#2c2c2c]"
+          />
+        </div>
+
+        {/* Modal Buttons */}
+        <div className="flex flex-col sm:flex-row justify-between mt-4 gap-2">
+          <button
+            type="button"
+            onClick={handleModalClose}
+            className="bg-gray-500 hover:bg-gray-600 px-4 py-2 rounded-md text-white w-full sm:w-auto"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="bg-yellow-500 hover:bg-yellow-600 px-4 py-2 rounded-md text-white w-full sm:w-auto"
+          >
+            {isSaving ? 'Saving...' : 'Update'}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+
       </div>
     </Layout>
   );
