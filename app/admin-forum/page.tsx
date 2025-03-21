@@ -1155,10 +1155,10 @@ const AdminForumPage = () => {
             )}
 
             {/* Posts Section with Title and Divider */}
-            <div className="mt-6 w-8/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
+            <div className="mt-6 w-9/12 mx-auto flex justify-between items-center border-b-2 border-white pb-2 mb-4">
                 <div>
                   {/* Posts Text with Border */}
-                  <p className="text-white text-xl">Manage Forum</p>
+                  <p className="text-xs | sm:text-xl | text-white">Manage Forum</p>
                 </div>
                 
                 {/* Buttons aligned to the right */}
@@ -1169,7 +1169,7 @@ const AdminForumPage = () => {
                     onClick={togglePostForum}
                     className={`text-white ${isPostForumVisible ? 'text-yellow-500' : 'hover:text-yellow-500'}`}
                     >
-                    <FaPlus className="w-6 h-6" />
+                    <FaPlus className="w-3 h-3 | sm:w-6 sm:h-6" />
                     </button>
 
                     {/* Tooltip */}
@@ -1184,7 +1184,7 @@ const AdminForumPage = () => {
                     onClick={toggleSearch}
                     className={`text-white ${isSearchVisible ? 'text-yellow-500' : 'hover:text-yellow-500'}`}
                     >
-                    <FaSearch className="w-6 h-6" />
+                    <FaSearch className="w-3 h-3 | sm:w-6 sm:h-6" />
                     </button>
 
                     {/* Tooltip */}
@@ -1204,27 +1204,27 @@ const AdminForumPage = () => {
 
             {/* Contains the Posts and Comments Sections*/}
               <div>
-                <div className="p-3 w-9/12 mx-auto">
+                <div className="p-3 w-10/12 mx-auto">
                   {filteredPosts.length === 0 ? (
-                      <p className="text-center text-white w-full">There are no posts matching your search query.</p>
+                      <p className="text-xs | sm:text-lg | text-center text-white w-full">There are no posts matching your search query.</p>
                   ) : (
                     filteredPosts.map((post) => (
                     <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383838] p-6">
                         <div className="flex items-center justify-between mb-4">
                         {/* Left Section: Image, Username, and Timestamp */}
-                        <div className="flex items-center">
+                        <div className="flex flex-row items-center">
                           <div className="relative group inline-flex items-center">
                             <Link href={`/profile-view/${post.userId}`} className="relative">
                               {/* Profile Image */}
                               <img
                                 src={userPhotos.get(post.userId) || '/placeholder.jpg'}
                                 alt="Profile"
-                                className="w-12 h-12 rounded-full mr-4 cursor-pointer transition-opacity duration-300"
+                                className="w-6 h-6 | sm:w-12 sm:h-12 sm:mr-2 | rounded-full cursor-pointer transition-opacity duration-300"
                                 onLoad={() => fetchUserPhoto(post.userId)}
                               />
                               
                               {/* Yellow Tint Overlay */}
-                              <div className="absolute inset-0 w-12 h-12 rounded-full bg-yellow-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                              <div className="absolute inset-0 | w-6 h-6 | sm:w-12 sm:h-12 sm:mr-2 | rounded-full bg-yellow-500 opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
                             </Link>
 
                             {/* Tooltip for View User's Profile */}

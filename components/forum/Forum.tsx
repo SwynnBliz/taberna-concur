@@ -1197,7 +1197,7 @@ const Forum = () => {
           ) : (
             filteredPosts.map((post) => (
               <div key={post.id} className="pt-6 rounded-lg mb-10 w-11/12 mx-auto mt-2 bg-[#383838] p-6">
-                <div className="flex justify-between mb-4">
+                <div className="flex items-center justify-between mb-4">
                   {/* Left Section: Image, Username, and Timestamp */}
                   <div className="flex flex-row items-center">
                     <div className="relative group inline-flex items-center">

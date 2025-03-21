@@ -21,16 +21,27 @@ interface Drink {
     createdAt: number;
 }
 
+// Options for flavor and measurement
 const flavorOptions = [
-  "Fruity", "Smoky", "Spicy", "Sweet", "Sour", "Bitter",
-  "Dry", "Herbal", "Floral", "Nutty", "Caramel",
-  "Oaky", "Vanilla", "Chocolate", "Malty", "Creamy"
+    "Bitter", "Caramel", "Chocolate", "Creamy", "Dry", "Floral",
+    "Fruity", "Herbal", "Malty", "Nutty", "Oaky", "Smoky",
+    "Sour", "Spicy", "Sweet", "Vanilla"
 ];
-
-const measurementOptions = [
-  "ml", "liter", "cl", "dl", "oz", "pint", "quart", "gallon",
-  "g", "kg", "lb", "piece", "cube", "dash", "slice", "sprig"
+    
+  const measurementOptions = [
+    // Volume (Liquids)
+    "ml", "cl", "dl", "liter", "oz", "pint", "quart", "gallon",
+  
+    // Weight (Solids)
+    "g", "kg", "lb", 
+  
+    // Small Additives (Common in Bartending)
+    "dash", "drop", "pinch", "sprig", "cube",
+  
+    // Countable Items (Fruits, Garnishes, etc.)
+    "piece", "slice", "wedge", "twist"
 ];
+  
 
 
 const AdminDrink = () => {
@@ -44,7 +55,7 @@ const AdminDrink = () => {
         category: "Brandy",
         imageUrl: "",
         alcoholContent: { abv: 0, proof: 0 },
-        flavorProfile: ["Fruity"],
+        flavorProfile: ["Bitter"],
         ingredients: [{ name: "", quantity: 0, unit: "ml" }],
         steps: [""],
         createdBy: "",
@@ -97,7 +108,7 @@ const AdminDrink = () => {
           isMounted = false;
           unsubscribe();
         };
-      }, []);
+    }, []);
     
     const addDrink = async () => {
         const isInvalid = (
@@ -721,14 +732,14 @@ const AdminDrink = () => {
                         <div className="fixed inset-0 bg-[#484848] bg-opacity-40 flex items-center justify-center z-50">
                             <div className="bg-[#2c2c2c] p-6 rounded-lg text-white text-center">
                                 <p>Are you sure you want to delete {selectedDrink.name}? This cannot be undone!</p>
-                                <div className="mt-4 flex justify-center gap-4">
+                                <div className="mt-4 flex justify-between gap-4">
                                     <button
                                         onClick={async () => {
                                             if (!selectedDrink.id) return;
                                             await deleteDrink(selectedDrink.id);
                                             setShowDeletePopup(false);
                                         }}
-                                        className="bg-yellow-500 text-black px-4 py-2 rounded hover:bg-yellow-600"
+                                        className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
                                     >
                                         Confirm
                                     </button>

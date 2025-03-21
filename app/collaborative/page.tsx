@@ -1,3 +1,4 @@
+// app/collaborative/page.tsx (Collaborative Page)
 'use client';
 import { useState, useEffect } from "react";
 import { collection, query, where, onSnapshot, doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
@@ -12,14 +13,23 @@ import Link from "next/link";
 
 // Options for flavor and measurement
 const flavorOptions = [
-  "Fruity", "Smoky", "Spicy", "Sweet", "Sour", "Bitter",
-  "Dry", "Herbal", "Floral", "Nutty", "Caramel",
-  "Oaky", "Vanilla", "Chocolate", "Malty", "Creamy"
+  "Bitter", "Caramel", "Chocolate", "Creamy", "Dry", "Floral",
+  "Fruity", "Herbal", "Malty", "Nutty", "Oaky", "Smoky",
+  "Sour", "Spicy", "Sweet", "Vanilla"
 ];
-
+  
 const measurementOptions = [
-  "ml", "liter", "cl", "dl", "oz", "pint", "quart", "gallon",
-  "g", "kg", "lb", "piece", "cube", "dash", "slice", "sprig"
+  // Volume (Liquids)
+  "ml", "cl", "dl", "liter", "oz", "pint", "quart", "gallon",
+
+  // Weight (Solids)
+  "g", "kg", "lb", 
+
+  // Small Additives (Common in Bartending)
+  "dash", "drop", "pinch", "sprig", "cube",
+
+  // Countable Items (Fruits, Garnishes, etc.)
+  "piece", "slice", "wedge", "twist"
 ];
 
 interface Project {
@@ -34,11 +44,10 @@ interface Project {
   priorityPercentage: { ingredients: number; flavors: number };
 }
 
-
 const CollaborativePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [projectName, setProjectName] = useState('');
-  const [flavorProfile, setFlavorProfile] = useState<string[]>(["Fruity"]);
+  const [flavorProfile, setFlavorProfile] = useState<string[]>(["Bitter"]);
   const [ingredients, setIngredients] = useState<{ name: string; quantity: number; unit: string }[]>([
     { name: "", quantity: 0, unit: "ml" },
   ]);
@@ -203,12 +212,11 @@ const CollaborativePage = () => {
       flavorProfile,
       ingredients,
       priorityPercentage: {
-        ingredients: priorityPercentage.ingredients / 100,
-        flavors: priorityPercentage.flavors / 100
+        ingredients: priorityPercentage.ingredients,
+        flavors: priorityPercentage.flavors
       }
     };
     
-  
     try {
       const projectRef = doc(collection(firestore, "projects"));
       await setDoc(projectRef, projectData);
@@ -221,6 +229,8 @@ const CollaborativePage = () => {
           projectName,
         })
       ));
+
+      alert("Project created successfully!");
   
       handleCancel();
     } catch (error) {
@@ -239,7 +249,7 @@ const CollaborativePage = () => {
   const handleCancel = () => {
     setIsModalOpen(false);
     setProjectName('');
-    setFlavorProfile(["Fruity"]);
+    setFlavorProfile(["Bitter"]);
     setIngredients([{ name: "", quantity: 0, unit: "ml" }]);
     setInvitedEmails([]);
     setInviteEmail("");
@@ -331,7 +341,7 @@ const CollaborativePage = () => {
 
           {/* Existing Project Boxes */}
           {projects.map((project, index) => (
-            <Link key={index} href={`/collaborative/${project.id}`}>
+            <Link key={index} href={`/collaborative/${project.id}/settings`}>
               <div
                 className="flex flex-col justify-between items-center bg-[#2c2c2c] text-white rounded-xl p-8 cursor-pointer hover:bg-yellow-500 transition duration-300 ease-in-out shadow-lg"
                 style={{ height: '180px' }}
@@ -461,7 +471,7 @@ const CollaborativePage = () => {
               </div>
               <ul>
                 {invitedEmails.map((email, index) => (
-                  <li key={index} className="text-gray-300 bg-[#2c2c2c] border border-yellow-500 p-2 rounded flex justify-between">
+                  <li key={index} className="text-gray-300 bg-[#2c2c2c] p-2 mb-2 rounded flex justify-between">
                     {email}
                     <button onClick={() => setInvitedEmails(invitedEmails.filter((_, i) => i !== index))} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
                   </li>

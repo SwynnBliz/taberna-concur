@@ -29,6 +29,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isProfileView = pathname.startsWith('/profile-view/');
   const isAdmin = pathname.includes("/admin");
   const isEducational = pathname.includes("educational");
+  const isCollaborative = /^\/collaborative\/[^/]+(\/.*)?$/.test(pathname);
 
   useEffect(() => {
     const checkUserStatus = async (user: User | null) => {
@@ -89,13 +90,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
         {/* Main Content */}
         <main 
-          className={`flex-1 bg-[#484848] overflow-auto ${isForum || isProfileView || isAdmin || isEducational ? "lg:mr-60" : ""}`}
+          className={`flex-1 bg-[#484848] overflow-auto ${isForum || isProfileView || isAdmin || isEducational || isCollaborative ? "lg:mr-60" : ""}`}
         >
           {children}
         </main>
 
         {/* Right Sidebar for Desktop */}
-        {(isForum || isProfileView || isAdmin || isEducational) && (
+        {(isForum || isProfileView || isAdmin || isEducational || isCollaborative) && (
           <div className="hidden lg:block">
             <RightSidebar />
           </div>
