@@ -1133,7 +1133,7 @@ const Forum = () => {
               setSortMethod(selectedSort); 
               filterPosts(posts, selectedSort); 
             }}
-            className="w-[80px] text-xs | sm:text-base | p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
+            className="w-[75px] text-xs | sm:text-base sm:w-[100px] | p-2 bg-[#2c2c2c] text-white rounded-md focus:ring-2 focus:ring-yellow-500 outline-none"
           >
             <option value="latest">Latest</option>
             <option value="popular">Popular</option>

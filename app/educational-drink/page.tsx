@@ -20,15 +20,25 @@ interface Drink {
     createdAt: number;
 }
 
+// Options for flavor and measurement
 const flavorOptions = [
-  "Fruity", "Smoky", "Spicy", "Sweet", "Sour", "Bitter",
-  "Dry", "Herbal", "Floral", "Nutty", "Caramel",
-  "Oaky", "Vanilla", "Chocolate", "Malty", "Creamy"
+    "Bitter", "Caramel", "Chocolate", "Creamy", "Dry", "Floral",
+    "Fruity", "Herbal", "Malty", "Nutty", "Oaky", "Smoky",
+    "Sour", "Spicy", "Sweet", "Vanilla"
 ];
 
 const measurementOptions = [
-  "ml", "liter", "cl", "dl", "oz", "pint", "quart", "gallon",
-  "g", "kg", "lb", "piece", "cube", "dash", "slice", "sprig"
+    // Volume (Liquids)
+    "ml", "cl", "dl", "liter", "oz", "pint", "quart", "gallon",
+  
+    // Weight (Solids)
+    "g", "kg", "lb", 
+  
+    // Small Additives (Common in Bartending)
+    "dash", "drop", "pinch", 
+  
+    // Countable Items (Fruits, Garnishes, etc.)
+    "piece", "slice", "wedge", "twist", "tsp", "tbsp"
 ];
 
 

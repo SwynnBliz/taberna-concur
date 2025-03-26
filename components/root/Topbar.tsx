@@ -304,7 +304,7 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
       </div>
 
       <div className="ml-6 | sm:ml-0 | flex-1 text-center">
-        <button onClick={handleNavigateHome} className="text-md | sm:text-4xl | text-yellow-500 hover:bg-gray-500 hover:rounded-2xl hover:p-1 italic island-moments font-semibold">
+        <button onClick={handleNavigateHome} className="text-md | sm:text-4xl | text-yellow-500 italic island-moments font-semibold">
           TabernaConcur
         </button>
 

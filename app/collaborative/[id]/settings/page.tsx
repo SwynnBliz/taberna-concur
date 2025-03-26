@@ -25,17 +25,19 @@ const measurementOptions = [
   "g", "kg", "lb", 
 
   // Small Additives (Common in Bartending)
-  "dash", "drop", "pinch", "sprig", "cube",
+  "dash", "drop", "pinch", 
 
   // Countable Items (Fruits, Garnishes, etc.)
-  "piece", "slice", "wedge", "twist"
+  "piece", "slice", "wedge", "twist", "tsp", "tbsp"
 ];
 
-const unitConversionMap = {
-  "ml": 1, "cl": 10, "dl": 100, "liter": 1000, "oz": 29.5735,
-  "pint": 473.176, "quart": 946.353, "gallon": 3785.41,
-  "g": 1, "kg": 1000, "lb": 453.592, 
-  "dash": 0.92, "drop": 0.05, "pinch": 0.36, "sprig": 2, "cube": 4.5
+const unitConversionMap: Record<string, number> = {
+  ml: 1, cl: 10, dl: 100, liter: 1000, oz: 29.5735,
+  pint: 473.176, quart: 946.353, gallon: 3785.41,
+  g: 1, kg: 1000, lb: 453.592,
+  dash: 0.92, drop: 0.05, pinch: 0.36,
+  tsp: 4.2,
+  tbsp: 12.6,
 };
 
 interface Project {
@@ -72,9 +74,16 @@ const ProjectSettingsPage = () => {
     ingredients: 50, 
     flavors: 50 
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   if (!projectId) {
-    return <h1 className="text-white text-center text-2xl p-6">Project Id does not exist</h1>;
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-screen">
+          <h1 className="text-red-500 text-center text-2xl p-6">Project Id does not exist</h1>;
+        </div>
+      </Layout>
+    );
   }
 
   useEffect(() => {
@@ -98,6 +107,7 @@ const ProjectSettingsPage = () => {
     if (project) {
         setEditedMembers(project.members);
         setInvitedEmails(project.invitedEmails);
+        setIsLoading(false);
     }
   }, [project]);
 
@@ -122,15 +132,19 @@ const ProjectSettingsPage = () => {
         setProjectName(projectData.name);
         setFlavorProfile(projectData.flavorProfile);
         setIngredients(projectData.ingredients);
-  
+        
         if (projectData.members.length > 0) {
           await fetchUserNames(projectData.members);
         }
+      } else {
+        setProject(null);
       }
+  
+      setIsLoading(false);
     });
   
     return () => unsubscribe();
-  }, [projectId]);
+  }, [projectId]);  
   
   const fetchUserNames = async (memberIds: string[]) => {
     const memberData: { [key: string]: string } = {};
@@ -251,47 +265,46 @@ const ProjectSettingsPage = () => {
     }
   };
 
-  if (!project) return <div className="text-white p-6">Loading project...</div>;
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-white text-center text-xl">Loading project...</p>
+        </div>
+      </Layout>
+    );
+  }
+  
+  if (!project) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-screen">
+          <p className="text-red-500 text-center text-xl">Project not found.</p>
+        </div>
+      </Layout>
+    );
+  }  
 
   return (
     <Layout>
       <div className="p-6 min-h-screen max-w-5xl">
-        <div className="mx-auto h-12 flex border-b-2 border-white mb-4">
-            {/* Drink Plan Tab */}
+      <div className="mx-auto w-full h-12 flex border-b-2 border-white mb-4">
+          {/* Tabs */}
+          {[
+            { name: "Drink Plan", path: `/collaborative/${projectId}/drink-plan` },
+            { name: "Summary", path: `/collaborative/${projectId}/summary` },
+            { name: "Logs", path: `/collaborative/${projectId}/logs` },
+            { name: "Settings", path: `/collaborative/${projectId}/settings` },
+          ].map(({ name, path }) => (
             <Link
-                href={`/collaborative/${projectId}/drink-plan`}
-                className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                  ${/^\/collaborative\/[^/]+\/drink-plan$/.test(pathname) ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
+              key={name}
+              href={path}
+              className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
+                ${pathname === path ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
             >
-                Drink Plan
+              {name}
             </Link>
-
-            {/* Summary Tab */}
-            <Link
-                href={`/collaborative/${projectId}/settings`}
-                className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                  ${/^\/collaborative\/[^/]+\/summary$/.test(pathname) ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
-            >
-                Summary
-            </Link>
-
-            {/* Logs Tab */}
-            <Link
-                href={`/collaborative/${projectId}/drink-plan`}
-                className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                  ${/^\/collaborative\/[^/]+\/logs$/.test(pathname) ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
-            >
-                Logs
-            </Link>
-
-            {/* Settings */}
-            <Link
-                href={`/collaborative/${projectId}/settings`}
-                className={`p-3 text-lg flex-1 text-center rounded-tl-lg rounded-tr-lg transition-all duration-300 
-                    ${/^\/collaborative\/[^/]+\/settings$/.test(pathname) ? "bg-yellow-500 text-white" : "bg-transparent text-white hover:bg-gray-500"}`}
-            >
-                Settings
-            </Link>
+          ))}
         </div>
         
         <div className="mx-auto bg-[#383838] p-6 rounded-lg shadow-md">
