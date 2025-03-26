@@ -44,42 +44,7 @@ const AdminUserPage = () => {
   const [warnings, setWarnings] = useState<{ id: string; [key: string]: any }[]>([]);
   const [newWarning, setNewWarning] = useState({ category: '', message: '', id: '' });
 
-  useEffect(() => {
-     const checkAdminRole = async (authUser: FirebaseUser | null) => {
-       if (!authUser) {
-         router.push('/sign-in');
-         return;
-       }
- 
-       try {
-         const userDocRef = doc(firestore, 'users', authUser.uid);
-         const userDoc = await getDoc(userDocRef);
-         
-         if (userDoc.exists()) {
-           const userData = userDoc.data() as User;
- 
-           if (userData.role !== 'admin') {
-             router.push('/forum');
-           }
-         } else {
-           router.push('/sign-in');
-         }
-       } catch (error) {
-         console.error('Error checking user role: ', error);
-         router.push('/sign-in');
-       }
-     };
- 
-     const unsubscribe = onAuthStateChanged(auth, (user) => {
-       if (user) {
-         checkAdminRole(user);
-       } else {
-         router.push('/sign-in');
-       }
-     });
- 
-     return () => unsubscribe();
-   }, [auth, firestore, router]);
+
 
   useEffect(() => {
     let filtered = [...users];
