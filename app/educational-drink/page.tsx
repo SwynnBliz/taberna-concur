@@ -22,9 +22,10 @@ interface Drink {
 
 // Options for flavor and measurement
 const flavorOptions = [
-    "Bitter", "Caramel", "Chocolate", "Creamy", "Dry", "Floral",
-    "Fruity", "Herbal", "Malty", "Nutty", "Oaky", "Smoky",
-    "Sour", "Spicy", "Sweet", "Vanilla"
+    "Bitter", "Briny", "Caramel", "Chocolate", "Citrusy", "Creamy", "Dry", 
+    "Earthy", "Floral", "Fruity", "Herbal", "Malty", "Nutty", "Oaky", 
+    "Rich", "Robust", "Salty", "Savory", "Smoky", "Sour", "Spicy", 
+    "Strong", "Sweet", "Tangy", "Tart", "Umami", "Vanilla", "Woody"
 ];
 
 const measurementOptions = [

@@ -1,11 +1,10 @@
-// components/root/Layout.tsx (Root Layout File)
 'use client';
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation"; 
 import TopBar from "./Topbar";
 import RightSidebar from "./RightSidebar";
 import LeftSidebar from "./LeftSideBar";
-import { getAuth, User } from "firebase/auth";
+import { getAuth, User, onAuthStateChanged } from "firebase/auth";
 import { app } from "../../app/firebase/config";
 import { doc, onSnapshot } from "firebase/firestore";
 import { firestore } from "../../app/firebase/config";
@@ -16,6 +15,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const auth = getAuth(app);
   const [isLeftSidebarVisible, setIsLeftSidebarVisible] = useState(false);
   const [isRightSidebarVisible, setIsRightSidebarVisible] = useState(false);
+  const [isAuthChecked, setIsAuthChecked] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   const handleLeftSidebarToggle = () => {
     setIsLeftSidebarVisible(!isLeftSidebarVisible);
@@ -23,7 +24,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const handleRightSidebarToggle = () => {
     setIsRightSidebarVisible(!isRightSidebarVisible);
-  };  
+  };
 
   const isForum = pathname.startsWith('/forum');
   const isProfileView = pathname.startsWith('/profile-view/');
@@ -32,7 +33,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isCollaborative = /^\/collaborative\/[^/]+(\/.*)?$/.test(pathname);
 
   useEffect(() => {
-    const checkUserStatus = async (user: User | null) => {
+    let authTimeout: NodeJS.Timeout;
+    
+    const checkUserStatus = (user: User | null) => {
       if (!user) {
         router.push("/sign-in");
         return;
@@ -41,17 +44,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       try {
         const settingsRef = doc(firestore, "settings", "disabledIds");
 
-        // Listen for changes to the disabledIds array in the settings document
+        // Listen for ban status updates
         const unsubscribeSettings = onSnapshot(settingsRef, (settingsDoc) => {
           if (settingsDoc.exists()) {
             const settingsData = settingsDoc.data();
             const disabledIds = settingsData?.disabledIds || [];
 
-            // If the current user's ID is in the disabledIds, log them out and navigate to sign-in
             if (disabledIds.includes(user.uid)) {
               auth.signOut();
               alert("You have been banned, logging out. Please contact support.");
-
+              
               setTimeout(() => {
                 router.push("/sign-in");
               }, 2000);
@@ -65,14 +67,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
-    const unsubscribeAuth = auth.onAuthStateChanged((user: User | null) => {
-      if (user) {
-        checkUserStatus(user);
-      }
-    });
+    authTimeout = setTimeout(() => {
+      const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
+        setUser(firebaseUser);
+        setIsAuthChecked(true); // Mark authentication as checked
 
-    // Cleanup auth state listener
-    return () => unsubscribeAuth();
+        if (firebaseUser) {
+          checkUserStatus(firebaseUser);
+        } else {
+          router.push("/sign-in");
+        }
+      });
+
+      return () => unsubscribeAuth();
+    }, 25000); // Wait 5 seconds before checking authentication
+
+    return () => clearTimeout(authTimeout); // Cleanup timeout on unmount
   }, [auth, router]);
 
   return (
@@ -88,11 +98,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           onClose={() => setIsLeftSidebarVisible(false)} 
         />
 
-        {/* Main Content */}
+        {/* Main Content - Keep Structure but Hide `children` Until Auth is Checked */}
         <main 
           className={`flex-1 bg-[#484848] overflow-auto ${isForum || isProfileView || isAdmin || isEducational || isCollaborative ? "lg:mr-60" : ""}`}
         >
-          {children}
+          {!isAuthChecked || !user ? (
+            <div className="flex justify-center items-center h-full text-white text-lg">
+              Loading...
+            </div>
+          ) : (
+            children
+          )}
         </main>
 
         {/* Right Sidebar for Desktop */}

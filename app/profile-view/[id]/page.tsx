@@ -91,6 +91,44 @@ const ProfileViewPage = () => {
   const [userDetails, setUserDetails] = useState(new Map());
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [showWarningsModal, setShowWarningsModal] = useState(false);
+
+  useEffect(() => {
+    if (!id || Array.isArray(id)) return; 
+  
+    const fetchUserData = async () => {
+      try {
+        const userDoc = await getDoc(doc(firestore, 'users', id)); 
+        if (userDoc.exists()) {
+          const data = userDoc.data() as User;
+  
+          
+          setIsProfilePublic(data.visibility === 'public'); 
+  
+          
+          let filteredBio = data.bio || "";
+          let filteredContact = data.contactNumber || "";
+  
+          bannedWords.forEach((word) => {
+            const regex = new RegExp(`\\b${word}\\b`, "gi"); 
+            filteredBio = filteredBio.replace(regex, "*".repeat(word.length));
+            filteredContact = filteredContact.replace(regex, "*".repeat(word.length));
+          });
+  
+          setUserData({
+            ...data,
+            bio: filteredBio,
+            contactNumber: filteredContact,
+          });
+        } else {
+          setError('User not found.');
+        }
+      } catch (err) {
+        setError('Failed to load user data.');
+      }
+    };
+  
+    fetchUserData();
+  }, [id, bannedWords]);
   
   const toggleMessage = (postId: string) => {
     setIsExpanded((prev) => ({
@@ -99,7 +137,6 @@ const ProfileViewPage = () => {
     }));
   };
 
-  
   const checkTruncation = (postId: string) => {
     const element = contentRefs.current[postId];
     if (element) {
@@ -111,7 +148,6 @@ const ProfileViewPage = () => {
     }
   };
 
-  
   useEffect(() => {
     posts.forEach((post) => checkTruncation(post.id));
   }, [posts]);
@@ -291,44 +327,6 @@ const ProfileViewPage = () => {
     
     return () => unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (!id || Array.isArray(id)) return; 
-  
-    const fetchUserData = async () => {
-      try {
-        const userDoc = await getDoc(doc(firestore, 'users', id)); 
-        if (userDoc.exists()) {
-          const data = userDoc.data() as User;
-  
-          
-          setIsProfilePublic(data.visibility === 'public'); 
-  
-          
-          let filteredBio = data.bio || "";
-          let filteredContact = data.contactNumber || "";
-  
-          bannedWords.forEach((word) => {
-            const regex = new RegExp(`\\b${word}\\b`, "gi"); 
-            filteredBio = filteredBio.replace(regex, "*".repeat(word.length));
-            filteredContact = filteredContact.replace(regex, "*".repeat(word.length));
-          });
-  
-          setUserData({
-            ...data,
-            bio: filteredBio,
-            contactNumber: filteredContact,
-          });
-        } else {
-          setError('User not found.');
-        }
-      } catch (err) {
-        setError('Failed to load user data.');
-      }
-    };
-  
-    fetchUserData();
-  }, [id, bannedWords]);
 
   if (bannedWordsLoading) {
     return (
