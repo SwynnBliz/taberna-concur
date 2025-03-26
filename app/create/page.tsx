@@ -30,11 +30,15 @@ const QuizCreatorPage = () => {
   });
   const [quizCode, setQuizCode] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
+  const code = quizName.toLowerCase().replace(/[^a-zA-Z0-9@&_.-]/g, '');
   const [createdExams, setCreatedExams] = useState<Quiz[]>([]); 
   const [selectedQuiz, setSelectedQuiz] = useState<Quiz | null>(null); 
   const [showQuestions, setShowQuestions] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null); // New state for file upload
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editedQuiz, setEditedQuiz] = useState<Quiz | null>(null);
+  const [editedQuizName, setEditedQuizName] = useState("");
 
 
   useEffect(() => {
@@ -120,45 +124,60 @@ const QuizCreatorPage = () => {
       alert('Please provide a quiz name and at least one question!');
       return;
     }
-
+  
     try {
-      
+      // Ensure unique quiz name or code
       const quizSnapshot = await getDocs(collection(firestore, 'quizzes'));
       const existingQuiz = quizSnapshot.docs.find(
-        (doc) => doc.data().name.toLowerCase() === quizName.toLowerCase() || doc.data().code === quizName.toLowerCase().replace(/ /g, '_')
+        (doc) =>
+          doc.data().name.toLowerCase() === quizName.toLowerCase() ||
+          doc.data().code === quizName.toLowerCase().replace(/ /g, '_')
       );
-
+  
       if (existingQuiz) {
         setErrorMessage('A quiz with this name or code already exists. Please choose another.');
         return;
       }
-
-      const code = quizName.toLowerCase().replace(/ /g, '_');
-
-      
+  
+      // Generate quiz code with allowed characters only
+      const code = quizName.toLowerCase().replace(/[^a-zA-Z0-9@&_]/g, '');
+  
       const quizRef = await addDoc(collection(firestore, 'quizzes'), {
         name: quizName,
         code,
         createdAt: new Date(),
       });
+  
+      // Save questions to Firestore
       await Promise.all(
-        questions.map(question =>
+        questions.map((question) =>
           addDoc(collection(firestore, 'questions'), { quizId: quizRef.id, ...question })
         )
       );
-
-      setQuizCode(code); 
-      setQuizName(''); 
-      setQuestions([]); 
-      setErrorMessage(null); 
+  
+      setQuizCode(code);
+      setQuizName('');
+      setQuestions([]);
+      setErrorMessage(null);
       alert('Quiz created successfully!');
-      setShowModal(true); 
+      setShowModal(true);
     } catch (error) {
       console.error('Error creating quiz:', error);
       alert('An error occurred while creating the quiz.');
     }
   };
-
+  
+  const handleSaveQuiz = (quiz: Quiz | null) => {
+    if (!quiz) return; // Prevent saving if there's no quiz selected
+    
+    const updatedExams = createdExams.map((q) =>
+      q.code === quiz.code ? { ...q, name: editedQuizName } : q
+    );
+    
+    setCreatedExams(updatedExams);
+    setShowEditModal(false);
+  };
+  
   const handleViewQuestions = async (quiz: Quiz) => {
     setSelectedQuiz(quiz);
     setShowQuestions(true);
@@ -197,23 +216,28 @@ const QuizCreatorPage = () => {
     }
   };
 
-  const handleUpdateQuiz = async (quizId: string) => {
+  const handleUpdateQuiz = async (quizId: string, newName: string) => {
     try {
-      const updatedQuizName = prompt('Enter new quiz name:');
-      if (!updatedQuizName) return;
-
-      await updateDoc(doc(firestore, 'quizzes', quizId), { name: updatedQuizName });
-      alert('Quiz updated successfully!');
-
-      
+      if (!newName.trim()) {
+        alert("Quiz name cannot be empty.");
+        return;
+      }
+  
+      await updateDoc(doc(firestore, "quizzes", quizId), { name: newName });
+      alert("Quiz updated successfully!");
+  
+      // Update state
       setCreatedExams(
-        createdExams.map(quiz => (quiz.id === quizId ? { ...quiz, name: updatedQuizName } : quiz))
+        createdExams.map((quiz) =>
+          quiz.id === quizId ? { ...quiz, name: newName } : quiz
+        )
       );
     } catch (error) {
-      console.error('Error updating quiz:', error);
-      alert('An error occurred while updating the quiz.');
+      console.error("Error updating quiz:", error);
+      alert("An error occurred while updating the quiz.");
     }
   };
+  
 
   return (
     <Layout>
@@ -226,12 +250,13 @@ const QuizCreatorPage = () => {
           
           {/* Quiz Name */}
           <input
-            type="text"
-            placeholder="Quiz Name"
-            value={quizName}
-            onChange={e => setQuizName(e.target.value)}
-            className="border-2 border-yellow-500 p-4 mb-6 w-full rounded-lg focus:ring focus:ring-yellow-400 bg-transparent text-yellow-200 placeholder-yellow-400"
-          />
+  type="text"
+  placeholder="Quiz Name"
+  value={quizName}
+  onChange={(e) => setQuizName(e.target.value.replace(/[^a-zA-Z0-9@&_]/g, ''))}
+  className="border-2 border-yellow-500 p-4 mb-6 w-full rounded-lg focus:ring focus:ring-yellow-400 bg-transparent text-yellow-200 placeholder-yellow-400"
+/>
+
   
           {errorMessage && (
             <div className="text-red-500 text-sm mb-4">{errorMessage}</div>
@@ -365,26 +390,77 @@ const QuizCreatorPage = () => {
           <div
             key={quiz.id}
             className="flex justify-between items-center bg-gray-700 p-4 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500 transition-all"
-            onClick={() => handleViewQuestions(quiz)}
           >
             <span>{quiz.name} (Code: {quiz.code})</span>
 
-            {/* Delete Button */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent clicking the quiz from opening it
-                handleDeleteQuiz(quiz.id);
-              }}
-              className="bg-red-500 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
-            >
-              🗑 Delete
-            </button>
+            <div className="flex gap-2">
+              {/* Edit Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent clicking the quiz from opening it
+                  setEditedQuiz(quiz);
+                  setEditedQuizName(quiz.name);
+                  setShowEditModal(true);
+                }}
+                className="bg-yellow-500 hover:bg-yellow-700 text-white text-sm px-3 py-1 rounded"
+              >
+                ✏ Edit
+              </button>
+
+              {/* Delete Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteQuiz(quiz.id);
+                }}
+                className="bg-red-500 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
+              >
+                🗑 Delete
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      {/* Edit Quiz Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+          <div className="bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-md relative">
+            
+            {/* Close Button */}
+            <button
+              onClick={() => setShowEditModal(false)}
+              className="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded"
+            >
+              ✖
+            </button>
+
+            <h3 className="text-2xl font-semibold text-yellow-300 mb-4">
+              Edit Quiz
+            </h3>
+
+            {/* Input Field */}
+            <input
+              type="text"
+              className="w-full p-2 mb-4 rounded bg-gray-700 text-white"
+              value={editedQuizName}
+              onChange={(e) => setEditedQuizName(e.target.value)}
+            />
+
+            {/* Save Button */}
+            <button
+              onClick={() => handleSaveQuiz(editedQuiz)}
+              className="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded w-full"
+            >
+              Save Changes
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   </div>
 )}
+
 
    </div>
  </div>
