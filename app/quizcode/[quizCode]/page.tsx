@@ -6,10 +6,12 @@ import { useRouter, useParams } from 'next/navigation';
 import { firestore, auth } from './../../../app/firebase/config';
 import { collection, query, where, getDocs, setDoc, doc } from 'firebase/firestore';
 import Layout from '../../../components/root/Layout';
+import emailjs from "emailjs-com";
 
 const QuizPage = () => {
   const router = useRouter();
   const { quizCode } = useParams();
+ const normalizedQuizCode = Array.isArray(quizCode) ? quizCode[0] : quizCode ?? "";
   const [quiz, setQuiz] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -24,7 +26,7 @@ const QuizPage = () => {
   const [timer, setTimer] = useState<number>(15);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const passingPercentage = 60;
-
+  
   const normalizeAnswer = (answer: string) =>
     answer.trim().replace(/[^\w\s]/g, '').toLowerCase();
 
@@ -137,66 +139,109 @@ const QuizPage = () => {
     handleAnswerSelection(answers[currentQuestionIndex]);
   };
 
+  const sendQuizResult = (
+    userEmail: string,
+    userName: string, // Add user's name
+    quizCode: string,
+    score: number,
+    percentage: number,
+    passingPercentage: number
+  ) => {
+    emailjs
+  .send(
+    "service_5tpvz2s",
+    "template_qis7csk",
+    {
+      user_email: userEmail, // ✅ Correct (matches EmailJS template)
+      name: userName,
+      quiz_code: quizCode,
+      score: score,
+      percentage: percentage,
+      status: percentage >= passingPercentage ? "Passed" : "Failed",
+    },
+    "fWC24jZuIKWxpOyRU"
+  )
+
+      .then(() => console.log(`✅ Email Sent Successfully to ${userEmail}`))
+      .catch((error) =>
+        console.error(`❌ Error sending email to ${userEmail}:`, error)
+      );
+  };
+  
+  
   const handleSubmit = async (finalAnswers: string[]) => {
     let score = 0;
+    
+    // ✅ Calculate Score
     questions.forEach((q, index) => {
-      const userAnswer = normalizeAnswer(finalAnswers[index]);
-      const correctAnswer = normalizeAnswer(q.correctAnswer);
-
-      if (userAnswer === correctAnswer) {
+      if (normalizeAnswer(finalAnswers[index]) === normalizeAnswer(q.correctAnswer)) {
         score++;
       }
     });
-
+  
     const totalQuestions = questions.length;
     const percentage = (score / totalQuestions) * 100;
-
+    const status = percentage >= passingPercentage ? "Passed" : "Failed";
+  
     setScore(score);
-    setPassStatus(percentage >= passingPercentage ? 'Passed' : 'Failed');
+    setPassStatus(status);
     setShowPopup(true);
-
+  
     if (userEmail) {
       const user = auth.currentUser;
+  
       if (user) {
-        const scoreRef = doc(firestore, 'quizScores', `${user.uid}_${quizCode}`);
-        await setDoc(scoreRef, {
-          userId: user.uid,
-          quizCode: quizCode,
-          score,
-          email: userEmail,
-          createdAt: new Date(),
-        });
+        try {
+          // ✅ Extract Name from Email
+          const userName = userEmail
+            .split("@")[0] // Take first part of email
+            .replace(/[0-9]/g, "") // Remove numbers
+            .replace(".", " ") // Replace dot with space
+            .replace(/(^\w|\s\w)/g, (match) => match.toUpperCase()); // Capitalize first letters
+  
+          // ✅ Save Score to Firestore
+          const scoreRef = doc(firestore, "quizScores", `${user.uid}_${normalizedQuizCode}`);
+          await setDoc(scoreRef, {
+            userId: user.uid,
+            quizCode: quizCode,
+            score,
+            email: userEmail,
+            percentage,
+            passed: status === "Passed",
+            createdAt: new Date(),
+          });
+  
+          // ✅ Send Email with User's Name
+          sendQuizResult(userEmail, userName, normalizedQuizCode, score, percentage, passingPercentage);
+        } catch (error) {
+          console.error("Error saving quiz result:", error);
+        }
       }
     }
-
+  
+    // ✅ Delay before redirecting
     setTimeout(() => {
-      router.push('/join');
+      router.push("/join");
     }, 5000);
   };
-
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => {
-        setLoading(false);
-      }, 3000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
-
-  if (loading)
+  
+  // ✅ Loading and Error Handling
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#3A3A3A] text-white">
         <div className="text-xl font-semibold animate-pulse">Loading...</div>
       </div>
     );
-
-  if (error)
+  }
+  
+  if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#3A3A3A] text-white">
         {error}
       </div>
     );
+  }
+  
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -272,5 +317,6 @@ const QuizPage = () => {
     </Layout>
   );
 };
+
 
 export default QuizPage;

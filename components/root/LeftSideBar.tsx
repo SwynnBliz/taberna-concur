@@ -85,12 +85,12 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
 
   return (
     <div
-      className={`w-40 p-3 | sm:w-64 sm:p-6 | fixed top-18 left-0 h-full bg-[#383838] text-white transition-all transform ${
+      className={`fixed top-18 left-0 h-full w-64 bg-[#383838] text-white p-6 transition-all transform ${
         isVisible ? 'translate-x-0' : '-translate-x-full'
       }`}
       style={{ zIndex: 1000 }}
     >
-      <ul className="space-y-2 text-xs | sm:space-y-4 sm:text-base">
+      <ul className="space-y-4">
         {/* Show these buttons if user is not on admin page */}
         {!pathname.includes("/admin") ? (
           <>
@@ -139,6 +139,7 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                 TESDA
               </button>
             </li>
+            
           </>
         ) : (
           /* Show these buttons if user is on an admin page and is an admin */
@@ -187,17 +188,30 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             </>
           )
         )}
-
-        {/* Show logout button on both modes */}
-        <li>
-          <button
-            className="w-full py-2 px-4 text-left text-red-600 font-semibold hover:bg-red-300 hover:rounded-lg"
-            onClick={handleLogout}
-            disabled={isLoggingOut}
-          >
-            {isLoggingOut ? 'Logging out...' : 'Logout'}
-          </button>
-        </li>
+        {/* Bottom SideBar */}
+        <div className="absolute bottom-20 left-0 w-full px-6">
+          <hr className="border-gray-50 my-2" />
+          <ul className="space-y-2">
+            <li>
+              <button
+                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                onClick={() => handleNavigate('/contact-support')}
+              >
+                Contact Support
+              </button>
+            </li>
+            {/* Show logout button on both modes */}
+            <li>
+              <button
+                className="w-full py-2 px-4 text-left text-red-600 font-semibold hover:bg-red-300 hover:rounded-lg"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? 'Logging out...' : 'Logout'}
+              </button>
+            </li>
+          </ul>
+        </div>
       </ul>
     </div>
   );
