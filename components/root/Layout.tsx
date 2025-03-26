@@ -80,7 +80,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       });
 
       return () => unsubscribeAuth();
-    }, 5000); // Wait 5 seconds before checking authentication
+    }, 2000); // Wait 5 seconds before checking authentication
 
     return () => clearTimeout(authTimeout); // Cleanup timeout on unmount
   }, [auth, router]);
