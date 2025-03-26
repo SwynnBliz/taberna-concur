@@ -96,3 +96,23 @@ html, body {
   cursor: pointer;
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
 }
+
+@media print {
+  body {
+    background-color: #383838 !important;
+  }
+  
+  #print-content {
+    background-color: #383838 !important;
+    color: white;
+    height: 100vh;
+    width: 100vw;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  /* Remove unnecessary UI elements */
+  button, a {
+    display: none !important;
+  }
+}

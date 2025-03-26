@@ -26,10 +26,10 @@ const measurementOptions = [
   "g", "kg", "lb", 
 
   // Small Additives (Common in Bartending)
-  "dash", "drop", "pinch", "sprig", "cube",
+  "dash", "drop", "pinch", 
 
   // Countable Items (Fruits, Garnishes, etc.)
-  "piece", "slice", "wedge", "twist"
+  "piece", "slice", "wedge", "twist", "tsp", "tbsp"
 ];
 
 interface Project {
@@ -341,12 +341,12 @@ const CollaborativePage = () => {
 
           {/* Existing Project Boxes */}
           {projects.map((project, index) => (
-            <Link key={index} href={`/collaborative/${project.id}/settings`}>
+            <Link key={index} href={`/collaborative/${project.id}/drink-plan`}>
               <div
-                className="flex flex-col justify-between items-center bg-[#2c2c2c] text-white rounded-xl p-8 cursor-pointer hover:bg-yellow-500 transition duration-300 ease-in-out shadow-lg"
+                className="flex flex-col justify-between items-center bg-[#2c2c2c] text-yellow-500 rounded-xl p-8 cursor-pointer hover:bg-yellow-500 hover:text-white transition duration-300 ease-in-out shadow-lg"
                 style={{ height: '180px' }}
               >
-                <div className="text-2xl font-semibold text-yellow-500">{project.name}</div>
+                <div className="text-2xl font-semibold">{project.name}</div>
                 <div className="text-xs font-semibold text-gray-300">Created at: {formatTimestamp(project.createdAt)}</div>
                 <div className="text-xs mt-2 text-gray-300">Members: {project.members.length}</div>
               </div>

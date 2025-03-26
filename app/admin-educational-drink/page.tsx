@@ -28,7 +28,7 @@ const flavorOptions = [
     "Sour", "Spicy", "Sweet", "Vanilla"
 ];
     
-  const measurementOptions = [
+const measurementOptions = [
     // Volume (Liquids)
     "ml", "cl", "dl", "liter", "oz", "pint", "quart", "gallon",
   
@@ -36,10 +36,10 @@ const flavorOptions = [
     "g", "kg", "lb", 
   
     // Small Additives (Common in Bartending)
-    "dash", "drop", "pinch", "sprig", "cube",
+    "dash", "drop", "pinch", 
   
     // Countable Items (Fruits, Garnishes, etc.)
-    "piece", "slice", "wedge", "twist"
+    "piece", "slice", "wedge", "twist", "tsp", "tbsp"
 ];
   
 
@@ -341,137 +341,135 @@ const AdminDrink = () => {
     return (
         <Layout>
             <div className="flex flex-col px-4">
-    <div className="mt-6 w-full md:w-8/12 mx-auto flex flex-wrap md:flex-nowrap justify-between items-center border-b-2 border-white pb-2 mb-4 gap-2">
-        <h1 className="text-lg md:text-xl text-white">Manage Drinks</h1>
-        <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="text-white p-2 rounded-full hover:bg-yellow-500 transition duration-200 flex items-center"
-        >
-            <FaPlus className="inline mr-2" /> Add Drink
-        </button>
-    </div>
-    
-    <div className="flex flex-col justify-center items-center mx-auto w-full md:w-6/12 px-4">
-    {showCreateForm && (
-        <div className="w-full max-w-xl mx-auto p-4 md:p-6 bg-[#383838] shadow-md rounded-lg relative">
-           {/* Clear Button */}
-<button
-    type="button"
-    onClick={() => setDrink(initialDrinkState)}
-    className="text-yellow-500 hover:text-yellow-600 flex items-center space-x-2 sm:top-4 sm:right-4 absolute top-2 right-2"
->
-    <span className="text-sm md:text-base">Clear</span>
-    <FaTimes className="text-sm md:text-base" />
-</button>
+                <div className="mt-6 w-full md:w-8/12 mx-auto flex flex-wrap md:flex-nowrap justify-between items-center border-b-2 border-white pb-2 mb-4 gap-2">
+                    <h1 className="text-lg md:text-xl text-white">Manage Drinks</h1>
+                    <button
+                        onClick={() => setShowCreateForm(!showCreateForm)}
+                        className="text-white p-2 rounded-full hover:bg-yellow-500 transition duration-200 flex items-center"
+                    >
+                        <FaPlus className="inline mr-2" /> Add Drink
+                    </button>
+                </div>
+                
+                <div className="flex flex-col justify-center items-center mx-auto w-full md:w-6/12 px-4">
+                {showCreateForm && (
+                    <div className="w-full max-w-xl mx-auto p-4 md:p-6 bg-[#383838] shadow-md rounded-lg relative">
+                        {/* Clear Button */}
+                        <button
+                            type="button"
+                            onClick={() => setDrink(initialDrinkState)}
+                            className="text-yellow-500 hover:text-yellow-600 flex items-center space-x-2 sm:top-4 sm:right-4 absolute top-2 right-2"
+                        >
+                            <span className="text-sm md:text-base">Clear</span>
+                            <FaTimes className="text-sm md:text-base" />
+                        </button>
 
-{/* Name */}
-<label className="font-semibold text-white text-sm md:text-base">Drink Name</label>
-<input 
-    type="text" 
-    name="name" 
-    value={drink.name} 
-    onChange={handleChange} 
-    className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded mb-3 text-sm md:text-base"
-/>
+                        {/* Name */}
+                        <label className="font-semibold text-white text-sm md:text-base">Drink Name</label>
+                        <input 
+                            type="text" 
+                            name="name" 
+                            value={drink.name} 
+                            onChange={handleChange} 
+                            className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded mb-3 text-sm md:text-base"
+                        />
 
-{/* Category */}
-<div className="flex flex-col space-y-2">
-    <label className="font-semibold text-white text-sm md:text-base">Category</label>
-    <select 
-        name="category" 
-        value={drink.category} 
-        onChange={handleChange} 
-        className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
-    >
-        {["Brandy", "Beer", "Gin", "Liqueur", "Rum", "Spirit", "Tequila", "Vodka", "Whiskey", "Wine"].map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
-        ))}
-    </select>
-</div>
+                        {/* Category */}
+                        <div className="flex flex-col space-y-2">
+                            <label className="font-semibold text-white text-sm md:text-base">Category</label>
+                            <select 
+                                name="category" 
+                                value={drink.category} 
+                                onChange={handleChange} 
+                                className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                            >
+                                {["Brandy", "Beer", "Gin", "Liqueur", "Rum", "Spirit", "Tequila", "Vodka", "Whiskey", "Wine"].map((cat) => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
 
-{/* Image URL */}
-<div className="flex flex-col space-y-2 mt-3">
-    <label className="font-semibold text-white text-sm md:text-base">Select Image</label>
-    <input 
-        type="file" 
-        accept="image/*" 
-        className="bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full p-2 text-sm md:text-base"
-        onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])} 
-    />
-</div>
+                        {/* Image URL */}
+                        <div className="flex flex-col space-y-2 mt-3">
+                            <label className="font-semibold text-white text-sm md:text-base">Select Image</label>
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full p-2 text-sm md:text-base"
+                                onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])} 
+                            />
+                        </div>
 
 
-{/* Alcohol Content */}
-<div className="flex flex-col space-y-2">
-    <label className="font-semibold text-white text-sm md:text-base">Alcohol Content</label>
-    <div className="flex flex-col md:flex-row gap-2 md:gap-3 mb-3">
-        {/* ABV Input */}
-        <input
-            type="number"
-            name="abv"
-            placeholder="ABV %"
-            value={drink.alcoholContent.abv || ""}
-            onChange={(e) => {
-                const value = e.target.value;
-                const abv = value === "" ? 0 : parseFloat(value);
-                setDrink({
-                    ...drink,
-                    alcoholContent: { abv, proof: abv * 2 },
-                });
-            }}
-            className="w-full md:w-1/2 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
-        />
-        
-        {/* Proof Input (Disabled) */}
-        <input 
-            type="number" 
-            name="proof" 
-            placeholder="Proof" 
-            value={drink.alcoholContent.proof} 
-            disabled 
-            className="w-full md:w-1/2 p-2 bg-[#484848] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
-        />
-    </div>
-</div>
-
+                        {/* Alcohol Content */}
+                        <div className="flex flex-col space-y-2">
+                            <label className="font-semibold text-white text-sm md:text-base">Alcohol Content</label>
+                            <div className="flex flex-col md:flex-row gap-2 md:gap-3 mb-3">
+                                {/* ABV Input */}
+                                <input
+                                    type="number"
+                                    name="abv"
+                                    placeholder="ABV %"
+                                    value={drink.alcoholContent.abv || ""}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        const abv = value === "" ? 0 : parseFloat(value);
+                                        setDrink({
+                                            ...drink,
+                                            alcoholContent: { abv, proof: abv * 2 },
+                                        });
+                                    }}
+                                    className="w-full md:w-1/2 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                                />
+                                
+                                {/* Proof Input (Disabled) */}
+                                <input 
+                                    type="number" 
+                                    name="proof" 
+                                    placeholder="Proof" 
+                                    value={drink.alcoholContent.proof} 
+                                    disabled 
+                                    className="w-full md:w-1/2 p-2 bg-[#484848] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                                />
+                            </div>
+                        </div>
 
                             {/* Flavor Profile */}
-<div className="flex flex-col space-y-2">
-    <label className="font-semibold text-white text-sm md:text-base">Flavor Profile</label>
-    {drink.flavorProfile.map((flavor, index) => (
-        <div key={index} className="flex flex-wrap gap-1 md:gap-2 mb-2 items-center">
-            {/* Flavor Select Dropdown */}
-            <select 
-                value={flavor} 
-                onChange={(e) => handleFlavorProfileChange(index, e.target.value)} 
-                className="w-full md:w-auto flex-1 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
-            >
-                {flavorOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                ))}
-            </select>
+                            <div className="flex flex-col space-y-2">
+                                <label className="font-semibold text-white text-sm md:text-base">Flavor Profile</label>
+                                {drink.flavorProfile.map((flavor, index) => (
+                                    <div key={index} className="flex flex-wrap gap-1 md:gap-2 mb-2 items-center">
+                                        {/* Flavor Select Dropdown */}
+                                        <select 
+                                            value={flavor} 
+                                            onChange={(e) => handleFlavorProfileChange(index, e.target.value)} 
+                                            className="w-full md:w-auto flex-1 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                                        >
+                                            {flavorOptions.map((option) => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
 
-            {/* Remove Flavor Button (Only for additional flavors) */}
-            {index > 0 && (
-                <button 
-                    onClick={() => handleFlavorProfileRemove(index)} 
-                    className="text-red-500 hover:text-red-600 p-2"
-                >
-                    <FaTrashAlt />
-                </button>
-            )}
-        </div>
-    ))}
+                                        {/* Remove Flavor Button (Only for additional flavors) */}
+                                        {index > 0 && (
+                                            <button 
+                                                onClick={() => handleFlavorProfileRemove(index)} 
+                                                className="text-red-500 hover:text-red-600 p-2"
+                                            >
+                                                <FaTrashAlt />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
 
-    {/* Add Flavor Button */}
-    <button 
-        onClick={handleFlavorProfileAdd} 
-        className="w-full bg-gray-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-600 transition mb-3 text-sm md:text-base"
-    >
-        <FaPlus /> Add Flavor
-    </button>
-</div>
-
+                                {/* Add Flavor Button */}
+                                <button 
+                                    onClick={handleFlavorProfileAdd} 
+                                    className="w-full bg-gray-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-600 transition mb-3 text-sm md:text-base"
+                                >
+                                    <FaPlus /> Add Flavor
+                                </button>
+                            </div>
 
                             {/* Ingredients */}
                             <label className="font-semibold text-white">Ingredients</label>
