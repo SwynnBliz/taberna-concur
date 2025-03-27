@@ -288,7 +288,7 @@ const ProjectSettingsPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 min-h-screen max-w-5xl">
+      <div className="p-6 min-h-screen w-full">
       <div className="mx-auto w-full h-12 flex border-b-2 border-white mb-4">
           {/* Tabs */}
           {[

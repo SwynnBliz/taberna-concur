@@ -163,7 +163,7 @@ const ProjectLogsPage = () => {
 
   return (
     <Layout>
-      <div className="p-6 min-h-screen max-w-5xl text-white">
+      <div className="p-6 min-h-screen w-full text-white">
         <div className="mx-auto w-full h-12 flex border-b-2 mb-4">
           {[ 
             { name: "Drink Plan", path: `/collaborative/${projectId}/drink-plan` },
