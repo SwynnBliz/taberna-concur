@@ -11,7 +11,7 @@ import emailjs from "emailjs-com";
 const QuizPage = () => {
   const router = useRouter();
   const { quizCode } = useParams();
- const normalizedQuizCode = Array.isArray(quizCode) ? quizCode[0] : quizCode ?? "";
+  const normalizedQuizCode = decodeURIComponent(Array.isArray(quizCode) ? quizCode[0] : quizCode ?? "");
   const [quiz, setQuiz] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
@@ -26,6 +26,7 @@ const QuizPage = () => {
   const [timer, setTimer] = useState<number>(15);
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(true);
   const passingPercentage = 60;
+
   
   const normalizeAnswer = (answer: string) =>
     answer.trim().replace(/[^\w\s]/g, '').toLowerCase();
@@ -35,22 +36,25 @@ const QuizPage = () => {
 
     const fetchQuiz = async () => {
       try {
-        const quizQuery = query(collection(firestore, 'quizzes'), where('code', '==', quizCode));
+        console.log("Fetching quiz with code:", normalizedQuizCode); // Debugging
+    
+        const quizQuery = query(collection(firestore, 'quizzes'), where('code', '==', normalizedQuizCode));
         const quizSnapshot = await getDocs(quizQuery);
-
+    
         if (!quizSnapshot.empty) {
           const quizDoc = quizSnapshot.docs[0];
           setQuiz(quizDoc.data());
           const quizId = quizDoc.id;
-
+    
           const questionsQuery = query(collection(firestore, 'questions'), where('quizId', '==', quizId));
           const questionsSnapshot = await getDocs(questionsQuery);
           const questionsData = questionsSnapshot.docs.map((doc) => doc.data());
           setQuestions(questionsData);
-
+    
           // Initialize answers array
           setAnswers(Array(questionsData.length).fill(''));
         } else {
+          console.log("Quiz not found in Firestore for code:", normalizedQuizCode);
           setError('Quiz not found');
         }
       } catch (err) {
@@ -60,6 +64,7 @@ const QuizPage = () => {
         setLoading(false);
       }
     };
+    
 
     fetchQuiz();
   }, [quizCode]);
@@ -113,7 +118,7 @@ const QuizPage = () => {
     }
   
     // Change question immediately while keeping smooth flip effect
-    setTimeout(() => {
+   setTimeout(() => {
       if (currentQuestionIndex < questions.length - 1) {
         setCurrentQuestionIndex((prevIndex) => prevIndex + 1);
         setTimer(30);
@@ -128,7 +133,6 @@ const QuizPage = () => {
       setFlipped(false);
     }, 200); // Keep flip effect smooth without extra wait
   };
-
   const handleFillInAnswer = (e: React.ChangeEvent<HTMLInputElement>) => {
     const updatedAnswers = [...answers];
     updatedAnswers[currentQuestionIndex] = e.target.value; // Keep spaces as the user types
@@ -317,6 +321,4 @@ const QuizPage = () => {
     </Layout>
   );
 };
-
-
 export default QuizPage;
