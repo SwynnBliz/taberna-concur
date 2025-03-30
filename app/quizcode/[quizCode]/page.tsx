@@ -225,7 +225,7 @@ const QuizPage = () => {
   
     // ✅ Delay before redirecting
     setTimeout(() => {
-      router.push("/join");
+      router.push("/results");
     }, 5000);
   };
   
