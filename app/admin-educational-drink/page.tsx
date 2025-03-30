@@ -43,8 +43,6 @@ const measurementOptions = [
     "piece", "slice", "wedge", "twist", "tsp", "tbsp"
 ];
   
-
-
 const AdminDrink = () => {
     const [drinks, setDrinks] = useState<Drink[]>([]);
     const [searchTerm, setSearchTerm] = useState("");
