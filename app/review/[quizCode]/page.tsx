@@ -98,21 +98,40 @@ const ReviewPage = () => {
           </h2>
           <p className="text-yellow-400 mt-3 text-lg animate-pulse">Check your answers below:</p>
     
-          <div className="max-w-3xl w-full bg-[#1f1f1f] p-8 mt-6 rounded-xl shadow-xl border border-gray-700 transition-all duration-300">
-            {questions.map((question, index) => (
-              <div key={index} className="mb-6 border-b border-gray-700 pb-4">
-                <p className="text-xl font-semibold text-white">
-                  {index + 1}. {question.question}
-                </p>
-                <p className="text-gray-400 text-lg">
-                  Your Answer: <span className="font-bold text-yellow-400">{userAnswers[index] || 'No Answer'}</span>
-                </p>
-                <p className="font-bold text-green-400 text-lg">
-                  Correct Answer: {question.correctAnswer}
-                </p>
-              </div>
-            ))}
-          </div>
+            <div className="max-w-3xl w-full bg-[#1f1f1f] p-8 mt-6 rounded-xl shadow-xl border border-gray-700 transition-all duration-300">
+            {questions.map((question, index) => {
+  const userAnswer = userAnswers[index];
+  const normalizeAnswer = (answer: string) =>
+    answer.trim().replace(/[^\w\s]/g, '').toLowerCase();
+
+  const isCorrect = normalizeAnswer(userAnswer || '') === normalizeAnswer(question.correctAnswer);
+  const isNoAnswer = !userAnswer;
+
+  return (
+    <div key={index} className="mb-6 border-b border-gray-700 pb-4 text-alig">
+      <p className="text-xl font-semibold text-white">
+        {index + 1}. {question.question}
+      </p>
+      <p
+        className={`text-lg font-bold  ${
+          isNoAnswer
+            ? 'text-yellow-400'
+            : isCorrect
+            ? 'text-green-400'
+            : 'text-red-400'
+        }`}
+      >
+          <p className='text-yellow-500'>Your Answer: </p>
+            {isNoAnswer ? 'No Answer' : userAnswer}
+        </p>
+          <p className='text-lg font-bold text-yellow-500'>Correct Anwer: </p>
+        <p className="font-bold text-green-400 text-lg">
+        {question.correctAnswer}
+      </p>
+    </div>
+  );
+})}
+            </div>
     
           <div className="flex justify-center mt-6">
             <button
