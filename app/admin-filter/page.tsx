@@ -151,7 +151,7 @@ const AdminFilterPage: React.FC = () => {
         type="text"
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white w-full sm:w-auto"
+        className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white w-full sm:w-auto sm:min-w-56"
         placeholder="Search for a banned word"
       />
 
@@ -159,7 +159,7 @@ const AdminFilterPage: React.FC = () => {
         type="text"
         value={newWord}
         onChange={(e) => setNewWord(e.target.value)}
-        className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white w-full sm:w-auto"
+        className="bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 p-2 rounded text-white w-full sm:w-auto sm:min-w-56"
         placeholder="Enter a new banned word"
       />
 
