@@ -174,13 +174,16 @@ const AdminDrink = () => {
     // Add Drink Function
     const handleFlavorProfileAdd = () => {
         if (drink.flavorProfile.length < flavorOptions.length) {
-            setDrink({ ...drink, flavorProfile: [...drink.flavorProfile, ""] });
+            setDrink({ 
+                ...drink, 
+                flavorProfile: [...drink.flavorProfile, flavorOptions[0]]
+            });
         }
     };
 
     const handleFlavorProfileChange = (index: number, value: string) => {
         const updatedProfiles = [...drink.flavorProfile];
-        updatedProfiles[index] = value;
+        updatedProfiles[index] = value.trim() ? value : flavorOptions[0];
         setDrink({ ...drink, flavorProfile: updatedProfiles });
     };
 
@@ -230,7 +233,7 @@ const AdminDrink = () => {
         if (selectedDrink && selectedDrink.flavorProfile.length < flavorOptions.length) {
             setSelectedDrink({ 
                 ...selectedDrink, 
-                flavorProfile: [...selectedDrink.flavorProfile, ""]
+                flavorProfile: [...selectedDrink.flavorProfile, flavorOptions[0]]
             });
         }
     };
@@ -618,8 +621,8 @@ const AdminDrink = () => {
                                             className="bg-[#383838] p-4 rounded-lg shadow-lg text-white cursor-pointer hover:bg-[#484848] hover:shadow-xl transform hover:scale-105 transition-transform duration-200 ease-in-out h-56 flex flex-col justify-between"
                                         >
                                             <img src={drink.imageUrl} alt={drink.name} className="w-full h-32 object-cover rounded-lg" />
-                                            <h3 className="text-lg font-semibold text-yellow-500 mt-2">{drink.name}</h3>
-                                            <p className="text-gray-300">{drink.category}</p>
+                                            <h3 className="text-md font-semibold text-yellow-500 mt-2">{drink.name}</h3>
+                                            <p className="text-sm text-gray-300">{drink.category}</p>
                                         </div>
                                     </Link>
                                 </div>

@@ -8,7 +8,8 @@ import { firestore } from "../../../firebase/config";
 import { FaTrashAlt, FaEdit, FaSave, FaTimes, FaPlus } from "react-icons/fa";
 import Layout from "../../../../components/root/Layout";
 import Link from "next/link";
-import { usePathname } from "next/navigation"; 
+import { usePathname } from "next/navigation";
+import { ChatPopupButton } from "../../../../components/Chat";
 
 // Options for flavor and measurement
 const flavorOptions = [
@@ -76,6 +77,7 @@ const ProjectSettingsPage = () => {
     flavors: 50 
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   if (!projectId) {
     return (
@@ -322,6 +324,8 @@ const ProjectSettingsPage = () => {
                 project.name
               )}
             </h1>
+
+            {authUser && projectId && <ChatPopupButton projectId={projectId} userId={authUser.uid} isOpen={isOpen} setIsOpen={setIsOpen} />}
   
             {authUser && authUser.uid === project.createdBy && (
               <div className="flex gap-3">

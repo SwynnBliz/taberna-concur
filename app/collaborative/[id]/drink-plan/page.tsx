@@ -11,6 +11,7 @@ import { usePathname } from "next/navigation";
 import { formatDistanceToNow } from 'date-fns';
 import { AiOutlineClose, AiOutlinePlus, AiOutlineEdit, AiOutlineDelete } from 'react-icons/ai';
 import { FaExclamationTriangle, FaExclamationCircle } from 'react-icons/fa';
+import { ChatPopupButton } from "../../../../components/Chat";
 
 const unitConversionMap: Record<string, number> = {
   ml: 1, cl: 10, dl: 100, liter: 1000, oz: 29.5735,
@@ -93,6 +94,7 @@ const ProjectDrinkPlanPage = () => {
   const [drinkQuantity, setDrinkQuantity] = useState(selectedDrink?.quantity || 1);
   const [drinkPlan, setDrinkPlan] = useState<any[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -884,11 +886,13 @@ const ProjectDrinkPlanPage = () => {
         )}
   
         <button
-          className="fixed bottom-6 right-6 lg:right-[17rem] bg-yellow-500 text-white p-4 rounded-full shadow-lg hover:bg-yellow-600 transition-all"
+          className="fixed bottom-6 right-24 bg-yellow-500 text-white p-4 rounded-full shadow-lg hover:bg-yellow-600 transition-all"
           onClick={() => setShowDrinkModal(true)}
         >
           <AiOutlinePlus className="w-6 h-6" />
         </button>
+
+        {authUser && projectId && <ChatPopupButton projectId={projectId} userId={authUser.uid} isOpen={isOpen} setIsOpen={setIsOpen} />}
   
         {/* Drink Selection Modal */}
         {showDrinkModal && (
@@ -916,7 +920,7 @@ const ProjectDrinkPlanPage = () => {
                         className="bg-[#484848] p-3 rounded-lg shadow-lg text-white cursor-pointer hover:bg-[#585858] hover:shadow-xl transform hover:scale-105 transition-transform duration-200 ease-in-out h-56 flex flex-col justify-between"
                         onClick={() => handleExpandDrink(drink)}
                       >
-                        <div className="text-lg font-semibold text-yellow-500 text-center mb-2">{drink.name}</div>
+                        <div className="text-md font-semibold text-yellow-500 text-center mb-2">{drink.name}</div>
                         <img src={drink.imageUrl} alt={drink.name} className="w-full h-32 object-cover rounded-lg" />
                         <div className="mt-2">
                           <div className="text-sm font-semibold text-white mb-1">

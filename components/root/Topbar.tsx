@@ -282,7 +282,7 @@ const Topbar = ({ onLeftSidebarToggle, onRightSidebarToggle }: { onLeftSidebarTo
   };
 
   return (
-    <div className="h-12 p-2 | sm:h-18 sm:p-4 | sticky top-0 z-50 flex justify-between items-center bg-[#303030] text-white shadow-md">
+    <div className="h-12 p-2 | sm:h-18 sm:py-8 sm:px-4 | sticky top-0 z-50 flex justify-between items-center bg-[#303030] text-white shadow-md">
       <div className="relative group">
         <button
           onClick={handleSidebarToggle} 

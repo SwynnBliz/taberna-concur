@@ -98,20 +98,33 @@ html, body {
 }
 
 @media print {
-  body {
-    background-color: #383838 !important;
-  }
-  
-  #print-content {
-    background-color: #383838 !important;
-    color: white;
-    height: 100vh;
-    width: 100vw;
-    padding: 20px;
-    box-sizing: border-box;
+  /* Ensure background is printed */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  /* Remove unnecessary UI elements */
+  /* Make sure background color applies to all pages */
+  html, body, #print-content {
+    background-color: #383838 !important;
+    color: white !important;
+    height: auto !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Ensure the print content spans multiple pages properly */
+  #print-content {
+    page-break-inside: auto !important;
+  }
+
+  /* Adjust page margins for printing */
+  @page {
+    background-color: #383838 !important;
+    margin: 10mm; /* Top/bottom: 10mm, Left/right: 15mm */
+  }
+
+  /* Hide non-essential elements like buttons */
   button, a {
     display: none !important;
   }

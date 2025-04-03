@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { formatDistanceToNow } from 'date-fns';
+import { ChatPopupButton } from "../../../../components/Chat";
 
 interface Log {
   action: string;
@@ -38,6 +39,7 @@ const ProjectLogsPage = () => {
   const [filter, setFilter] = useState<string>('all');
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
   const [usernames, setUsernames] = useState<Map<string, string>>(new Map());
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -181,6 +183,8 @@ const ProjectLogsPage = () => {
             </Link>
           ))}
         </div>
+
+        {authUser && projectId && <ChatPopupButton projectId={projectId} userId={authUser.uid} isOpen={isOpen} setIsOpen={setIsOpen} />}
   
         <div className="mb-4 flex justify-end items-center">
           <label htmlFor="filter" className="mr-2 text-white">Filter by action:</label>

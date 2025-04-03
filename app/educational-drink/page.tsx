@@ -162,7 +162,6 @@ const UserDrink = () => {
         )}
     </div>
 </Layout>
-
     );
 };
 

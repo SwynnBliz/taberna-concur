@@ -17,7 +17,14 @@ const PostForum = () => {
   const [userProfile, setUserProfile] = useState<any>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoPreview, setVideoPreview] = useState<string | null>(null);
-  const [uploadingVideo, setUploadingVideo] = useState(false);  
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+
+  useEffect(() => {
+    const user = auth.currentUser;
+    if (user) {
+      fetchUserProfile(user.uid);
+    }
+  }, [auth.currentUser]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -138,15 +145,7 @@ const PostForum = () => {
       setUploading(false);
       setUploadingVideo(false);
     }
-  }; 
-  
-
-  useEffect(() => {
-    const user = auth.currentUser;
-    if (user) {
-      fetchUserProfile(user.uid);
-    }
-  }, [auth.currentUser]);
+  };
 
   const handleRemoveImage = () => {
     setFile(null);

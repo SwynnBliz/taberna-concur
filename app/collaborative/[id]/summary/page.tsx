@@ -10,6 +10,7 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { firestore } from "../../../firebase/config";
 import { PieChart, Pie, Tooltip, Cell, Legend } from "recharts";
 import { useReactToPrint } from "react-to-print";
+import { ChatPopupButton } from "../../../../components/Chat";
 
 const unitConversionMap: Record<string, number> = {
   ml: 1, cl: 10, dl: 100, liter: 1000, oz: 29.5735,
@@ -61,6 +62,7 @@ const ProjectSummaryPage = () => {
   const [isClient, setIsClient] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const reactToPrintFn = useReactToPrint({ contentRef });
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -106,7 +108,7 @@ const ProjectSummaryPage = () => {
         const drinkIngredients = normalizeAndCombineIngredients(fetchedProject.drinkPlan, fetchedProject);
     
         const projectIngredientsMap = fetchedProject.ingredients.reduce((acc: any, { name, quantity, unit }: any) => {
-          acc[name] = { total: quantity, unit }; // Store original unit
+          acc[name] = { total: quantity, unit };
           return acc;
         }, {});  
     
@@ -128,7 +130,7 @@ const ProjectSummaryPage = () => {
             name,
             drinkAmount: `${drinkTotal.toFixed(2)} ${drinkUnit}`, 
             projectAmount: projectEntry ? `${projectTotal.toFixed(2)} ${projectUnit}` : "Missing",
-            drinksUsing: drinksUsingIngredient, // New property
+            drinksUsing: drinksUsingIngredient,
           };
         });        
     
@@ -165,7 +167,7 @@ const ProjectSummaryPage = () => {
       projectUnitMap[name] = unit.toLowerCase();
     });
   
-    const drinkUnitUsage: Record<string, Record<string, number>> = {}; // Track unit occurrences
+    const drinkUnitUsage: Record<string, Record<string, number>> = {};
   
     drinks.forEach((drink) => {
       drink.ingredients.forEach(({ name, quantity, unit }) => {
@@ -175,12 +177,12 @@ const ProjectSummaryPage = () => {
         if (!drinkUnitUsage[name]) drinkUnitUsage[name] = {};
         drinkUnitUsage[name][drinkUnit] = (drinkUnitUsage[name][drinkUnit] || 0) + 1;
   
-        const projectUnit = projectUnitMap[name] || drinkUnit; // Prefer project unit, else use drink unit
+        const projectUnit = projectUnitMap[name] || drinkUnit;
         const conversionFactor = unitConversionMap[drinkUnit] || 1;
-        const convertedQuantity = quantity * conversionFactor * drink.quantity; // Multiply by drink quantity
+        const convertedQuantity = quantity * conversionFactor * drink.quantity;
   
         const finalConversionFactor = unitConversionMap[projectUnit] || 1;
-        const finalQuantity = convertedQuantity / finalConversionFactor; // Convert to project unit
+        const finalQuantity = convertedQuantity / finalConversionFactor;
   
         if (!combinedIngredients[name]) {
           combinedIngredients[name] = { total: finalQuantity, unit: projectUnit };
@@ -225,10 +227,11 @@ const ProjectSummaryPage = () => {
           ))}
         </div>
 
+        {authUser && projectId && <ChatPopupButton projectId={projectId} userId={authUser.uid} isOpen={isOpen} setIsOpen={setIsOpen} />}
+
         {/* Top Navigation */}
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-2xl font-bold text-yellow-500">Project Summary</h1>
-          
           <button onClick={() => reactToPrintFn()} className="flex items-center gap-2 bg-[#2c2c2c] px-4 py-2 rounded-lg text-white hover:bg-yellow-500 transition-all">
             <FaPrint className="text-xl" />
             <span>Print</span>
@@ -241,7 +244,7 @@ const ProjectSummaryPage = () => {
           <div className="flex flex-col gap-6">
             <div className="flex gap-6">
               {/* Pie Chart */}
-              <div className="w-1/2 p-2">
+              <div className="w-1/2 p-6 mr-10">
                 <h2 className="text-xl font-bold mb-4 text-yellow-500">Flavor Profile Distribution</h2>
                 {isClient && (
                   <PieChart width={380} height={350}>
@@ -251,7 +254,7 @@ const ProjectSummaryPage = () => {
                       nameKey="name"
                       cx="50%"
                       cy="50%"
-                      outerRadius={100}
+                      outerRadius={90}
                       fill="#8884d8"
                       label={({ name, percent, x, y, index }) => (
                         <text
@@ -281,7 +284,7 @@ const ProjectSummaryPage = () => {
               {/* Ingredients Table */}
               <div className="w-1/2 text-white">
                 <h2 className="text-xl font-bold mb-4 text-yellow-500">Ingredient Usage</h2>
-                <table className="w-full border-collapse border border-gray-400 text-sm">
+                <table className="w-full border-collapse border border-gray-400 text-xs">
                   <thead>
                     <tr className="bg-gray-700">
                       <th className="border p-2">Ingredient</th>

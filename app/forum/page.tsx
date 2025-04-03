@@ -9,7 +9,6 @@ const ForumPage = () => {
   
   const [showPopup, setShowPopup] = useState(false);
 
-  
   useEffect(() => {
     const hasSeenPopup = localStorage.getItem('hasSeenPopup');
     if (!hasSeenPopup) {
@@ -18,7 +17,6 @@ const ForumPage = () => {
     }
   }, []);
 
-  
   const handleClosePopup = () => {
     
     localStorage.setItem('hasSeenPopup', 'true');

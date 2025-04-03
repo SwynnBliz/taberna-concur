@@ -120,14 +120,6 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
             </li>
             <li>
               <button
-                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
-                onClick={() => handleNavigate('/quiz')}
-              >
-                TESDA
-              </button>
-            </li>
-            <li>
-              <button
                 className="relative w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg flex items-center justify-between"
                 onClick={() => handleNavigate('/collaborative')}
               >
@@ -137,6 +129,14 @@ const LeftSidebar: React.FC<LeftSidebarProps> = ({ isVisible, onClose }) => {
                     {inviteCount}
                   </span>
                 )}
+              </button>
+            </li>
+            <li>
+              <button
+                className="w-full py-2 px-4 text-left hover:bg-yellow-500 hover:rounded-lg"
+                onClick={() => handleNavigate('/quiz')}
+              >
+                TESDA
               </button>
             </li>
           </>
