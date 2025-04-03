@@ -91,7 +91,7 @@ const RightSidebar = () => {
   };
 
   return (
-    <div className="w-40 | sm:w-60 | right-sidebar bg-[#484848] p-4 border-l-2 border-white h-full overflow-y-auto fixed right-0 z-10">
+    <div className="w-40 | sm:w-60 | right-sidebar bg-[#484848] p-4 border-l-2 border-white overflow-y-auto fixed right-0 z-10" style={{ height: 'calc(100vh - 3rem)' }}>
       <h3 className="text-[12px] pl-3 | sm:text-sm sm:pl-5 | mt-3 -mb-2 text-white">
         Bookmarked Posts
       </h3>
