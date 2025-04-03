@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import { firestore } from './../../app/firebase/config';
 import { collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
 import Layout from '../../components/root/Layout';
+import { useRouter } from "next/navigation"; // Correct import for App Router
 
 interface Question {
   question: string;
@@ -28,6 +29,7 @@ const QuizCreatorPage = () => {
     options: [''],
     correctAnswer: '',
   });
+  const router = useRouter();
   const [quizCode, setQuizCode] = useState<string | null>(null);
   const [showModal, setShowModal] = useState<boolean>(false);
   const code = quizName.toLowerCase().replace(/[^a-zA-Z0-9@&_.-]/g, '');
@@ -385,42 +387,40 @@ const QuizCreatorPage = () => {
       <h3 className="text-2xl font-semibold text-yellow-300 mb-4">Created Quizzes</h3>
       
       {/* List of Quizzes */}
-      <div className="space-y-2">
-        {createdExams.map((quiz) => (
-          <div
-            key={quiz.id}
-            className="flex justify-between items-center bg-gray-700 p-4 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500 transition-all"
-          >
-            <span>{quiz.name} (Code: {quiz.code})</span>
+<div className="space-y-2">
+  {createdExams.map((quiz) => (
+    <div
+      key={quiz.id}
+      className="flex justify-between items-center bg-gray-700 p-4 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500 transition-all"
+    >
+      <span>{quiz.name} (Code: {quiz.code})</span>
 
-            <div className="flex gap-2">
-              {/* Edit Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent clicking the quiz from opening it
-                  setEditedQuiz(quiz);
-                  setEditedQuizName(quiz.name);
-                  setShowEditModal(true);
-                }}
-                className="bg-yellow-500 hover:bg-yellow-700 text-white text-sm px-3 py-1 rounded"
-              >
-                ✏ Edit
-              </button>
+      <div className="flex gap-2">
+        {/* Edit Button */}
+        <button
+  onClick={(e) => {
+    e.stopPropagation();
+    router.push(`/EditExam/${quiz.code}`);
+  }}
+  className="bg-yellow-500 hover:bg-yellow-700 text-white text-sm px-3 py-1 rounded"
+>
+  ✏ Edit
+</button>
 
-              {/* Delete Button */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeleteQuiz(quiz.id);
-                }}
-                className="bg-red-500 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
-              >
-                🗑 Delete
-              </button>
-            </div>
-          </div>
-        ))}
+        {/* Delete Button */}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteQuiz(quiz.id);
+          }}
+          className="bg-red-500 hover:bg-red-700 text-white text-sm px-3 py-1 rounded"
+        >
+          🗑 Delete
+        </button>
       </div>
+    </div>
+  ))}
+</div>
 
       {/* Edit Quiz Modal */}
       {showEditModal && (
