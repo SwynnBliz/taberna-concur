@@ -18,6 +18,7 @@ const ProfileManagePage = () => {
     bio: '',
     contactNumber: '',
     profilePhoto: '',
+    address: '',
   });
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -49,6 +50,7 @@ const ProfileManagePage = () => {
             bio: userDoc.data()?.bio || '',
             contactNumber: userDoc.data()?.contactNumber || '',
             profilePhoto: userDoc.data()?.profilePhoto || '',
+            address: userDoc.data()?.address || '',
           });
 
           setDataLoaded(true);
@@ -139,6 +141,7 @@ const ProfileManagePage = () => {
         bio: userData.bio,
         contactNumber: userData.contactNumber,
         profilePhoto: newPhotoUrl || userData.profilePhoto,
+        address: userData.address,
       });
   
       if (oldPassword && newPassword && !isGoogleUser) {
@@ -274,6 +277,23 @@ const ProfileManagePage = () => {
                         className="w-full px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500"
                       />
                     )}
+                </div>
+
+                {/* Address */}
+                <div className="mb-4">
+                  <label htmlFor="address" className="text-white mb-2">Address</label>
+                  {!dataLoaded ? (
+                    <div className="w-full h-10 bg-gray-300 animate-pulse rounded-lg"></div>
+                  ) : (
+                    <input
+                      id="address"
+                      type="text"
+                      value={userData.address || ''}
+                      onChange={(e) => setUserData({ ...userData, address: e.target.value })}
+                      placeholder="Address"
+                      className="w-full px-4 py-2 rounded-md bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500"
+                    />
+                  )}
                 </div>
 
                 <label htmlFor="changePassword" className="text-white mb-2">Change Password</label>
