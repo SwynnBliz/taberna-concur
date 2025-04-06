@@ -57,10 +57,10 @@ const PasswordStrengthChecker = ({ password, setStrengthValid }: PasswordStrengt
   }, [password, setStrengthValid]);
 
   const textStyles = {
-    Weak: "text-red-500 font-semibold",
-    Fair: "text-yellow-500 font-semibold",
-    Good: "text-blue-500 font-semibold",
-    Strong: "text-green-500 font-semibold",
+    Weak: "text-red-400 font-semibold",
+    Fair: "text-yellow-400 font-semibold",
+    Good: "text-blue-400 font-semibold",
+    Strong: "text-green-400 font-semibold",
   };
 
   return (
@@ -73,7 +73,7 @@ const PasswordStrengthChecker = ({ password, setStrengthValid }: PasswordStrengt
         Password Strength: {strength}
       </p>
       {feedback.length > 0 && (
-        <ul className="text-sm text-red-500 mt-1 p-2 rounded-md" style={{ textShadow: "2px 2px 5px rgba(0, 0, 0, 0.8)" }}>
+        <ul className="text-sm text-red-400 mt-1 p-2 rounded-md" style={{ textShadow: "2px 2px 5px rgba(0, 0, 0, 0.8)" }}>
           {feedback.map((item, index) => (
             <li key={index} className="mb-1">
               - {item}
