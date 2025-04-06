@@ -23,6 +23,7 @@ interface User {
   visibility: 'public' | 'private';
   role: 'admin' | 'user';
   isNCIIHolder: boolean;
+  address?: string;
 }
 
 interface Post {
@@ -793,7 +794,7 @@ const ProfileViewPage = () => {
               <h1 className="text-[10px] | sm:text-2xl | text-white font-bold">{userData.username}</h1>
             </div>
 
-            {/* Right Section: Role, Bio, and Contact Number */}
+            {/* Right Section: Role, Bio, Contact Number, and Address */}
             <div className="flex flex-col w-2/3">
 
               {/* Role and NCII Labels */}
@@ -825,11 +826,23 @@ const ProfileViewPage = () => {
               </div>
 
               {/* Contact Number */}
-              <div className="text-[10px] | sm:text-base | bg-[#484848] p-4 rounded-lg">
+              <div className="text-[10px] | sm:text-base | bg-[#484848] p-4 rounded-lg mb-4">
                 <p className="text-gray-300">
                   <span className="font-bold text-white">Contact: </span><br />
                   {currentUserId === id || isProfilePublic ? (
                     userData.contactNumber || 'Not provided'
+                  ) : (
+                    'Profile set to private'
+                  )}
+                </p>
+              </div>
+
+              {/* Address */}
+              <div className="text-[10px] | sm:text-base | bg-[#484848] p-4 rounded-lg">
+                <p className="text-gray-300">
+                  <span className="font-bold text-white">Address: </span><br />
+                  {currentUserId === id || isProfilePublic ? (
+                    userData.address || 'Not provided'
                   ) : (
                     'Profile set to private'
                   )}
