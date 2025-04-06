@@ -6,9 +6,12 @@ import { useRouter } from 'next/navigation';
 import { firestore, auth } from './../../app/firebase/config';
 import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import Layout from '../../components/root/Layout';
+import { FaSearch } from 'react-icons/fa'; // Add this import for the search icon
 
 const ResultsPage = () => {
   const [results, setResults] = useState<any[]>([]);
+  const [filteredResults, setFilteredResults] = useState<any[]>([]); // State for filtered results
+  const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -36,13 +39,12 @@ const ResultsPage = () => {
           return;
         }
 
-        const scoresData = scoresSnapshot.docs.map((doc, index) => {
+        const scoresData = scoresSnapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             id: doc.id,
-            attemptNumber: index + 1, // Numbering attempts
-            email: data.email || 'Unknown', // Ensure email field exists
             quizCode: data.quizCode || 'N/A',
+            email: data.email || 'Unknown', // Ensure email field exists
             score: data.score !== null ? data.score : 'Pending', // If null, mark as Pending
             createdAt: data.createdAt?.seconds
               ? new Date(data.createdAt.seconds * 1000).toLocaleString()
@@ -50,7 +52,23 @@ const ResultsPage = () => {
           };
         });
 
-        setResults(scoresData);
+        // Group results by quizCode and calculate attempt numbers
+        const groupedResults = scoresData.reduce((acc, result) => {
+          if (!acc[result.quizCode]) acc[result.quizCode] = [];
+          acc[result.quizCode].push(result);
+          return acc;
+        }, {} as Record<string, any[]>);
+
+        const finalResults = Object.values(groupedResults).flatMap((group) => {
+          // Sort each group by createdAt in ascending order (oldest first)
+          group.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+          return group.map((result, index) => ({
+            ...result,
+            attemptNumber: index + 1, // Increment attempt number based on sorted order
+          }));
+        });
+
+        setResults(finalResults);
       } catch (err: any) {
         console.error('Error fetching quiz results:', err.message || err);
         setError('Error loading quiz results. Ensure Firestore index is set up.');
@@ -61,6 +79,14 @@ const ResultsPage = () => {
     
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    setFilteredResults(
+      results.filter((result) =>
+        result.quizCode.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [searchQuery, results]); // Update filtered results when search query or results change
 
   const retakeQuiz = async (quizCode: string) => {
     const user = auth.currentUser;
@@ -117,8 +143,6 @@ const ResultsPage = () => {
     }
   };
   
-  
-
   const deleteAttempt = async (attemptId: string) => {
     const confirmDelete = window.confirm('Are you sure you want to delete this attempt?');
     if (!confirmDelete) return;
@@ -158,6 +182,18 @@ const ResultsPage = () => {
           <h2 className="text-4xl text-yellow-500 font-extrabold mb-6 text-center animate-pulse">
             Your Quiz Results
           </h2>
+          <div className="flex items-center mb-6">
+            <div className="relative w-full">
+              <input
+                type="text"
+                placeholder="Search by Quiz Code..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full py-2 px-4 pl-10 bg-gray-800 text-yellow-400 rounded-lg border border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-500"
+              />
+              <FaSearch className="absolute left-3 top-2.5 text-yellow-400" />
+            </div>
+          </div>
           <div className="overflow-x-auto">
             <table className="w-full text-center border-collapse">
               <thead>
@@ -171,7 +207,7 @@ const ResultsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {results.map((result) => (
+                {filteredResults.map((result) => (
                   <tr key={result.id} className="border-b border-gray-700 text-yellow-200 hover:bg-yellow-500 hover:text-gray-900 transition">
                     <td className="py-4 px-2 font-bold">{result.attemptNumber}</td>
                     <td className="py-4 px-2">{result.email}</td>
@@ -179,8 +215,7 @@ const ResultsPage = () => {
                     <td className="py-4 px-2 font-bold">{result.score}</td>
                     <td className="py-4 px-2">{result.createdAt}</td>
                     <td className="py-4 px-2 flex space-x-2">
-
-                    <button
+                      <button
                         onClick={() => reviewQuiz(result.quizCode)}
                         className="bg-yellow-500 hover:bg-blue-600 text-black font-semibold py-2 px-6 rounded-lg shadow-md transition-transform hover:scale-105"
                       >
@@ -198,7 +233,6 @@ const ResultsPage = () => {
                       >
                         Delete
                       </button>
-                     
                     </td>
                   </tr>
                 ))}
