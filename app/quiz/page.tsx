@@ -69,7 +69,7 @@ const QuizHomePage = () => {
             {(status.isNc2Holder || status.isAdmin) && (
               <Link href="/create">
                 <motion.button 
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-yellow-500 text-black text-lg font-semibold rounded-md shadow-xl 
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-yellow-500 text-gray-200 text-lg font-semibold rounded-md shadow-xl 
                   hover:shadow-yellow-500/80"
                   whileHover={{ scale: 1.1 }}
                 >
