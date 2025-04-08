@@ -45,8 +45,8 @@ interface Drink {
   steps: string[];
   quantity: number;
   createdBy: string;
-  createdAt: number;
-  updatedAt: number;
+  createdAt: any;
+  updatedAt: any;
 }
 
 const ProjectSummaryPage = () => {

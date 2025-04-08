@@ -46,8 +46,8 @@ interface Drink {
     steps: string[];
     quantity: number;
     createdBy: string;
-    createdAt: number;
-    updatedAt: number;
+    createdAt: any;
+    updatedAt: any;
 }
 
 type ProjectIngredientWithRemainingQuantity = {
@@ -153,8 +153,8 @@ const ProjectDrinkPlanPage = () => {
               steps: data.steps || [],
               quantity: data.quantity || "",
               createdBy: data.createdBy || "",
-              createdAt: data.createdAt || Date.now(),
-              updatedAt: data.updatedAt || Date.now(),
+              createdAt: data.createdAt || Timestamp.now(),
+              updatedAt: data.updatedAt || Timestamp.now(),
             };
           });
 
@@ -414,6 +414,8 @@ const ProjectDrinkPlanPage = () => {
           ...drinkWithoutMatches,
           quantity: drinkQuantity,
           ingredients: unmodifiedIngredients,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
         }),
         logs: arrayUnion(logEntry),
       });
@@ -453,7 +455,7 @@ const ProjectDrinkPlanPage = () => {
       ...selectedDrink,
       quantity: drinkQuantity,
       ingredients: updatedIngredients,
-      updatedAt: Date.now(),
+      updatedAt: Timestamp.now(),
     };
   
     const logEntry = {
