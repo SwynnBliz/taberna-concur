@@ -95,6 +95,7 @@ const ProjectDrinkPlanPage = () => {
   const [drinkPlan, setDrinkPlan] = useState<any[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -498,14 +499,13 @@ const ProjectDrinkPlanPage = () => {
     }
   };  
 
-  const handleDeleteDrink = async () => {
+  const handleConfirmDelete = async () => {
     if (!selectedDrink) return;
     if (!projectId) {
       console.error("Project ID is undefined.");
       return;
     }
   
-    // Create the log entry for the deletion
     const logEntry = {
       action: 'DELETE',
       description: `Deleted drink: ${selectedDrink.name}`,
@@ -526,13 +526,13 @@ const ProjectDrinkPlanPage = () => {
   
     try {
       const projectRef = doc(firestore, "projects", projectId as string);
-      // Remove the drink from the drinkPlan
       await updateDoc(projectRef, {
         drinkPlan: arrayRemove(selectedDrink),
         logs: arrayUnion(logEntry),
       });
   
       setSelectedDrink(null);
+      setShowDeleteModal(false);
       alert("Drink successfully deleted from the plan!");
     } catch (error) {
       console.error("Error deleting drink plan:", error);
@@ -676,7 +676,7 @@ const ProjectDrinkPlanPage = () => {
                 {!isUpdating && (
                   <button
                     className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 flex items-center gap-2"
-                    onClick={handleDeleteDrink}
+                    onClick={() => setShowDeleteModal(true)}
                   >
                     <AiOutlineDelete className="w-5 h-5" /> {/* Delete Icon */}
                     Delete
@@ -882,6 +882,32 @@ const ProjectDrinkPlanPage = () => {
                 ) : (
                   <p className="text-gray-400">Select a drink to view ingredient match details.</p>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
+            <div className="bg-[#383838] p-6 rounded-lg shadow-lg text-white w-full max-w-md">
+              <h2 className="text-xl font-semibold text-yellow-500 text-center mb-4">Confirm Deletion</h2>
+              <p className="text-center text-gray-300 mb-6">
+                Are you sure you want to delete the drink <span className="text-yellow-500 font-bold">{selectedDrink?.name}</span>?
+              </p>
+              <div className="flex justify-center gap-4">
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                  onClick={handleConfirmDelete}
+                >
+                  Yes
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  No
+                </button>
               </div>
             </div>
           </div>
