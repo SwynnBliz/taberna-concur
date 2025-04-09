@@ -273,7 +273,7 @@ const QuizCreatorPage = () => {
     }}
   >
     {/* Overlay Effect */}
-    <div className="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-lg"></div>
+    <div className="absolute inset-0 bg-black bg-opacity-60 "></div>
 
     <div className="bg-gray-900 bg-opacity-95 text-yellow-400 p-8 sm:p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-3xl border border-yellow-500 relative z-10">
       <h2 className="text-4xl sm:text-5xl font-extrabold mb-6 text-center text-yellow-300 drop-shadow-lg animate-pulse">
