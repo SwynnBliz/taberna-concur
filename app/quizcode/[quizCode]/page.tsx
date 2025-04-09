@@ -153,8 +153,8 @@ const QuizPage = () => {
   ) => {
     emailjs
   .send(
-    "service_5tpvz2s",
-    "template_qis7csk",
+    "service_20rlf32",
+    "template_aq9jypi",
     {
       user_email: userEmail, // ✅ Correct (matches EmailJS template)
       name: userName,
@@ -163,7 +163,7 @@ const QuizPage = () => {
       percentage: percentage,
       status: percentage >= passingPercentage ? "Passed" : "Failed",
     },
-    "fWC24jZuIKWxpOyRU"
+    "VdJNrhaXpaf5ASiZ0"
   )
 
       .then(() => console.log(`✅ Email Sent Successfully to ${userEmail}`))
