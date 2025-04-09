@@ -335,7 +335,9 @@ const ProjectSummaryPage = () => {
                         {project?.drinkPlan
                           .filter((drink: Drink) => drink.flavorProfile.includes(flavor))
                           .map((drink: Drink) => (
-                            <li key={drink.id} className="text-white">{drink.name}</li>
+                            <li key={drink.id} className="text-white">
+                              {drink.name} (x{drink.quantity})
+                            </li>
                         ))}
                       </ul>
                     </div>
