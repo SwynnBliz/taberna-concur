@@ -44,15 +44,15 @@ const ResultsPage = () => {
           return {
             id: doc.id,
             quizCode: data.quizCode || 'N/A',
-            email: data.email || 'Unknown', // Ensure email field exists
-            score: data.score !== null ? data.score : 'Pending', // If null, mark as Pending
+            email: data.email || 'Unknown', 
+            score: data.score !== null ? data.score : 'Pending', 
             createdAt: data.createdAt?.seconds
               ? new Date(data.createdAt.seconds * 1000).toLocaleString()
               : 'No Date Available',
           };
         });
 
-        // Group results by quizCode and calculate attempt numbers
+        //attempt numbers
         const groupedResults = scoresData.reduce((acc, result) => {
           if (!acc[result.quizCode]) acc[result.quizCode] = [];
           acc[result.quizCode].push(result);
@@ -60,11 +60,11 @@ const ResultsPage = () => {
         }, {} as Record<string, any[]>);
 
         const finalResults = Object.values(groupedResults).flatMap((group) => {
-          // Sort each group by createdAt in ascending order (oldest first)
+          //  ascending order
           group.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
           return group.map((result, index) => ({
             ...result,
-            attemptNumber: index + 1, // Increment attempt number based on sorted order
+            attemptNumber: index + 1, // Increment
           }));
         });
 
