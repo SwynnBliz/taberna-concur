@@ -10,7 +10,8 @@ import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaSearch, FaPlus
 import Link from 'next/link';
 import useBannedWords from "./hooks/useBannedWords"; 
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
-import { AiOutlineClose } from 'react-icons/ai'; 
+import { AiOutlineClose } from 'react-icons/ai';
+import { IoMdCloseCircleOutline } from "react-icons/io";
 import { LinkIt } from 'react-linkify-it';
 import PostMediaCarousel from './ui/PostMediaCarousel';
 
@@ -94,6 +95,10 @@ const Forum = () => {
   const [deleteReplyPrompt, setDeleteReplyPrompt] = useState(false);
   const [replyToDelete, setReplyToDelete] = useState<{ postId: string, commentIndex: number, replyIndex: number } | null>(null);
   const [userDetails, setUserDetails] = useState(new Map());
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
+  const [editVideoFile, setEditVideoFile] = useState<File | null>(null);
+  const [editCurrentVideoUrl, setEditCurrentVideoUrl] = useState<string | null>(null);
   
   useEffect(() => {
     const postsQuery = query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
@@ -666,30 +671,32 @@ const Forum = () => {
   const handleUpdatePost = (postId: string) => {
     const postToEdit = posts.find((post) => post.id === postId);
     if (postToEdit) {
-      setEditingPostId(postId); 
-      setEditContentPost(postToEdit.message); 
-      setEditCurrentImageUrl(postToEdit.imageUrl); 
-      setIsEditingPost(true); 
+      setEditingPostId(postId);
+      setEditContentPost(postToEdit.message);
+      setEditCurrentImageUrl(postToEdit.imageUrl);
+      setEditCurrentVideoUrl(postToEdit.videoUrl ?? null);
+      setIsEditingPost(true);
     }
   };
   
   const handleSavePost = async () => {
-    if (!editingPostId) return; 
-  
+    if (!editingPostId) return;
+
     const userId = auth.currentUser?.uid;
-    if (!userId) return; 
-  
-    setIsSaving(true); 
-  
+    if (!userId) return;
+
+    setIsSaving(true);
+
     try {
-      let imageUrl = editCurrentImageUrl; 
-  
-      
+      let imageUrl = editCurrentImageUrl;
+      let videoUrl = editCurrentVideoUrl;
+
+      // Handle image upload
       if (editImageFile) {
         const formData = new FormData();
         formData.append('file', editImageFile);
-        formData.append('upload_preset', 'post-image-upload'); 
-  
+        formData.append('upload_preset', 'post-image-upload');
+
         const res = await fetch(
           `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`,
           {
@@ -697,38 +704,66 @@ const Forum = () => {
             body: formData,
           }
         );
-  
+
         if (!res.ok) {
           throw new Error('Image upload failed');
         }
-  
+
         const data = await res.json();
-        imageUrl = data.secure_url; 
+        imageUrl = data.secure_url;
       }
-  
-      
+
+      // Handle video upload
+      if (editVideoFile) {
+        const formData = new FormData();
+        formData.append('file', editVideoFile);
+        formData.append('upload_preset', 'post-video-upload');
+
+        const res = await fetch(
+          `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload`,
+          {
+            method: 'POST',
+            body: formData,
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error('Video upload failed');
+        }
+
+        const data = await res.json();
+        videoUrl = data.secure_url;
+      }
+
+      // Remove image or video if not replaced
       if (!editImageFile && !editCurrentImageUrl) {
         imageUrl = null;
       }
-  
-      
+      if (!editVideoFile && !editCurrentVideoUrl) {
+        videoUrl = null;
+      }
+
+      // Update the post in Firestore
       const postRef = doc(firestore, 'posts', editingPostId);
       await updateDoc(postRef, {
-        message: editContentPost, 
-        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }), 
-        updatedAt: new Date(), 
+        message: editContentPost,
+        ...(imageUrl === null ? { imageUrl: deleteField() } : { imageUrl }),
+        ...(videoUrl === null ? { videoUrl: deleteField() } : { videoUrl }),
+        updatedAt: new Date(),
       });
-  
-      
+
+      // Reset state
       setIsEditingPost(false);
       setEditContentPost('');
       setEditingPostId(null);
-      setEditImageFile(null); 
-      setEditCurrentImageUrl(null); 
+      setEditImageFile(null);
+      setEditVideoFile(null);
+      setEditCurrentImageUrl(null);
+      setEditCurrentVideoUrl(null);
     } catch (error) {
       console.error('Error updating post:', error);
     } finally {
-      setIsSaving(false); 
+      setIsSaving(false);
     }
   };
 
@@ -1410,64 +1445,118 @@ const Forum = () => {
                         placeholder="Edit your post..."
                       />
 
+                      {/* Image Section */}
+                      <h2 className="text-white font-semibold mt-4">Image</h2>
+
+                      {/* Current Image Preview */}
                       {editCurrentImageUrl && (
                         <div className="mt-4 relative">
-                          <p className="text-white">Current Image:</p>
+                          <p className="text-white font-semibold">Current Image:</p>
                           <div className="relative">
                             <img
                               src={editCurrentImageUrl}
                               alt="Current Post Image"
                               className="w-full | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
                             />
-                            {/* Close button to remove the image */}
+                            {/* Remove Image Button */}
                             <button
-                              onClick={() => setEditCurrentImageUrl(null)} 
+                              onClick={() => setEditCurrentImageUrl(null)}
                               className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                             >
-                              <AiOutlineClose/>
+                              <AiOutlineClose />
                             </button>
                           </div>
                         </div>
                       )}
 
-                      {/* Selected Image Preview */}
+                      {/* New Image Preview */}
                       {editImageFile && (
                         <div className="mt-4 relative">
-                          <p className="text-white">New Image Preview:</p>
+                          <p className="text-white font-semibold">New Image Preview:</p>
                           <div className="relative">
                             <img
-                              src={URL.createObjectURL(editImageFile)} 
+                              src={URL.createObjectURL(editImageFile)}
                               alt="Selected Image Preview"
-                              className="w-full max-w-2xl | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
+                              className="w-full | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
                             />
-                            {/* Close button overlaid on the image */}
+                            {/* Remove New Image Button */}
                             <button
-                              onClick={() => setEditImageFile(null)} 
+                              onClick={() => setEditImageFile(null)}
                               className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
                             >
-                              <AiOutlineClose/>
+                              <AiOutlineClose />
                             </button>
                           </div>
                         </div>
                       )}
 
-                      {/* Current Image Display */}
-                      {editCurrentImageUrl && (
-                        <div className="mt-4">
-                          <p className="text-white">Select an Image to Change (Optional):</p>
-                        </div>
-                      )}
-
-                      {/* File Input for Selecting New Image */}
+                      <h2 className="text-white  mt-3">Select an Image to Change (Optional):</h2>
                       <input
                         type="file"
                         accept="image/*"
                         onChange={(e) => {
                           if (e.target.files && e.target.files[0]) {
-                            setEditImageFile(e.target.files[0]); 
+                            setEditImageFile(e.target.files[0]);
                           }
                         }}
-                        className="mt-4 text-white bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full p-2"
+                        className="mt-2 text-white bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full p-2"
+                      />
+
+                      {/* Video Section */}
+                      <h2 className="text-white font-semibold mt-6">Video</h2>
+
+                      {/* Current Video Preview */}
+                      {editCurrentVideoUrl && (
+                        <div className="mt-4 relative">
+                          <p className="text-white font-semibold">Current Video:</p>
+                          <div className="relative">
+                            <video
+                              src={editCurrentVideoUrl}
+                              controls
+                              className="w-full | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
+                            />
+                            {/* Remove Video Button */}
+                            <button
+                              onClick={() => setEditCurrentVideoUrl(null)}
+                              className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                            >
+                              <AiOutlineClose />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* New Video Preview */}
+                      {editVideoFile && (
+                        <div className="mt-4 relative">
+                          <p className="text-white font-semibold">New Video Preview:</p>
+                          <div className="relative">
+                            <video
+                              src={URL.createObjectURL(editVideoFile)}
+                              controls
+                              className="w-full | h-[150px] | sm:h-[450px] | object-cover rounded-lg mt-2"
+                            />
+                            {/* Remove New Video Button */}
+                            <button
+                              onClick={() => setEditVideoFile(null)}
+                              className="absolute top-2 right-2 bg-[#2c2c2c] text-white rounded-full p-1 hover:bg-yellow-500"
+                            >
+                              <AiOutlineClose />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <h2 className="text-white  mt-3">Select a Video to Change (Optional):</h2>
+                      <input
+                        type="file"
+                        accept="video/*"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setEditVideoFile(e.target.files[0]);
+                          }
+                        }}
+                        className="mt-2 text-white bg-[#2c2c2c] outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full p-2"
                       />
 
                       {/* Buttons */}
@@ -1475,7 +1564,8 @@ const Forum = () => {
                         <button
                           onClick={() => {
                             setIsEditingPost(false);
-                            setEditImageFile(null); 
+                            setEditImageFile(null);
+                            setEditVideoFile(null);
                           }}
                           className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
                         >
@@ -1484,9 +1574,9 @@ const Forum = () => {
                         <button
                           onClick={handleSavePost}
                           className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
-                          disabled={isSaving} 
+                          disabled={isSaving}
                         >
-                          {isSaving ? "Saving..." : "Save"}
+                          {isSaving ? 'Saving...' : 'Save'}
                         </button>
                       </div>
                     </div>
@@ -1495,11 +1585,43 @@ const Forum = () => {
 
                 {/* Image and Video Display Carousel */}
                 <div className="mb-2">
-                  <PostMediaCarousel 
-                    imageUrl={post.imageUrl ?? undefined} 
+                  <PostMediaCarousel
+                    imageUrl={post.imageUrl ?? undefined}
                     videoUrl={post.videoUrl ?? undefined}
+                    onImageClick={() => {
+                      if (post.imageUrl) {
+                        setSelectedImageUrl(post.imageUrl);
+                        setIsImageModalOpen(true);
+                      }
+                    }}
                   />
                 </div>
+
+                {/* Modal for Enlarged Image */}
+                {isImageModalOpen && selectedImageUrl && (
+                  <div className="fixed inset-0 z-40 flex items-center justify-center">
+                    {/* Background Overlay */}
+                    <div className="absolute inset-0 bg-[#2c2c2c]"></div>
+                    
+                    <div className="relative z-30 max-w-full max-h-full flex justify-center items-center">
+                      {/* Close Button */}
+                      <button
+                        onClick={() => setIsImageModalOpen(false)}
+                        className="absolute top-16 right-4 text-yellow-500 text-5xl hover:text-yellow-600"
+                      >
+                        <IoMdCloseCircleOutline />
+                      </button>
+                      
+                      {/* Enlarged Image */}
+                      <img
+                        src={selectedImageUrl}
+                        alt="Enlarged View"
+                        className="max-w-full rounded-lg mt-14"
+                        style={{ height: 'calc(100vh - 6rem)' }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="text-[10px] gap-2 | sm:text-base | flex mb-4 items-center">
                   {/* Like Button with Tooltip */}

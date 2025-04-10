@@ -7,6 +7,7 @@ import { getAuth } from "firebase/auth";
 import Link from "next/link";
 import useBannedWords from "../forum/hooks/useBannedWords";
 import { formatDistanceToNow } from 'date-fns';
+import { IoMdCloseCircleOutline } from "react-icons/io";
 import PostMediaCarousel from '../forum/ui/PostMediaCarousel';
 
 const RightSidebar = () => {
@@ -15,6 +16,8 @@ const RightSidebar = () => {
   const { currentUser } = getAuth();
   const { bannedWords, loading: bannedWordsLoading } = useBannedWords();
   const bannedWordsMemo = useMemo(() => bannedWords, [bannedWords]);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentUser?.uid && !bannedWordsLoading) {
@@ -131,10 +134,17 @@ const RightSidebar = () => {
 
               {/* Post Media Carousel for Sidebar */}
               <div className="mt-2 relative">
-                <PostMediaCarousel imageUrl={post.imageUrl} videoUrl={post.videoUrl} className="h-32" />
-
-                {/* Tint Overlay */}
-                <div className="absolute top-0 left-0 w-full h-full bg-[#2c2c2c] opacity-20 rounded-lg pointer-events-none" />
+                <PostMediaCarousel
+                  imageUrl={post.imageUrl}
+                  videoUrl={post.videoUrl}
+                  className="h-32"
+                  onImageClick={() => {
+                    if (post.imageUrl) {
+                      setSelectedImageUrl(post.imageUrl);
+                      setIsImageModalOpen(true);
+                    }
+                  }}
+                />
               </div>
 
               {/* "View Original Post" Button */}
@@ -153,6 +163,32 @@ const RightSidebar = () => {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Modal for Enlarged Image */}
+      {isImageModalOpen && selectedImageUrl && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center">
+          {/* Background Overlay */}
+          <div className="absolute inset-0 bg-[#2c2c2c]"></div>
+          
+          <div className="relative z-30 max-w-full max-h-full flex justify-center items-center">
+            {/* Close Button */}
+            <button
+              onClick={() => setIsImageModalOpen(false)}
+              className="absolute top-16 right-4 text-yellow-500 text-5xl hover:text-yellow-600"
+            >
+              <IoMdCloseCircleOutline />
+            </button>
+            
+            {/* Enlarged Image */}
+            <img
+              src={selectedImageUrl}
+              alt="Enlarged View"
+              className="max-w-full rounded-lg mt-14"
+              style={{ height: 'calc(100vh - 6rem)' }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

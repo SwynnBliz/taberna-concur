@@ -2,7 +2,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { onSnapshot, collection, doc, getDoc, updateDoc, arrayUnion, arrayRemove, Timestamp } from "firebase/firestore";
+import { onSnapshot, collection, doc, getDoc, updateDoc, arrayUnion, arrayRemove, Timestamp, serverTimestamp, addDoc } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { firestore } from "../../../firebase/config";
 import Layout from "../../../../components/root/Layout";
@@ -12,6 +12,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { AiOutlineClose, AiOutlinePlus, AiOutlineEdit, AiOutlineDelete } from 'react-icons/ai';
 import { FaExclamationTriangle, FaExclamationCircle } from 'react-icons/fa';
 import { ChatPopupButton } from "../../../../components/Chat";
+import { FaTrashAlt, FaPlus, FaTimes } from "react-icons/fa";
 
 const unitConversionMap: Record<string, number> = {
   ml: 1, cl: 10, dl: 100, liter: 1000, oz: 29.5735,
@@ -21,6 +22,28 @@ const unitConversionMap: Record<string, number> = {
   tsp: 4.2,
   tbsp: 12.6,
 };
+
+// Options for flavor and measurement
+const flavorOptions = [
+  "Bitter", "Briny", "Caramel", "Chocolate", "Citrusy", "Creamy", "Dry", 
+  "Earthy", "Floral", "Fruity", "Herbal", "Malty", "Nutty", "Oaky", 
+  "Rich", "Robust", "Salty", "Savory", "Smoky", "Sour", "Spicy", 
+  "Strong", "Sweet", "Tangy", "Tart", "Umami", "Vanilla", "Woody"
+];
+  
+const measurementOptions = [
+  // Volume (Liquids)
+  "ml", "cl", "dl", "liter", "oz", "pint", "quart", "gallon",
+
+  // Weight (Solids)
+  "g", "kg", "lb", 
+
+  // Small Additives (Common in Bartending)
+  "dash", "drop", "pinch", 
+
+  // Countable Items (Fruits, Garnishes, etc.)
+  "piece", "slice", "wedge", "twist", "tsp", "tbsp"
+];
 
 interface Project {
     id: string;
@@ -96,6 +119,26 @@ const ProjectDrinkPlanPage = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [activeTab, setActiveTab] = useState<"website" | "project">("website");
+  const [projectDrinks, setProjectDrinks] = useState<Drink[]>([]);
+  const [showCreateProjectDrinkModal, setShowCreateProjectDrinkModal] = useState(false);
+  const initialDrinkState: Drink = {
+    id: "",
+    name: "",
+    category: "Brandy",
+    imageUrl: "",
+    alcoholContent: { abv: 0, proof: 0 },
+    flavorProfile: ["Bitter"],
+    ingredients: [{ name: "", quantity: 0, unit: "ml" }],
+    steps: [""],
+    quantity: 1,
+    createdBy: "",
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  const [drink, setDrink] = useState<Drink>(initialDrinkState);
+  const [selectedProjectDrink, setSelectedProjectDrink] = useState<Drink | null>(null);
+  const [showProjectDeleteModal, setShowProjectDeleteModal] = useState(false);
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
@@ -124,9 +167,11 @@ const ProjectDrinkPlanPage = () => {
       if (snapshot.exists()) {
         setProject(snapshot.data());
         setDrinkPlan(snapshot.data().drinkPlan || []);
+        setProjectDrinks(snapshot.data().drinkDatabase || []);
       } else {
         setProject(null);
         setDrinkPlan([]);
+        setProjectDrinks  ([]);
       }
       setIsLoading(false);
     });
@@ -345,6 +390,13 @@ const ProjectDrinkPlanPage = () => {
   )
   .sort((a, b) => b.score - a.score);
 
+  const scoredProjectDrinks = projectDrinks.map((drink) => {
+    const { score, flavorMatchDetails, ingredientMatchDetails } = calculateDrinkScore(drink, project, 1);
+    return { ...drink, score, flavorMatchDetails, ingredientMatchDetails };
+  });
+
+  const sourceDrinks = activeTab === "website" ? filteredDrinks : scoredProjectDrinks;
+
   const formatTimestamp = (timestamp: any) => {
       return timestamp && timestamp.seconds
         ? formatDistanceToNow(new Date(timestamp.seconds * 1000), { addSuffix: true })
@@ -539,6 +591,192 @@ const ProjectDrinkPlanPage = () => {
       alert("Failed to delete drink. Please try again.");
     }
   };
+
+  const addDrinkToProjectDatabase = async () => {
+    const isInvalid = (
+      !drink.name.trim() ||
+      !drink.category ||
+      !drink.imageUrl ||
+      isNaN(Number(drink.alcoholContent.abv)) || Number(drink.alcoholContent.abv) <= 0 ||
+      drink.flavorProfile.length < 1 ||
+      drink.ingredients.some(i => !i.name.trim() || isNaN(Number(i.quantity)) || Number(i.quantity) <= 0) ||
+      drink.steps.some(s => !s.trim())
+    );
+  
+    if (isInvalid) {
+      alert("Please fill out all required fields with valid values.");
+      return;
+    }
+  
+    const user = auth.currentUser;
+    if (!user) {
+      alert("You must be logged in to add a drink.");
+      return;
+    }
+
+    if (!projectId) {
+      alert("Project ID is missing.");
+      return;
+    }    
+  
+    try {
+      const projectRef = doc(firestore, "projects", projectId);
+      await updateDoc(projectRef, {
+        drinkDatabase: arrayUnion({
+          ...drink,
+          createdBy: user.uid,
+          createdAt: Timestamp.now(),
+          updatedAt: Timestamp.now(),
+        }),
+      });
+  
+      alert("Drink added to project database!");
+      setDrink(initialDrinkState);
+      setShowCreateProjectDrinkModal(false);
+    } catch (error) {
+      console.error("Error adding drink to project database:", error);
+      alert("Something went wrong.");
+    }
+  };  
+
+  const handleImageUpload = async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('upload_preset', 'post-image-upload');
+
+      try {
+          const res = await fetch(
+              `https://api.cloudinary.com/v1_1/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload`, 
+              { method: 'POST', body: formData }
+          );
+          const data = await res.json();
+          setDrink((prev) => ({ ...prev, imageUrl: data.secure_url }));
+      } catch (error) {
+
+      }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+      setDrink({ ...drink, [e.target.name]: e.target.value });
+  };
+
+  // Add Drink Function
+  const handleFlavorProfileAdd = () => {
+      if (drink.flavorProfile.length < flavorOptions.length) {
+          setDrink({ 
+              ...drink, 
+              flavorProfile: [...drink.flavorProfile, flavorOptions[0]]
+          });
+      }
+  };
+
+  const handleFlavorProfileChange = (index: number, value: string) => {
+      const updatedProfiles = [...drink.flavorProfile];
+      updatedProfiles[index] = value.trim() ? value : flavorOptions[0];
+      setDrink({ ...drink, flavorProfile: updatedProfiles });
+  };
+
+  const handleFlavorProfileRemove = (index: number) => {
+      if (index > 0) {
+          const updatedProfiles = drink.flavorProfile.filter((_, i) => i !== index);
+          setDrink({ ...drink, flavorProfile: updatedProfiles });
+      }
+  };
+
+  const handleIngredientAdd = () => {
+      setDrink({ ...drink, ingredients: [...drink.ingredients, { name: "", quantity: 0, unit: "ml" }] });
+  };
+
+  const handleIngredientChange = (index: number, field: string, value: string | number) => {
+      const updatedIngredients = [...drink.ingredients];
+      updatedIngredients[index] = { ...updatedIngredients[index], [field]: value };
+      setDrink({ ...drink, ingredients: updatedIngredients });
+  };
+
+  const handleIngredientRemove = (index: number) => {
+      if (index > 0) {
+          const updatedIngredients = drink.ingredients.filter((_, i) => i !== index);
+          setDrink({ ...drink, ingredients: updatedIngredients });
+      }
+  };
+
+  const handleStepAdd = () => {
+      setDrink({ ...drink, steps: [...drink.steps, ""] });
+  };
+
+  const handleStepChange = (index: number, value: string) => {
+      const updatedSteps = [...drink.steps];
+      updatedSteps[index] = value;
+      setDrink({ ...drink, steps: updatedSteps });
+  };
+
+  const handleStepRemove = (index: number) => {
+      if (drink.steps.length > 1) {
+          const updatedSteps = drink.steps.filter((_, i) => i !== index);
+          setDrink({ ...drink, steps: updatedSteps });
+      }
+  };
+
+  const handleDeleteProjectDrink = async (selectedDrink: Drink) => {
+    if (!projectId) {
+      console.error("Project ID is undefined.");
+      return;
+    }
+  
+    try {
+      const projectRef = doc(firestore, "projects", projectId);
+  
+      // Fetch the current project document
+      const projectSnap = await getDoc(projectRef);
+      if (!projectSnap.exists()) {
+        console.error("Project not found.");
+        return;
+      }
+  
+      const projectData = projectSnap.data();
+      const drinkDatabase = projectData.drinkDatabase || [];
+  
+      // Find the correct index of the selected drink in the original drinkDatabase
+      const drinkIndex = drinkDatabase.findIndex(
+        (drink: Drink) =>
+          drink.name === selectedDrink.name &&
+          drink.category === selectedDrink.category &&
+          drink.quantity === selectedDrink.quantity
+      );
+  
+      if (drinkIndex === -1) {
+        console.error("Selected drink not found in the database.");
+        alert("Failed to delete drink. Drink not found.");
+        return;
+      }
+  
+      // Remove the drink at the specified index
+      const updatedDrinkDatabase = drinkDatabase.filter(
+        (_: any, index: number) => index !== drinkIndex
+      );
+  
+      console.log("Updated drinkDatabase:", updatedDrinkDatabase);
+  
+      // Create a log entry
+      const logEntry = {
+        action: 'DELETE',
+        description: `Deleted project drink: ${selectedDrink.name}`,
+        timestamp: Timestamp.now(),
+        createdBy: authUser?.uid,
+      };
+  
+      // Update the Firestore document with the filtered array
+      await updateDoc(projectRef, {
+        drinkDatabase: updatedDrinkDatabase,
+        logs: arrayUnion(logEntry),
+      });
+  
+      alert("Drink successfully deleted from the project database!");
+    } catch (error) {
+      console.error("Error deleting project drink:", error);
+      alert("Failed to delete drink. Please try again.");
+    }
+  };
   
   if (isLoading) {
     return (
@@ -580,6 +818,13 @@ const ProjectDrinkPlanPage = () => {
               {name}
             </Link>
           ))}
+        </div>
+
+        {/* Total Drinks Counter */}
+        <div className="flex justify-end mb-4">
+          <div className="text-white text-lg font-semibold">
+            Total Drinks: {drinkPlan.reduce((total, drink) => total + (drink.quantity || 0), 0)}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -895,7 +1140,7 @@ const ProjectDrinkPlanPage = () => {
               <p className="text-center text-gray-300 mb-6">
                 Are you sure you want to delete the drink <span className="text-yellow-500 font-bold">{selectedDrink?.name}</span>?
               </p>
-              <div className="flex justify-center gap-4">
+              <div className="flex justify-between gap-4 px-20">
                 <button
                   className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
                   onClick={handleConfirmDelete}
@@ -934,14 +1179,234 @@ const ProjectDrinkPlanPage = () => {
                 <AiOutlineClose className="w-6 h-6" />
               </button>
   
-              <h2 className="text-2xl font-semibold text-yellow-500 text-center">Select a Drink</h2>
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex space-x-4">
+                  <button
+                    onClick={() => setActiveTab("website")}
+                    className={`px-4 py-2 rounded-md font-semibold ${
+                      activeTab === "website" ? "bg-yellow-500 text-white" : "bg-gray-700 text-gray-300"
+                    }`}
+                  >
+                    Website Drinks
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("project")}
+                    className={`px-4 py-2 rounded-md font-semibold ${
+                      activeTab === "project" ? "bg-yellow-500 text-white" : "bg-gray-700 text-gray-300"
+                    }`}
+                  >
+                    Project Drinks
+                  </button>
+                </div>
+
+                {activeTab === "project" && (
+                  <button
+                    onClick={() => setShowCreateProjectDrinkModal(true)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold px-3 py-1 rounded-md text-sm flex items-center gap-2 mr-10"
+                  >
+                    <AiOutlinePlus className="w-4 h-4" />
+                    Add Drink
+                  </button>
+                )}
+              </div>
+
+              {/* Add Project Drink Modal */}
+              {showCreateProjectDrinkModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                  <div className="bg-[#383838] p-6 rounded-lg shadow-lg w-full max-w-2xl h-[calc(100vh-10rem)] overflow-y-auto relative">
+                    <button
+                      className="absolute top-4 right-4 text-gray-400 hover:text-yellow-500"
+                      onClick={() => {
+                        setDrink(initialDrinkState);
+                        setShowCreateProjectDrinkModal(false);
+                      }}
+                    >
+                      <AiOutlineClose className="w-6 h-6" />
+                    </button>
+                     {showCreateProjectDrinkModal && (
+                      <div className="w-full max-w-xl mx-auto p-4 md:p-6 bg-[#383838] shadow-md rounded-lg relative">
+                          {/* Clear Button */}
+                          <button
+                              type="button"
+                              onClick={() => setDrink(initialDrinkState)}
+                              className="text-yellow-500 hover:text-yellow-600 flex items-center space-x-2 sm:top-4 sm:right-4 absolute top-2 right-2"
+                          >
+                              <span className="text-sm md:text-base">Clear</span>
+                              <FaTimes className="text-sm md:text-base" />
+                          </button>
   
+                          {/* Name */}
+                          <label className="font-semibold text-white text-sm md:text-base">Drink Name</label>
+                          <input 
+                              type="text" 
+                              name="name" 
+                              value={drink.name} 
+                              onChange={handleChange} 
+                              className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded mb-3 text-sm md:text-base"
+                          />
+  
+                          {/* Category */}
+                          <div className="flex flex-col space-y-2">
+                              <label className="font-semibold text-white text-sm md:text-base">Category</label>
+                              <select 
+                                  name="category" 
+                                  value={drink.category} 
+                                  onChange={handleChange} 
+                                  className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                              >
+                                  {["Brandy", "Beer", "Gin", "Liqueur", "Rum", "Spirit", "Tequila", "Vodka", "Whiskey", "Wine"].map((cat) => (
+                                      <option key={cat} value={cat}>{cat}</option>
+                                  ))}
+                              </select>
+                          </div>
+  
+                          {/* Image URL */}
+                          <div className="flex flex-col space-y-2 mt-3">
+                              <label className="font-semibold text-white text-sm md:text-base">Select Image</label>
+                              <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  className="bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded w-full p-2 text-sm md:text-base"
+                                  onChange={(e) => e.target.files && handleImageUpload(e.target.files[0])} 
+                              />
+                          </div>
+  
+                          {/* Alcohol Content */}
+                          <div className="flex flex-col space-y-2">
+                              <label className="font-semibold text-white text-sm md:text-base">Alcohol Content</label>
+                              <div className="flex flex-col md:flex-row gap-2 md:gap-3 mb-3">
+                                  {/* ABV Input */}
+                                  <input
+                                      type="number"
+                                      name="abv"
+                                      placeholder="ABV %"
+                                      value={drink.alcoholContent.abv || ""}
+                                      onChange={(e) => {
+                                          const value = e.target.value;
+                                          const abv = value === "" ? 0 : parseFloat(value);
+                                          setDrink({
+                                              ...drink,
+                                              alcoholContent: { abv, proof: abv * 2 },
+                                          });
+                                      }}
+                                      className="w-full md:w-1/2 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                                  />
+                                  
+                                  {/* Proof Input (Disabled) */}
+                                  <input 
+                                      type="number" 
+                                      name="proof" 
+                                      placeholder="Proof" 
+                                      value={drink.alcoholContent.proof} 
+                                      disabled 
+                                      className="w-full md:w-1/2 p-2 bg-[#484848] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                                  />
+                              </div>
+                          </div>
+  
+                            {/* Flavor Profile */}
+                            <div className="flex flex-col space-y-2">
+                                <label className="font-semibold text-white text-sm md:text-base">Flavor Profile</label>
+                                {drink.flavorProfile.map((flavor, index) => (
+                                    <div key={index} className="flex flex-wrap gap-1 md:gap-2 mb-2 items-center">
+                                        {/* Flavor Select Dropdown */}
+                                        <select 
+                                            value={flavor} 
+                                            onChange={(e) => handleFlavorProfileChange(index, e.target.value)} 
+                                            className="w-full md:w-auto flex-1 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded text-sm md:text-base"
+                                        >
+                                            {flavorOptions.map((option) => (
+                                                <option key={option} value={option}>{option}</option>
+                                            ))}
+                                        </select>
+
+                                        {/* Remove Flavor Button (Only for additional flavors) */}
+                                        {index > 0 && (
+                                            <button 
+                                                onClick={() => handleFlavorProfileRemove(index)} 
+                                                className="text-red-500 hover:text-red-600 p-2"
+                                            >
+                                                <FaTrashAlt />
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {/* Add Flavor Button */}
+                                <button 
+                                    onClick={handleFlavorProfileAdd} 
+                                    className="w-full bg-gray-500 text-white py-2 rounded flex items-center justify-center gap-2 hover:bg-gray-600 transition mb-3 text-sm md:text-base"
+                                >
+                                    <FaPlus /> Add Flavor
+                                </button>
+                            </div>
+
+                            {/* Ingredients */}
+                            <label className="font-semibold text-white">Ingredients</label>
+                            {drink.ingredients.map((ingredient, index) => (
+                                <div key={index} className="flex gap-2 mb-2">
+                                    <input type="text" placeholder="Ingredient Name" value={ingredient.name} onChange={(e) => handleIngredientChange(index, "name", e.target.value)} className="w-1/2 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded" />
+                                    <input
+                                        type="number"
+                                        placeholder="Quantity"
+                                        value={ingredient.quantity || ""}
+                                        onChange={(e) => {
+                                            const value = e.target.value;
+                                            handleIngredientChange(index, "quantity", value === "" ? 0 : parseFloat(value));
+                                        }} 
+                                        className="w-1/4 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded"
+                                    />
+                                    <select value={ingredient.unit} onChange={(e) => handleIngredientChange(index, "unit", e.target.value)} className="w-1/4 p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded">
+                                        {measurementOptions.map((unit) => <option key={unit} value={unit}>{unit}</option>)}
+                                    </select>
+                                    {index > 0 && (
+                                        <button onClick={() => handleIngredientRemove(index)} className="text-red-500 hover:text-red-600"><FaTrashAlt /></button>
+                                    )}
+                                </div>
+                            ))}
+                            <button onClick={handleIngredientAdd} className="w-full bg-gray-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-gray-600 transition mb-3">
+                                <FaPlus /> Add Ingredient
+                            </button>
+
+                            {/* Step Instruction */}
+                            <label className="font-semibold text-white">Step-by-Step Instructions</label>
+                            {drink.steps.map((step, index) => (
+                                <div key={index} className="flex gap-2 mb-2">
+                                    <input
+                                        type="text"
+                                        placeholder={`Step ${index + 1}`}
+                                        value={step}
+                                        onChange={(e) => handleStepChange(index, e.target.value)}
+                                        className="w-full p-2 bg-[#2c2c2c] text-white outline-none focus:ring-2 focus:ring-yellow-500 rounded"
+                                    />
+                                    {index > 0 && (
+                                        <button onClick={() => handleStepRemove(index)} className="text-red-500 hover:text-red-600">
+                                            <FaTrashAlt />
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
+                            <button
+                                onClick={handleStepAdd}
+                                className="w-full bg-gray-500 text-white py-2 rounded mt-2 flex items-center justify-center gap-2 hover:bg-gray-600 transition"
+                            >
+                                <FaPlus /> Add Step
+                            </button>
+
+                            {/* Submit Button */}
+                            <button onClick={addDrinkToProjectDatabase} className="w-full bg-yellow-500 text-white py-2 rounded mt-3 hover:bg-yellow-600 transition">Add Drink</button>
+                        </div>
+                      )}
+                  </div>
+                </div>
+              )}
+
               {/* Drinks Grid */}
               {isLoading ? (
                 <div className="text-center text-white text-md my-5">Loading Drink Database...</div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-6 my-5">
-                  {filteredDrinks.map((drink, index) => (
+                  {sourceDrinks.map((drink, index) => (
                     <div key={drink.id || `drink-${index}`} className="relative w-full">
                       {/* Drink Card */}
                       <div
@@ -975,10 +1440,55 @@ const ProjectDrinkPlanPage = () => {
                           </div>
                         </div>
                       </div>
+
+                      {/* Delete Button (Only for Project Drinks) */}
+                      {activeTab === "project" && (
+                        <button
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedProjectDrink(drink);
+                            setShowProjectDeleteModal(true);
+                          }}
+                        >
+                          <AiOutlineDelete className="w-5 h-5" />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {showProjectDeleteModal && selectedProjectDrink && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4 z-50">
+            <div className="bg-[#383838] p-6 rounded-lg shadow-lg text-white w-full max-w-md">
+              <h2 className="text-xl font-semibold text-yellow-500 text-center mb-4">Confirm Deletion</h2>
+              <p className="text-center text-gray-300 mb-6">
+                Are you sure you want to delete the drink{" "}
+                <span className="text-yellow-500 font-bold">{selectedProjectDrink.name}</span>?
+              </p>
+              <div className="flex justify-between gap-4 px-20">
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600"
+                  onClick={async () => {
+                    if (selectedProjectDrink) {
+                      await handleDeleteProjectDrink(selectedProjectDrink);
+                    }
+                    setShowProjectDeleteModal(false);
+                  }}
+                >
+                  Yes
+                </button>
+                <button
+                  className="bg-gray-500 text-white px-4 py-2 rounded-md hover:bg-gray-600"
+                  onClick={() => setShowProjectDeleteModal(false)}
+                >
+                  No
+                </button>
+              </div>
             </div>
           </div>
         )}

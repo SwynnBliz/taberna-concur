@@ -11,7 +11,8 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns'; 
 import { FaThumbsUp, FaThumbsDown, FaTrash, FaEdit, FaBookmark, FaComment, FaEllipsisV, FaShare, FaTimes, FaRegEnvelope, FaAngleLeft, FaAngleRight, FaFastBackward, FaFastForward } from 'react-icons/fa'; 
 import { HiDocumentMagnifyingGlass } from "react-icons/hi2";
-import { AiOutlineClose } from 'react-icons/ai'; 
+import { AiOutlineClose } from 'react-icons/ai';
+import { IoMdCloseCircleOutline } from "react-icons/io";
 import { LinkIt } from 'react-linkify-it';
 import PostMediaCarousel from '../../../components/forum/ui/PostMediaCarousel';
 
@@ -92,6 +93,8 @@ const ProfileViewPage = () => {
   const [userDetails, setUserDetails] = useState(new Map());
   const [warnings, setWarnings] = useState<Warning[]>([]);
   const [showWarningsModal, setShowWarningsModal] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id || Array.isArray(id)) return; 
@@ -1159,11 +1162,43 @@ const ProfileViewPage = () => {
 
                       {/* Image and Video Display Carousel */}
                       <div className="mb-2">
-                        <PostMediaCarousel 
-                          imageUrl={post.imageUrl ?? undefined} 
+                        <PostMediaCarousel
+                          imageUrl={post.imageUrl ?? undefined}
                           videoUrl={post.videoUrl ?? undefined}
+                          onImageClick={() => {
+                            if (post.imageUrl) {
+                              setSelectedImageUrl(post.imageUrl);
+                              setIsImageModalOpen(true);
+                            }
+                          }}
                         />
                       </div>
+
+                      {/* Image Modal */}
+                      {isImageModalOpen && selectedImageUrl && (
+                        <div className="fixed inset-0 z-40 flex items-center justify-center">
+                          {/* Background Overlay */}
+                          <div className="absolute inset-0 bg-[#2c2c2c]"></div>
+
+                          <div className="relative z-30 max-w-full max-h-full flex justify-center items-center">
+                            {/* Close Button */}
+                            <button
+                              onClick={() => setIsImageModalOpen(false)}
+                              className="absolute top-16 right-4 text-yellow-500 text-5xl hover:text-yellow-600"
+                            >
+                              <IoMdCloseCircleOutline />
+                            </button>
+
+                            {/* Enlarged Image */}
+                            <img
+                              src={selectedImageUrl}
+                              alt="Enlarged View"
+                              className="max-w-full rounded-lg mt-14"
+                              style={{ height: 'calc(100vh - 6rem)' }}
+                            />
+                          </div>
+                        </div>
+                      )}
 
 
                         <div className="text-[8px] gap-2 | sm:text-base | flex mb-4 items-center">
