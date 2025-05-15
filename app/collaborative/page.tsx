@@ -203,7 +203,14 @@ const CollaborativePage = () => {
     if (!projectName) return alert("Project name is required.");
     const userId = auth.currentUser?.uid;
     if (!userId) return;
-  
+
+    // Validate ingredient quantities
+    const hasInvalidQuantities = ingredients.some(ingredient => ingredient.quantity < 0);
+    if (hasInvalidQuantities) {
+        alert("Ingredient quantities must be 0 or above.");
+        return;
+    }
+
     const projectData: Omit<Project, 'id'> = {
       name: projectName,
       createdBy: userId,
@@ -277,7 +284,18 @@ const CollaborativePage = () => {
 
   const handleIngredientChange = (index: number, field: string, value: string | number) => {
     const updatedIngredients = [...ingredients];
-    updatedIngredients[index] = { ...updatedIngredients[index], [field]: value };
+    if (field === "quantity") {
+        const numericValue = typeof value === "number" ? value : parseFloat(value);
+        updatedIngredients[index] = { 
+            ...updatedIngredients[index], 
+            [field]: numericValue >= 0 ? numericValue : 0 // Ensure non-negative quantities
+        };
+    } else {
+        updatedIngredients[index] = { 
+            ...updatedIngredients[index], 
+            [field]: value // Allow any value for other fields like name
+        };
+    }
     setIngredients(updatedIngredients);
   };
 

@@ -4,16 +4,18 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { firestore, auth } from './../../app/firebase/config';
-import { collection, query, where, getDocs, orderBy, addDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, addDoc, serverTimestamp } from 'firebase/firestore';
 import Layout from '../../components/root/Layout';
-import { FaSearch } from 'react-icons/fa'; // Add this import for the search icon
+import { FaSearch } from 'react-icons/fa'; 
 
 const ResultsPage = () => {
   const [results, setResults] = useState<any[]>([]);
-  const [filteredResults, setFilteredResults] = useState<any[]>([]); // State for filtered results
-  const [searchQuery, setSearchQuery] = useState<string>(''); // State for search query
+  const [filteredResults, setFilteredResults] = useState<any[]>([]); 
+  const [searchQuery, setSearchQuery] = useState<string>(''); 
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 5;
   const router = useRouter();
 
   useEffect(() => {
@@ -142,22 +144,27 @@ const ResultsPage = () => {
       setError(`Failed to retake the quiz: ${errorMessage}`);
     }
   };
-  
-  const deleteAttempt = async (attemptId: string) => {
-    const confirmDelete = window.confirm('Are you sure you want to delete this attempt?');
-    if (!confirmDelete) return;
-
-    try {
-      await deleteDoc(doc(firestore, 'quizScores', attemptId));
-      setResults((prev) => prev.filter((result) => result.id !== attemptId));
-    } catch (err) {
-      console.error('Error deleting quiz attempt:', err);
-      setError('Failed to delete the quiz attempt.');
-    }
-  };
 
   const reviewQuiz = (quizCode: string) => {
     router.push(`/review/${quizCode}`);
+  };
+
+  const totalPages = Math.ceil(filteredResults.length / itemsPerPage);
+  const paginatedResults = filteredResults.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
   };
 
   if (loading)
@@ -207,7 +214,7 @@ const ResultsPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredResults.map((result) => (
+                {paginatedResults.map((result) => (
                   <tr key={result.id} className="border-b border-gray-700 text-yellow-200 hover:bg-yellow-500 hover:text-gray-900 transition">
                     <td className="py-4 px-2 font-bold">{result.attemptNumber}</td>
                     <td className="py-4 px-2">{result.email}</td>
@@ -227,17 +234,30 @@ const ResultsPage = () => {
                       >
                         Retake
                       </button>
-                      <button
-                        onClick={() => deleteAttempt(result.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-transform hover:scale-105"
-                      >
-                        Delete
-                      </button>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className="flex justify-between mt-4">
+            {currentPage > 1 && (
+              <button
+                onClick={handlePreviousPage}
+                className="bg-gray-600 hover:bg-yellow-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-transform hover:scale-105"
+              >
+                Previous
+              </button>
+            )}
+            <span className="text-yellow-400 font-semibold">Page {currentPage} of {totalPages}</span>
+            {currentPage < totalPages && (
+              <button
+                onClick={handleNextPage}
+                className="bg-gray-600 hover:bg-yellow-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md transition-transform hover:scale-105"
+              >
+                Next
+              </button>
+            )}
           </div>
         </div>
       </div>

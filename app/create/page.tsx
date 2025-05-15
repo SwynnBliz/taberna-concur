@@ -265,7 +265,7 @@ const QuizCreatorPage = () => {
   return (
     <Layout>
   <div
-    className="flex items-center justify-center min-h-screen text-yellow-400 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 relative"
+    className="flex items-center justify-center min-h-screen text-white hover:text-yellow-400 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 relative"
     style={{
       backgroundImage: "url('/Background.png')",
       backgroundSize: "cover",
@@ -275,7 +275,7 @@ const QuizCreatorPage = () => {
     {/* Overlay Effect */}
     <div className="absolute inset-0 bg-black bg-opacity-60 "></div>
 
-    <div className="bg-gray-900 bg-opacity-95 text-yellow-400 p-8 sm:p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-3xl border border-yellow-500 relative z-10">
+    <div className="bg-gray-900 bg-opacity-95 text-white hover:text-yellow-400 p-8 sm:p-10 md:p-12 rounded-2xl shadow-2xl w-full max-w-3xl border border-yellow-500 relative z-10">
       <h2 className="text-4xl sm:text-5xl font-extrabold mb-6 text-center text-yellow-300 drop-shadow-lg animate-pulse">
         Create a Quiz
       </h2>
@@ -286,7 +286,7 @@ const QuizCreatorPage = () => {
         placeholder="Quiz Name"
         value={quizName}
         onChange={(e) => setQuizName(e.target.value.replace(/[^a-zA-Z0-9@&_]/g, ""))}
-        className="border-2 border-yellow-500 p-4 mb-6 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-yellow-200 placeholder-yellow-400 transition-all shadow-sm hover:shadow-md"
+        className="border-2 border-yellow-500 p-4 mb-6 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-white hover:text-yellow-400 placeholder-yellow-400 transition-all shadow-sm hover:shadow-md"
       />
 
       {errorMessage && <div className="text-red-500 text-sm mb-4">{errorMessage}</div>}
@@ -300,7 +300,7 @@ const QuizCreatorPage = () => {
             type: e.target.value as "multiple-choice" | "fill-in-the-blank",
           })
         }
-        className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-yellow-200 transition-all shadow-sm hover:shadow-md"
+        className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-white hover:text-yellow-400 transition-all shadow-sm hover:shadow-md"
       >
         <option value="multiple-choice">Multiple Choice</option>
         <option value="fill-in-the-blank">Fill in the Blank</option>
@@ -313,7 +313,7 @@ const QuizCreatorPage = () => {
           placeholder="Enter a Question"
           value={currentQuestion.question}
           onChange={(e) => setCurrentQuestion({ ...currentQuestion, question: e.target.value })}
-          className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-yellow-200 placeholder-yellow-400 transition-all shadow-sm hover:shadow-md"
+          className="border-2 border-yellow-500 p-4 mb-4 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-white hover:text-yellow-400 placeholder-yellow-400 transition-all shadow-sm hover:shadow-md"
         />
 
         {/* Multiple-Choice Options */}
@@ -330,7 +330,7 @@ const QuizCreatorPage = () => {
                     updatedOptions[index] = e.target.value;
                     setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
                   }}
-                  className="border-2 border-yellow-500 p-3 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-yellow-200 transition-all shadow-sm hover:shadow-md"
+                  className="border-2 border-yellow-500 p-3 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-white hover:text-yellow-400 transition-all shadow-sm hover:shadow-md"
                 />
                 <button
                   onClick={() => {
@@ -338,7 +338,7 @@ const QuizCreatorPage = () => {
                     updatedOptions.splice(index, 1);
                     setCurrentQuestion({ ...currentQuestion, options: updatedOptions });
                   }}
-                  className="bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition-all shadow-md"
+                  className="bg-red-600 text-white hover:text-yellow-400 p-2 rounded-lg hover:bg-red-700 transition-all shadow-md"
                 >
                   Remove
                 </button>
@@ -351,10 +351,47 @@ const QuizCreatorPage = () => {
                   options: [...(currentQuestion.options || []), ""],
                 })
               }
-              className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg w-full sm:w-auto transition-all shadow-md"
+              className="bg-yellow-600 hover:bg-yellow-700 text-white hover:text-yellow-400 font-bold py-2 px-4 rounded-lg w-full sm:w-auto transition-all shadow-md"
             >
               Add Option
             </button>
+
+            {/* Dropdown for selecting the correct answer */}
+            <div className="mt-4">
+              <label className="block text-yellow-300 font-bold mb-2">Select Correct Answer</label>
+              <select
+                value={currentQuestion.correctAnswer}
+                onChange={(e) =>
+                  setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })
+                }
+                className="border-2 border-yellow-500 p-3 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-white hover:text-yellow-400 transition-all shadow-sm hover:shadow-md"
+              >
+                <option value="" disabled>
+                  -- Select an Option --
+                </option>
+                {currentQuestion.options?.map((option, index) => (
+                  <option key={index} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Input field for correct answer in fill-in-the-blank questions */}
+        {currentQuestion.type === "fill-in-the-blank" && (
+          <div className="mt-4">
+            <label className="block text-yellow-300 font-bold mb-2">Enter Correct Answer</label>
+            <input
+              type="text"
+              value={currentQuestion.correctAnswer}
+              onChange={(e) =>
+                setCurrentQuestion({ ...currentQuestion, correctAnswer: e.target.value })
+              }
+              placeholder="Type the correct answer here"
+              className="border-2 border-yellow-500 p-3 w-full rounded-lg focus:ring-2 focus:ring-yellow-400 bg-gray-800 text-white hover:text-yellow-400 placeholder-yellow-400 transition-all shadow-sm hover:shadow-md"
+            />
           </div>
         )}
 
@@ -388,7 +425,7 @@ const QuizCreatorPage = () => {
   {/* Upload Button (Separate) */}
   <button
     onClick={handleUploadFile}
-    className="mt-4 bg-blue-600 hover:bg-blue-800 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-md hover:shadow-blue-500/50 flex items-center gap-2 w-full"
+    className="mt-4 bg-blue-600 hover:bg-blue-800 text-white hover:text-yellow-400 font-bold py-3 px-6 rounded-lg transition-all shadow-md hover:shadow-blue-500/50 flex items-center gap-2 w-full"
   >
    Upload Questions
   </button>
@@ -397,14 +434,14 @@ const QuizCreatorPage = () => {
 {/* Buttons */}
 <button
   onClick={handleAddQuestion}
-  className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg w-full mb-6 transition-all duration-300 shadow-lg hover:shadow-yellow-500"
+  className="bg-yellow-600 hover:bg-yellow-700 text-white hover:text-yellow-400 font-bold py-3 px-6 rounded-lg w-full mb-6 transition-all duration-300 shadow-lg hover:shadow-yellow-500"
 >
   Add Question
 </button>
 
 <button
   onClick={handleCreateQuiz}
-  className="bg-green-500 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg w-full transition-all duration-300 shadow-lg hover:shadow-green-500"
+  className="bg-green-500 hover:bg-green-700 text-white hover:text-yellow-400 font-bold py-3 px-6 rounded-lg w-full transition-all duration-300 shadow-lg hover:shadow-green-500"
 >
   Create Quiz
 </button>
@@ -414,7 +451,7 @@ const QuizCreatorPage = () => {
 {/* Button to Open Modal */}
 <button
   onClick={() => setShowQuestions(true)}
-  className="bg-blue-500 hover:bg-blue-700 text-white py-3 px-6 rounded-lg w-full mt-6 flex items-center justify-center gap-2 transition-all"
+  className="bg-blue-500 hover:bg-blue-700 text-white hover:text-yellow-400 py-3 px-6 rounded-lg w-full mt-6 flex items-center justify-center gap-2 transition-all"
 >
   <Eye size={20} /> View Created Quizzes
 </button>
@@ -427,7 +464,7 @@ const QuizCreatorPage = () => {
       {/* Close Button */}
       <button
         onClick={() => setShowQuestions(false)}
-        className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white p-2 rounded-full"
+        className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white hover:text-yellow-400 p-2 rounded-full"
       >
         <XCircle size={18} />
       
@@ -442,7 +479,7 @@ const QuizCreatorPage = () => {
         {createdExams.map((quiz) => (
           <div
             key={quiz.id}
-            className="flex justify-between items-center bg-gray-700 p-4 rounded-lg text-yellow-300 cursor-pointer hover:bg-yellow-500 hover:text-gray-900 transition-all"
+            className="flex justify-between items-center bg-gray-700 p-4 rounded-lg text-white hover:text-yellow-400 cursor-pointer hover:bg-yellow-500 transition-all"
           >
             {/* Quiz Name */}
             <span className="flex items-center gap-2">
@@ -457,7 +494,7 @@ const QuizCreatorPage = () => {
                   e.stopPropagation();
                   router.push(`/EditExam/${quiz.code}`);
                 }}
-                className="bg-yellow-500 hover:bg-yellow-700 text-white text-sm px-3 py-1 rounded flex items-center gap-1"
+                className="bg-yellow-500 hover:bg-yellow-700 text-white hover:text-yellow-400 text-sm px-3 py-1 rounded flex items-center gap-1"
               >
                 <Pencil size={16} /> Edit
               </button>
@@ -468,7 +505,7 @@ const QuizCreatorPage = () => {
                   e.stopPropagation();
                   handleDeleteQuiz(quiz.id);
                 }}
-                className="bg-red-500 hover:bg-red-700 text-white text-sm px-3 py-1 rounded flex items-center gap-1"
+                className="bg-red-500 hover:bg-red-700 text-white hover:text-yellow-400 text-sm px-3 py-1 rounded flex items-center gap-1"
               >
                 <Trash2 size={16} /> Delete
               </button>
@@ -485,7 +522,7 @@ const QuizCreatorPage = () => {
             {/* Close Button */}
             <button
               onClick={() => setShowEditModal(false)}
-              className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white p-2 rounded-full"
+              className="absolute top-2 right-2 bg-red-500 hover:bg-red-700 text-white hover:text-yellow-400 p-2 rounded-full"
             >
               <XCircle size={18} />
             </button>
@@ -497,7 +534,7 @@ const QuizCreatorPage = () => {
             {/* Input Field */}
             <input
               type="text"
-              className="w-full p-3 mb-4 rounded bg-gray-700 text-white border border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className="w-full p-3 mb-4 rounded bg-gray-700 text-white hover:text-yellow-400 border border-yellow-500 focus:outline-none focus:ring-2 focus:ring-yellow-400"
               value={editedQuizName}
               onChange={(e) => setEditedQuizName(e.target.value)}
               placeholder="Enter new quiz name"
@@ -506,7 +543,7 @@ const QuizCreatorPage = () => {
             {/* Save Button */}
             <button
               onClick={() => handleSaveQuiz(editedQuiz)}
-              className="bg-green-500 hover:bg-green-700 text-white py-2 px-4 rounded w-full flex items-center justify-center gap-2"
+              className="bg-green-500 hover:bg-green-700 text-white hover:text-yellow-400 py-2 px-4 rounded w-full flex items-center justify-center gap-2"
             >
               <Pencil size={16} /> Save Changes
             </button>

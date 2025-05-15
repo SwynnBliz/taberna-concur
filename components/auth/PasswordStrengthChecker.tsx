@@ -73,9 +73,12 @@ const PasswordStrengthChecker = ({ password, setStrengthValid }: PasswordStrengt
         Password Strength: {strength}
       </p>
       {feedback.length > 0 && (
-        <ul className="text-sm text-red-400 mt-1 p-2 rounded-md" style={{ textShadow: "2px 2px 5px rgba(0, 0, 0, 0.8)" }}>
-          {feedback.map((item, index) => (
-            <li key={index} className="mb-1">
+        <ul className="text-sm mt-1 p-2 rounded-md" style={{ textShadow: "2px 2px 5px rgba(0, 0, 0, 0.8)" }}>
+          {["At least 8 characters long", "At least one uppercase letter", "At least one number", "At least one special character"].map((item, index) => (
+            <li
+              key={index}
+              className={`mb-1 ${feedback.includes(item) ? "text-red-400" : "text-red-400 line-through"}`}
+            >
               - {item}
             </li>
           ))}
